@@ -1,0 +1,3620 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          org/apache/maven/unbound/Reporting.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier, monospace;'>1 <span style=''>/*
+</span>2 <span style=''> * Licensed to the Apache Software Foundation (ASF) under one or more
+</span>3 <span style=''> * contributor license agreements.  See the NOTICE file distributed with
+</span>4 <span style=''> * this work for additional information regarding copyright ownership.
+</span>5 <span style=''> * The ASF licenses this file to You under the Apache License, Version 2.0
+</span>6 <span style=''> * (the &quot;License&quot;); you may not use this file except in compliance with
+</span>7 <span style=''> * the License.  You may obtain a copy of the License at
+</span>8 <span style=''> *
+</span>9 <span style=''> *    http://www.apache.org/licenses/LICENSE-2.0
+</span>10 <span style=''> *
+</span>11 <span style=''> * Unless required by applicable law or agreed to in writing, software
+</span>12 <span style=''> * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+</span>13 <span style=''> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+</span>14 <span style=''> * See the License for the specific language governing permissions and
+</span>15 <span style=''> * limitations under the License.
+</span>16 <span style=''> */
+</span>17 <span style=''>
+</span>18 <span style=''>package org.apache.maven.unbound
+</span>19 <span style=''>
+</span>20 <span style=''>import java.io.{ ObjectInputStream, ObjectOutputStream, StringReader }
+</span>21 <span style=''>import java.util.Locale
+</span>22 <span style=''>
+</span>23 <span style=''>import scala.xml.Elem
+</span>24 <span style=''>
+</span>25 <span style=''>import com.typesafe.config.{ Config, ConfigFactory, ConfigObject }
+</span>26 <span style=''>import org.json4s._
+</span>27 <span style=''>
+</span>28 <span style=''>import org.apache.maven.shared.utils.xml.Xpp3DomBuilder
+</span>29 <span style=''>
+</span>30 <span style=''>case object Reporting extends CommonJsonReader {
+</span>31 <span style=''>
+</span>32 <span style=''>  implicit val formats = </span><span style='background: #AEF1AE'>JsonReader.formats</span><span style=''>
+</span>33 <span style=''>
+</span>34 <span style=''>  private def writeObject(stream: ObjectOutputStream): Unit =
+</span>35 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultWriteObject()</span><span style=''>
+</span>36 <span style=''>
+</span>37 <span style=''>  private def readObject(stream: ObjectInputStream): Unit =
+</span>38 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultReadObject()</span><span style=''>
+</span>39 <span style=''>
+</span>40 <span style=''>  class ReportingSerializer extends CustomSerializer[Reporting](format =&gt; (
+</span>41 <span style=''>    {
+</span>42 <span style=''>      case obj @ JObject(fields) =&gt;
+</span>43 <span style=''>        Reporting(
+</span>44 <span style=''>          readBool(fields, ExcludeDefaults).getOrElse(false),
+</span>45 <span style=''>          readStr(fields, OutputDirectory).getOrElse(Target + &quot;/&quot; + SiteStr),
+</span>46 <span style=''>          readObjectSequence[ReportPlugin](fields, Plugins)
+</span>47 <span style=''>        )
+</span>48 <span style=''>    },
+</span>49 <span style=''>    {
+</span>50 <span style=''>      case r: Reporting =&gt;
+</span>51 <span style=''>        JObject(Seq[Option[JField]](
+</span>52 <span style=''>          writeBool(ExcludeDefaults, r.excludeDefaults, false),
+</span>53 <span style=''>          writeStr(OutputDirectory, r.outputDirectory, Target + &quot;/&quot; + SiteStr),
+</span>54 <span style=''>          writeObjectSequence(Plugins, r.plugins)
+</span>55 <span style=''>        ).flatten.toList)
+</span>56 <span style=''>    }
+</span>57 <span style=''>  ))
+</span>58 <span style=''>}
+</span>59 <span style=''>
+</span>60 <span style=''>case class Reporting(
+</span>61 <span style=''>  excludeDefaults: Boolean = false,
+</span>62 <span style=''>  outputDirectory: String = SL.Target + &quot;/&quot; + SL.SiteStr,
+</span>63 <span style=''>  plugins: Seq[ReportPlugin] = Seq[ReportPlugin]()) {
+</span>64 <span style=''>
+</span>65 <span style=''>  def this(elem: Elem) = </span><span style='background: #AEF1AE'>this(
+</span>66 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault(
+</span>67 <span style=''></span><span style='background: #AEF1AE'>      (elem \ SL.ExcludeDefaults).text.toLowerCase(Locale.ROOT), SL.FalseStr) ==
+</span>68 <span style=''></span><span style='background: #AEF1AE'>      SL.TrueStr.toString,
+</span>69 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault(
+</span>70 <span style=''></span><span style='background: #AEF1AE'>      (elem \ SL.OutputDirectory).text, SL.Target + &quot;/&quot; + SL.SiteStr),
+</span>71 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Plugins \ SL.PluginStr).map { case e: Elem =&gt;
+</span>72 <span style=''></span><span style='background: #AEF1AE'>      new ReportPlugin(e) })</span><span style=''>
+</span>73 <span style=''>
+</span>74 <span style=''>  lazy val xml =
+</span>75 <span style=''>    &lt;reporting&gt;
+</span>76 <span style=''>      { if (excludeDefaults) &lt;excludeDefaults&gt;true&lt;/excludeDefaults&gt; }
+</span>77 <span style=''>      { if (outputDirectory != null &amp;&amp;
+</span>78 <span style=''>        outputDirectory != (SL.Target + &quot;/&quot; + SL.SiteStr).toString)
+</span>79 <span style=''>        &lt;outputDirectory&gt;{outputDirectory}&lt;/outputDirectory&gt; }
+</span>80 <span style=''>      { if (!plugins.isEmpty) &lt;plugins&gt;
+</span>81 <span style=''>        { plugins.map { _.xml } }
+</span>82 <span style=''>        &lt;/plugins&gt; }
+</span>83 <span style=''>    &lt;/reporting&gt;
+</span>84 <span style=''>
+</span>85 <span style=''>  def makeModelObject(): org.apache.maven.model.Reporting = {
+</span>86 <span style=''>    val reporting = </span><span style='background: #AEF1AE'>new org.apache.maven.model.Reporting()</span><span style=''>
+</span>87 <span style=''>    </span><span style='background: #AEF1AE'>reporting.setExcludeDefaults(
+</span>88 <span style=''></span><span style='background: #AEF1AE'>      if (excludeDefaults) </span><span style='background: #F0ADAD'>SL.TrueStr</span><span style='background: #AEF1AE'> else SL.FalseStr)</span><span style=''>
+</span>89 <span style=''>    </span><span style='background: #AEF1AE'>reporting.setOutputDirectory(outputDirectory)</span><span style=''>
+</span>90 <span style=''>    </span><span style='background: #AEF1AE'>plugins.foreach { plugin =&gt; reporting.addPlugin(plugin.makeModelObject()) }</span><span style=''>
+</span>91 <span style=''>    reporting
+</span>92 <span style=''>  }
+</span>93 <span style=''>}
+</span>94 <span style=''>
+</span>95 <span style=''>case object ReportPlugin extends CommonJsonReader {
+</span>96 <span style=''>
+</span>97 <span style=''>  implicit val formats = </span><span style='background: #AEF1AE'>JsonReader.formats</span><span style=''>
+</span>98 <span style=''>
+</span>99 <span style=''>  private def writeObject(stream: ObjectOutputStream): Unit =
+</span>100 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultWriteObject()</span><span style=''>
+</span>101 <span style=''>
+</span>102 <span style=''>  private def readObject(stream: ObjectInputStream): Unit =
+</span>103 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultReadObject()</span><span style=''>
+</span>104 <span style=''>
+</span>105 <span style=''>  class ReportPluginSerializer
+</span>106 <span style=''>      extends CustomSerializer[ReportPlugin](format =&gt; (
+</span>107 <span style=''>    {
+</span>108 <span style=''>      case obj @ JObject(fields) =&gt;
+</span>109 <span style=''>        ReportPlugin(
+</span>110 <span style=''>          readStr(fields, GroupId).getOrElse(DefaultPluginGroup),
+</span>111 <span style=''>          readStr(fields, ArtifactId).getOrElse(null),
+</span>112 <span style=''>          readStr(fields, Version).getOrElse(null),
+</span>113 <span style=''>          readObjectSequence[ReportSet](fields, ReportSets),
+</span>114 <span style=''>          readBool(fields, Inherited).getOrElse(true),
+</span>115 <span style=''>          (obj \ Configuration) match {
+</span>116 <span style=''>            case o: JObject =&gt; jsonToConfig(o)
+</span>117 <span style=''>            case _ =&gt; null
+</span>118 <span style=''>          }
+</span>119 <span style=''>        )
+</span>120 <span style=''>    },
+</span>121 <span style=''>    {
+</span>122 <span style=''>      case p: ReportPlugin =&gt;
+</span>123 <span style=''>        JObject(Seq[Option[JField]](
+</span>124 <span style=''>          writeStr(GroupId, p.groupId),
+</span>125 <span style=''>          writeStr(ArtifactId, p.artifactId),
+</span>126 <span style=''>          writeStr(Version, p.version),
+</span>127 <span style=''>          writeObjectSequence(ReportSets, p.reportSets),
+</span>128 <span style=''>          writeBool(Inherited, p.inherited, true),
+</span>129 <span style=''>          writeObject(Configuration, configToJson(p.configuration))
+</span>130 <span style=''>        ).flatten.toList)
+</span>131 <span style=''>    }
+</span>132 <span style=''>  ))
+</span>133 <span style=''>}
+</span>134 <span style=''>
+</span>135 <span style=''>case class ReportPlugin(
+</span>136 <span style=''>  groupId: String = SL.DefaultPluginGroup,
+</span>137 <span style=''>  artifactId: String = null, version: String = null,
+</span>138 <span style=''>  reportSets: Seq[ReportSet] = Seq[ReportSet](),
+</span>139 <span style=''>  inherited: Boolean = true,
+</span>140 <span style=''>  configuration: Config = null) {
+</span>141 <span style=''>
+</span>142 <span style=''>  def this(elem: Elem) = </span><span style='background: #AEF1AE'>this(
+</span>143 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault((elem \ SL.GroupId).text, SL.DefaultPluginGroup),
+</span>144 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.ArtifactId).text),
+</span>145 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.Version).text),
+</span>146 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.ReportSets \ SL.ReportSetStr).map { case e: Elem =&gt;
+</span>147 <span style=''></span><span style='background: #AEF1AE'>      new ReportSet(e)},
+</span>148 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault(
+</span>149 <span style=''></span><span style='background: #AEF1AE'>      (elem \ SL.Inherited).text.toLowerCase(Locale.ROOT), SL.TrueStr) ==
+</span>150 <span style=''></span><span style='background: #AEF1AE'>      SL.TrueStr.toString,
+</span>151 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Configuration).headOption.map { case e: Elem =&gt;
+</span>152 <span style=''></span><span style='background: #AEF1AE'>      elemToConfig(e) }.getOrElse(null))</span><span style=''>
+</span>153 <span style=''>
+</span>154 <span style=''>  lazy val xml =
+</span>155 <span style=''>    &lt;plugin&gt;
+</span>156 <span style=''>      { if (groupId != null &amp;&amp; groupId != SL.DefaultPluginGroup.toString)
+</span>157 <span style=''>        &lt;groupId&gt;{groupId}&lt;/groupId&gt; }
+</span>158 <span style=''>      { if (artifactId != null) &lt;artifactId&gt;{artifactId}&lt;/artifactId&gt; }
+</span>159 <span style=''>      { if (version != null) &lt;version&gt;{version}&lt;/version&gt; }
+</span>160 <span style=''>      { if (!reportSets.isEmpty) &lt;reportSets&gt;
+</span>161 <span style=''>        { reportSets.map { _.xml } }
+</span>162 <span style=''>        &lt;/reportSets&gt; }
+</span>163 <span style=''>      { if (!inherited) &lt;inherited&gt;false&lt;/inherited&gt; }
+</span>164 <span style=''>      { if (configuration != null) configToElem(configuration) }
+</span>165 <span style=''>    &lt;/plugin&gt;
+</span>166 <span style=''>
+</span>167 <span style=''>  def makeModelObject(): org.apache.maven.model.ReportPlugin = {
+</span>168 <span style=''>    val plugin = </span><span style='background: #AEF1AE'>new org.apache.maven.model.ReportPlugin()</span><span style=''>
+</span>169 <span style=''>    </span><span style='background: #AEF1AE'>plugin.setGroupId(groupId)</span><span style=''>
+</span>170 <span style=''>    </span><span style='background: #AEF1AE'>plugin.setArtifactId(artifactId)</span><span style=''>
+</span>171 <span style=''>    </span><span style='background: #AEF1AE'>plugin.setVersion(version)</span><span style=''>
+</span>172 <span style=''>    </span><span style='background: #AEF1AE'>reportSets.foreach { rs =&gt; plugin.addReportSet(rs.makeModelObject()) }</span><span style=''>
+</span>173 <span style=''>    if (</span><span style='background: #AEF1AE'>configuration != null</span><span style=''>) </span><span style='background: #AEF1AE'>{
+</span>174 <span style=''></span><span style='background: #AEF1AE'>      val xmlStr =
+</span>175 <span style=''></span><span style='background: #AEF1AE'>        (new Writeable {
+</span>176 <span style=''></span><span style='background: #AEF1AE'>          val xml: Elem = configToElem(configuration)
+</span>177 <span style=''></span><span style='background: #AEF1AE'>        }).toXmlString
+</span>178 <span style=''></span><span style='background: #AEF1AE'>      val sReader = new StringReader(xmlStr)
+</span>179 <span style=''></span><span style='background: #AEF1AE'>      plugin.setConfiguration(Xpp3DomBuilder.build(sReader))
+</span>180 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
+</span>181 <span style=''>    </span><span style='background: #AEF1AE'>plugin.setInherited(if (inherited) SL.TrueStr else </span><span style='background: #F0ADAD'>SL.FalseStr</span><span style='background: #AEF1AE'>)</span><span style=''>
+</span>182 <span style=''>    plugin
+</span>183 <span style=''>  }
+</span>184 <span style=''>}
+</span>185 <span style=''>
+</span>186 <span style=''>case object ReportSet extends CommonJsonReader {
+</span>187 <span style=''>
+</span>188 <span style=''>  implicit val formats = </span><span style='background: #AEF1AE'>JsonReader.formats</span><span style=''>
+</span>189 <span style=''>
+</span>190 <span style=''>  private def writeObject(stream: ObjectOutputStream): Unit =
+</span>191 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultWriteObject()</span><span style=''>
+</span>192 <span style=''>
+</span>193 <span style=''>  private def readObject(stream: ObjectInputStream): Unit =
+</span>194 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultReadObject()</span><span style=''>
+</span>195 <span style=''>
+</span>196 <span style=''>  class ReportSetSerializer
+</span>197 <span style=''>      extends CustomSerializer[ReportSet](format =&gt; (
+</span>198 <span style=''>    {
+</span>199 <span style=''>      case obj @ JObject(fields) =&gt;
+</span>200 <span style=''>        ReportSet(
+</span>201 <span style=''>          readStr(fields, Id).getOrElse(DefaultStr),
+</span>202 <span style=''>          readStringSequence(fields, Reports),
+</span>203 <span style=''>          readBool(fields, Inherited).getOrElse(true),
+</span>204 <span style=''>          (obj \ Configuration) match {
+</span>205 <span style=''>            case o: JObject =&gt; jsonToConfig(o)
+</span>206 <span style=''>            case _ =&gt; null
+</span>207 <span style=''>          }
+</span>208 <span style=''>        )
+</span>209 <span style=''>    },
+</span>210 <span style=''>    {
+</span>211 <span style=''>      case r: ReportSet =&gt;
+</span>212 <span style=''>        JObject(Seq[Option[JField]](
+</span>213 <span style=''>          writeStr(Id, r.id, DefaultStr),
+</span>214 <span style=''>          writeStringSequence(Reports, r.reports),
+</span>215 <span style=''>          writeBool(Inherited, r.inherited, true),
+</span>216 <span style=''>          writeObject(Configuration, configToJson(r.configuration))
+</span>217 <span style=''>        ).flatten.toList)
+</span>218 <span style=''>    }
+</span>219 <span style=''>  ))
+</span>220 <span style=''>}
+</span>221 <span style=''>
+</span>222 <span style=''>case class ReportSet(
+</span>223 <span style=''>  id: String = SL.DefaultStr, reports: Seq[String] = Seq[String](),
+</span>224 <span style=''>  inherited: Boolean = true, configuration: Config = null) {
+</span>225 <span style=''>
+</span>226 <span style=''>  def this(elem: Elem) = </span><span style='background: #AEF1AE'>this(
+</span>227 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault((elem \ SL.Id).text, SL.DefaultStr),
+</span>228 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Reports \ SL.ReportStr).map { _.text },
+</span>229 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault(
+</span>230 <span style=''></span><span style='background: #AEF1AE'>      (elem \ SL.Inherited).text.toLowerCase(Locale.ROOT), SL.TrueStr) ==
+</span>231 <span style=''></span><span style='background: #AEF1AE'>      SL.TrueStr.toString,
+</span>232 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Configuration).headOption.map { case e: Elem =&gt;
+</span>233 <span style=''></span><span style='background: #AEF1AE'>      elemToConfig(e) }.getOrElse(null))</span><span style=''>
+</span>234 <span style=''>
+</span>235 <span style=''>  lazy val xml = &lt;reportSet&gt;
+</span>236 <span style=''>                   &lt;id&gt;{id}&lt;/id&gt;
+</span>237 <span style=''>                   { if (!inherited) &lt;inherited&gt;false&lt;/inherited&gt; }
+</span>238 <span style=''>                   { if (!reports.isEmpty) &lt;reports&gt;
+</span>239 <span style=''>                     { reports.map { Report(_).xml } }
+</span>240 <span style=''>                   &lt;/reports&gt; }
+</span>241 <span style=''>                   { if (configuration != null) configToElem(configuration) }
+</span>242 <span style=''>                 &lt;/reportSet&gt;
+</span>243 <span style=''>
+</span>244 <span style=''>  def makeModelObject(): org.apache.maven.model.ReportSet = {
+</span>245 <span style=''>    val rs = </span><span style='background: #AEF1AE'>new org.apache.maven.model.ReportSet()</span><span style=''>
+</span>246 <span style=''>    </span><span style='background: #AEF1AE'>rs.setId(id)</span><span style=''>
+</span>247 <span style=''>    </span><span style='background: #AEF1AE'>rs.setInherited(if (inherited) SL.TrueStr else </span><span style='background: #F0ADAD'>SL.FalseStr</span><span style='background: #AEF1AE'>)</span><span style=''>
+</span>248 <span style=''>    if (</span><span style='background: #AEF1AE'>configuration != null</span><span style=''>) </span><span style='background: #F0ADAD'>{
+</span>249 <span style=''></span><span style='background: #F0ADAD'>      val xmlStr =
+</span>250 <span style=''></span><span style='background: #F0ADAD'>        (new Writeable {
+</span>251 <span style=''></span><span style='background: #F0ADAD'>          val xml: Elem = configToElem(configuration)
+</span>252 <span style=''></span><span style='background: #F0ADAD'>        }).toXmlString
+</span>253 <span style=''></span><span style='background: #F0ADAD'>      val sReader = new StringReader(xmlStr)
+</span>254 <span style=''></span><span style='background: #F0ADAD'>      rs.setConfiguration(Xpp3DomBuilder.build(sReader))
+</span>255 <span style=''></span><span style='background: #F0ADAD'>    }</span><span style=''>
+</span>256 <span style=''>    </span><span style='background: #AEF1AE'>reports.foreach { r =&gt; rs.addReport(r) }</span><span style=''>
+</span>257 <span style=''>    rs
+</span>258 <span style=''>  }
+</span>259 <span style=''>}
+</span>260 <span style=''>
+</span>261 <span style=''>case class Report(report: String) {
+</span>262 <span style=''>  lazy val xml = &lt;report&gt;{report}&lt;/report&gt;
+</span>263 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          3457
+        </td>
+        <td>
+          1175
+          -
+          1193
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #AEF1AE">
+          JsonReader.formats
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          3458
+        </td>
+        <td>
+          1261
+          -
+          1288
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectOutputStream.defaultWriteObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultWriteObject()
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          3459
+        </td>
+        <td>
+          1354
+          -
+          1380
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectInputStream.defaultReadObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultReadObject()
+        </td>
+      </tr><tr>
+        <td>
+          65
+        </td>
+        <td>
+          3483
+        </td>
+        <td>
+          2236
+          -
+          2550
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Reporting.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          Reporting.this.&lt;init&gt;(unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.ExcludeDefaults)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.FalseStr)).==(unbound.this.`package`.SL.TrueStr.toString()), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.OutputDirectory)).text, scala.Predef.any2stringadd[org.apache.maven.unbound.SL.Target.type](unbound.this.`package`.SL.Target).+(&quot;/&quot;).+(unbound.this.`package`.SL.SiteStr)), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Plugins)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.PluginStr)).map[org.apache.maven.unbound.ReportPlugin, Seq[org.apache.maven.unbound.ReportPlugin]](((x0$1: scala.xml.Node) =&gt; x0$1 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new ReportPlugin(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.ReportPlugin]))
+        </td>
+      </tr><tr>
+        <td>
+          65
+        </td>
+        <td>
+          3484
+        </td>
+        <td>
+          2236
+          -
+          2236
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          67
+        </td>
+        <td>
+          3465
+        </td>
+        <td>
+          2327
+          -
+          2338
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.FalseStr)
+        </td>
+      </tr><tr>
+        <td>
+          67
+        </td>
+        <td>
+          3462
+        </td>
+        <td>
+          2313
+          -
+          2324
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          java.util.Locale.ROOT
+        </td>
+        <td style="background: #AEF1AE">
+          java.util.Locale.ROOT
+        </td>
+      </tr><tr>
+        <td>
+          67
+        </td>
+        <td>
+          3461
+        </td>
+        <td>
+          2276
+          -
+          2294
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.ExcludeDefaults)
+        </td>
+      </tr><tr>
+        <td>
+          67
+        </td>
+        <td>
+          3464
+        </td>
+        <td>
+          2327
+          -
+          2338
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.FalseStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.FalseStr
+        </td>
+      </tr><tr>
+        <td>
+          67
+        </td>
+        <td>
+          3467
+        </td>
+        <td>
+          2246
+          -
+          2368
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.ExcludeDefaults)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.FalseStr)).==(unbound.this.`package`.SL.TrueStr.toString())
+        </td>
+      </tr><tr>
+        <td>
+          67
+        </td>
+        <td>
+          3460
+        </td>
+        <td>
+          2276
+          -
+          2294
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.ExcludeDefaults
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.ExcludeDefaults
+        </td>
+      </tr><tr>
+        <td>
+          67
+        </td>
+        <td>
+          3463
+        </td>
+        <td>
+          2269
+          -
+          2325
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.toLowerCase
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.ExcludeDefaults)).text.toLowerCase(java.util.Locale.ROOT)
+        </td>
+      </tr><tr>
+        <td>
+          68
+        </td>
+        <td>
+          3466
+        </td>
+        <td>
+          2349
+          -
+          2368
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr.toString
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr.toString()
+        </td>
+      </tr><tr>
+        <td>
+          69
+        </td>
+        <td>
+          3475
+        </td>
+        <td>
+          2374
+          -
+          2459
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToDefault
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.OutputDirectory)).text, scala.Predef.any2stringadd[org.apache.maven.unbound.SL.Target.type](unbound.this.`package`.SL.Target).+(&quot;/&quot;).+(unbound.this.`package`.SL.SiteStr))
+        </td>
+      </tr><tr>
+        <td>
+          70
+        </td>
+        <td>
+          3471
+        </td>
+        <td>
+          2430
+          -
+          2439
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Target
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Target
+        </td>
+      </tr><tr>
+        <td>
+          70
+        </td>
+        <td>
+          3474
+        </td>
+        <td>
+          2430
+          -
+          2458
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.+
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Predef.any2stringadd[org.apache.maven.unbound.SL.Target.type](unbound.this.`package`.SL.Target).+(&quot;/&quot;).+(unbound.this.`package`.SL.SiteStr)
+        </td>
+      </tr><tr>
+        <td>
+          70
+        </td>
+        <td>
+          3468
+        </td>
+        <td>
+          2404
+          -
+          2422
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.OutputDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.OutputDirectory
+        </td>
+      </tr><tr>
+        <td>
+          70
+        </td>
+        <td>
+          3470
+        </td>
+        <td>
+          2397
+          -
+          2428
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.OutputDirectory)).text
+        </td>
+      </tr><tr>
+        <td>
+          70
+        </td>
+        <td>
+          3473
+        </td>
+        <td>
+          2448
+          -
+          2458
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.SiteStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.SiteStr
+        </td>
+      </tr><tr>
+        <td>
+          70
+        </td>
+        <td>
+          3469
+        </td>
+        <td>
+          2404
+          -
+          2422
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.OutputDirectory)
+        </td>
+      </tr><tr>
+        <td>
+          70
+        </td>
+        <td>
+          3472
+        </td>
+        <td>
+          2442
+          -
+          2445
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          &quot;/&quot;
+        </td>
+      </tr><tr>
+        <td>
+          71
+        </td>
+        <td>
+          3477
+        </td>
+        <td>
+          2473
+          -
+          2483
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Plugins)
+        </td>
+      </tr><tr>
+        <td>
+          71
+        </td>
+        <td>
+          3479
+        </td>
+        <td>
+          2486
+          -
+          2498
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.PluginStr)
+        </td>
+      </tr><tr>
+        <td>
+          71
+        </td>
+        <td>
+          3482
+        </td>
+        <td>
+          2466
+          -
+          2549
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Plugins)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.PluginStr)).map[org.apache.maven.unbound.ReportPlugin, Seq[org.apache.maven.unbound.ReportPlugin]](((x0$1: scala.xml.Node) =&gt; x0$1 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new ReportPlugin(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.ReportPlugin])
+        </td>
+      </tr><tr>
+        <td>
+          71
+        </td>
+        <td>
+          3476
+        </td>
+        <td>
+          2473
+          -
+          2483
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Plugins
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Plugins
+        </td>
+      </tr><tr>
+        <td>
+          71
+        </td>
+        <td>
+          3478
+        </td>
+        <td>
+          2486
+          -
+          2498
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.PluginStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.PluginStr
+        </td>
+      </tr><tr>
+        <td>
+          71
+        </td>
+        <td>
+          3481
+        </td>
+        <td>
+          2504
+          -
+          2504
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.ReportPlugin]
+        </td>
+      </tr><tr>
+        <td>
+          72
+        </td>
+        <td>
+          3480
+        </td>
+        <td>
+          2528
+          -
+          2547
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ReportPlugin.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new ReportPlugin(e)
+        </td>
+      </tr><tr>
+        <td>
+          86
+        </td>
+        <td>
+          3485
+        </td>
+        <td>
+          3021
+          -
+          3059
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Reporting.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new org.apache.maven.model.Reporting()
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          3492
+        </td>
+        <td>
+          3064
+          -
+          3149
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Reporting.setExcludeDefaults
+        </td>
+        <td style="background: #AEF1AE">
+          reporting.setExcludeDefaults(`package`.this.SL.strToString(if (Reporting.this.excludeDefaults)
+  unbound.this.`package`.SL.TrueStr
+else
+  unbound.this.`package`.SL.FalseStr))
+        </td>
+      </tr><tr>
+        <td>
+          88
+        </td>
+        <td>
+          3489
+        </td>
+        <td>
+          3137
+          -
+          3148
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.FalseStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.FalseStr
+        </td>
+      </tr><tr>
+        <td>
+          88
+        </td>
+        <td>
+          3486
+        </td>
+        <td>
+          3104
+          -
+          3119
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Reporting.excludeDefaults
+        </td>
+        <td style="background: #AEF1AE">
+          Reporting.this.excludeDefaults
+        </td>
+      </tr><tr>
+        <td>
+          88
+        </td>
+        <td>
+          3488
+        </td>
+        <td>
+          3121
+          -
+          3131
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.SL.TrueStr
+        </td>
+      </tr><tr>
+        <td>
+          88
+        </td>
+        <td>
+          3491
+        </td>
+        <td>
+          3100
+          -
+          3148
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(if (Reporting.this.excludeDefaults)
+  unbound.this.`package`.SL.TrueStr
+else
+  unbound.this.`package`.SL.FalseStr)
+        </td>
+      </tr><tr>
+        <td>
+          88
+        </td>
+        <td>
+          3487
+        </td>
+        <td>
+          3121
+          -
+          3131
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.SL.TrueStr
+        </td>
+      </tr><tr>
+        <td>
+          88
+        </td>
+        <td>
+          3490
+        </td>
+        <td>
+          3137
+          -
+          3148
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.FalseStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.FalseStr
+        </td>
+      </tr><tr>
+        <td>
+          89
+        </td>
+        <td>
+          3494
+        </td>
+        <td>
+          3154
+          -
+          3199
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Reporting.setOutputDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          reporting.setOutputDirectory(Reporting.this.outputDirectory)
+        </td>
+      </tr><tr>
+        <td>
+          89
+        </td>
+        <td>
+          3493
+        </td>
+        <td>
+          3183
+          -
+          3198
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Reporting.outputDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          Reporting.this.outputDirectory
+        </td>
+      </tr><tr>
+        <td>
+          90
+        </td>
+        <td>
+          3495
+        </td>
+        <td>
+          3252
+          -
+          3276
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ReportPlugin.makeModelObject
+        </td>
+        <td style="background: #AEF1AE">
+          plugin.makeModelObject()
+        </td>
+      </tr><tr>
+        <td>
+          90
+        </td>
+        <td>
+          3497
+        </td>
+        <td>
+          3204
+          -
+          3279
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          Reporting.this.plugins.foreach[Unit](((plugin: org.apache.maven.unbound.ReportPlugin) =&gt; reporting.addPlugin(plugin.makeModelObject())))
+        </td>
+      </tr><tr>
+        <td>
+          90
+        </td>
+        <td>
+          3496
+        </td>
+        <td>
+          3232
+          -
+          3277
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Reporting.addPlugin
+        </td>
+        <td style="background: #AEF1AE">
+          reporting.addPlugin(plugin.makeModelObject())
+        </td>
+      </tr><tr>
+        <td>
+          97
+        </td>
+        <td>
+          3498
+        </td>
+        <td>
+          3379
+          -
+          3397
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #AEF1AE">
+          JsonReader.formats
+        </td>
+      </tr><tr>
+        <td>
+          100
+        </td>
+        <td>
+          3499
+        </td>
+        <td>
+          3465
+          -
+          3492
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectOutputStream.defaultWriteObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultWriteObject()
+        </td>
+      </tr><tr>
+        <td>
+          103
+        </td>
+        <td>
+          3500
+        </td>
+        <td>
+          3558
+          -
+          3584
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectInputStream.defaultReadObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultReadObject()
+        </td>
+      </tr><tr>
+        <td>
+          142
+        </td>
+        <td>
+          3531
+        </td>
+        <td>
+          4844
+          -
+          5324
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ReportPlugin.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ReportPlugin.this.&lt;init&gt;(unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.GroupId)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.DefaultPluginGroup)), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.ArtifactId)).text), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Version)).text), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.ReportSets)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.ReportSetStr)).map[org.apache.maven.unbound.ReportSet, Seq[org.apache.maven.unbound.ReportSet]](((x0$1: scala.xml.Node) =&gt; x0$1 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new ReportSet(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.ReportSet]), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Inherited)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString()), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Configuration)).headOption.map[com.typesafe.config.Config](((x0$2: scala.xml.Node) =&gt; x0$2 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; unbound.this.`package`.elemToConfig(e)
+})).getOrElse[com.typesafe.config.Config](null))
+        </td>
+      </tr><tr>
+        <td>
+          142
+        </td>
+        <td>
+          3532
+        </td>
+        <td>
+          4844
+          -
+          4844
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          143
+        </td>
+        <td>
+          3501
+        </td>
+        <td>
+          4877
+          -
+          4887
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.GroupId
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.GroupId
+        </td>
+      </tr><tr>
+        <td>
+          143
+        </td>
+        <td>
+          3504
+        </td>
+        <td>
+          4895
+          -
+          4916
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.DefaultPluginGroup
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.DefaultPluginGroup
+        </td>
+      </tr><tr>
+        <td>
+          143
+        </td>
+        <td>
+          3503
+        </td>
+        <td>
+          4870
+          -
+          4893
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.GroupId)).text
+        </td>
+      </tr><tr>
+        <td>
+          143
+        </td>
+        <td>
+          3506
+        </td>
+        <td>
+          4854
+          -
+          4917
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToDefault
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.GroupId)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.DefaultPluginGroup))
+        </td>
+      </tr><tr>
+        <td>
+          143
+        </td>
+        <td>
+          3502
+        </td>
+        <td>
+          4877
+          -
+          4887
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.GroupId)
+        </td>
+      </tr><tr>
+        <td>
+          143
+        </td>
+        <td>
+          3505
+        </td>
+        <td>
+          4895
+          -
+          4916
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.DefaultPluginGroup)
+        </td>
+      </tr><tr>
+        <td>
+          144
+        </td>
+        <td>
+          3507
+        </td>
+        <td>
+          4943
+          -
+          4956
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.ArtifactId
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.ArtifactId
+        </td>
+      </tr><tr>
+        <td>
+          144
+        </td>
+        <td>
+          3510
+        </td>
+        <td>
+          4923
+          -
+          4963
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.ArtifactId)).text)
+        </td>
+      </tr><tr>
+        <td>
+          144
+        </td>
+        <td>
+          3509
+        </td>
+        <td>
+          4936
+          -
+          4962
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.ArtifactId)).text
+        </td>
+      </tr><tr>
+        <td>
+          144
+        </td>
+        <td>
+          3508
+        </td>
+        <td>
+          4943
+          -
+          4956
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.ArtifactId)
+        </td>
+      </tr><tr>
+        <td>
+          145
+        </td>
+        <td>
+          3513
+        </td>
+        <td>
+          4982
+          -
+          5005
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Version)).text
+        </td>
+      </tr><tr>
+        <td>
+          145
+        </td>
+        <td>
+          3512
+        </td>
+        <td>
+          4989
+          -
+          4999
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Version)
+        </td>
+      </tr><tr>
+        <td>
+          145
+        </td>
+        <td>
+          3511
+        </td>
+        <td>
+          4989
+          -
+          4999
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Version
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Version
+        </td>
+      </tr><tr>
+        <td>
+          145
+        </td>
+        <td>
+          3514
+        </td>
+        <td>
+          4969
+          -
+          5006
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Version)).text)
+        </td>
+      </tr><tr>
+        <td>
+          146
+        </td>
+        <td>
+          3516
+        </td>
+        <td>
+          5020
+          -
+          5033
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.ReportSets)
+        </td>
+      </tr><tr>
+        <td>
+          146
+        </td>
+        <td>
+          3521
+        </td>
+        <td>
+          5013
+          -
+          5098
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.ReportSets)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.ReportSetStr)).map[org.apache.maven.unbound.ReportSet, Seq[org.apache.maven.unbound.ReportSet]](((x0$1: scala.xml.Node) =&gt; x0$1 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new ReportSet(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.ReportSet])
+        </td>
+      </tr><tr>
+        <td>
+          146
+        </td>
+        <td>
+          3515
+        </td>
+        <td>
+          5020
+          -
+          5033
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.ReportSets
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.ReportSets
+        </td>
+      </tr><tr>
+        <td>
+          146
+        </td>
+        <td>
+          3518
+        </td>
+        <td>
+          5036
+          -
+          5051
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.ReportSetStr)
+        </td>
+      </tr><tr>
+        <td>
+          146
+        </td>
+        <td>
+          3517
+        </td>
+        <td>
+          5036
+          -
+          5051
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.ReportSetStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.ReportSetStr
+        </td>
+      </tr><tr>
+        <td>
+          146
+        </td>
+        <td>
+          3520
+        </td>
+        <td>
+          5057
+          -
+          5057
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.ReportSet]
+        </td>
+      </tr><tr>
+        <td>
+          147
+        </td>
+        <td>
+          3519
+        </td>
+        <td>
+          5081
+          -
+          5097
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ReportSet.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new ReportSet(e)
+        </td>
+      </tr><tr>
+        <td>
+          149
+        </td>
+        <td>
+          3525
+        </td>
+        <td>
+          5127
+          -
+          5177
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.toLowerCase
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Inherited)).text.toLowerCase(java.util.Locale.ROOT)
+        </td>
+      </tr><tr>
+        <td>
+          149
+        </td>
+        <td>
+          3522
+        </td>
+        <td>
+          5134
+          -
+          5146
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Inherited
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Inherited
+        </td>
+      </tr><tr>
+        <td>
+          149
+        </td>
+        <td>
+          3524
+        </td>
+        <td>
+          5165
+          -
+          5176
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          java.util.Locale.ROOT
+        </td>
+        <td style="background: #AEF1AE">
+          java.util.Locale.ROOT
+        </td>
+      </tr><tr>
+        <td>
+          149
+        </td>
+        <td>
+          3527
+        </td>
+        <td>
+          5179
+          -
+          5189
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)
+        </td>
+      </tr><tr>
+        <td>
+          149
+        </td>
+        <td>
+          3526
+        </td>
+        <td>
+          5179
+          -
+          5189
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr
+        </td>
+      </tr><tr>
+        <td>
+          149
+        </td>
+        <td>
+          3529
+        </td>
+        <td>
+          5104
+          -
+          5219
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Inherited)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString())
+        </td>
+      </tr><tr>
+        <td>
+          149
+        </td>
+        <td>
+          3523
+        </td>
+        <td>
+          5134
+          -
+          5146
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Inherited)
+        </td>
+      </tr><tr>
+        <td>
+          150
+        </td>
+        <td>
+          3528
+        </td>
+        <td>
+          5200
+          -
+          5219
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr.toString
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr.toString()
+        </td>
+      </tr><tr>
+        <td>
+          152
+        </td>
+        <td>
+          3530
+        </td>
+        <td>
+          5226
+          -
+          5323
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Option.getOrElse
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Configuration)).headOption.map[com.typesafe.config.Config](((x0$2: scala.xml.Node) =&gt; x0$2 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; unbound.this.`package`.elemToConfig(e)
+})).getOrElse[com.typesafe.config.Config](null)
+        </td>
+      </tr><tr>
+        <td>
+          168
+        </td>
+        <td>
+          3533
+        </td>
+        <td>
+          5925
+          -
+          5966
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.ReportPlugin.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new org.apache.maven.model.ReportPlugin()
+        </td>
+      </tr><tr>
+        <td>
+          169
+        </td>
+        <td>
+          3534
+        </td>
+        <td>
+          5989
+          -
+          5996
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.ReportPlugin.groupId
+        </td>
+        <td style="background: #AEF1AE">
+          ReportPlugin.this.groupId
+        </td>
+      </tr><tr>
+        <td>
+          169
+        </td>
+        <td>
+          3535
+        </td>
+        <td>
+          5971
+          -
+          5997
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.ReportPlugin.setGroupId
+        </td>
+        <td style="background: #AEF1AE">
+          plugin.setGroupId(ReportPlugin.this.groupId)
+        </td>
+      </tr><tr>
+        <td>
+          170
+        </td>
+        <td>
+          3537
+        </td>
+        <td>
+          6002
+          -
+          6034
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.ReportPlugin.setArtifactId
+        </td>
+        <td style="background: #AEF1AE">
+          plugin.setArtifactId(ReportPlugin.this.artifactId)
+        </td>
+      </tr><tr>
+        <td>
+          170
+        </td>
+        <td>
+          3536
+        </td>
+        <td>
+          6023
+          -
+          6033
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.ReportPlugin.artifactId
+        </td>
+        <td style="background: #AEF1AE">
+          ReportPlugin.this.artifactId
+        </td>
+      </tr><tr>
+        <td>
+          171
+        </td>
+        <td>
+          3539
+        </td>
+        <td>
+          6039
+          -
+          6065
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.ReportPlugin.setVersion
+        </td>
+        <td style="background: #AEF1AE">
+          plugin.setVersion(ReportPlugin.this.version)
+        </td>
+      </tr><tr>
+        <td>
+          171
+        </td>
+        <td>
+          3538
+        </td>
+        <td>
+          6057
+          -
+          6064
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.ReportPlugin.version
+        </td>
+        <td style="background: #AEF1AE">
+          ReportPlugin.this.version
+        </td>
+      </tr><tr>
+        <td>
+          172
+        </td>
+        <td>
+          3540
+        </td>
+        <td>
+          6117
+          -
+          6137
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ReportSet.makeModelObject
+        </td>
+        <td style="background: #AEF1AE">
+          rs.makeModelObject()
+        </td>
+      </tr><tr>
+        <td>
+          172
+        </td>
+        <td>
+          3542
+        </td>
+        <td>
+          6070
+          -
+          6140
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          ReportPlugin.this.reportSets.foreach[Unit](((rs: org.apache.maven.unbound.ReportSet) =&gt; plugin.addReportSet(rs.makeModelObject())))
+        </td>
+      </tr><tr>
+        <td>
+          172
+        </td>
+        <td>
+          3541
+        </td>
+        <td>
+          6097
+          -
+          6138
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.ReportPlugin.addReportSet
+        </td>
+        <td style="background: #AEF1AE">
+          plugin.addReportSet(rs.makeModelObject())
+        </td>
+      </tr><tr>
+        <td>
+          173
+        </td>
+        <td>
+          3543
+        </td>
+        <td>
+          6149
+          -
+          6170
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          ReportPlugin.this.configuration.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          173
+        </td>
+        <td>
+          3552
+        </td>
+        <td>
+          6145
+          -
+          6145
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          173
+        </td>
+        <td>
+          3551
+        </td>
+        <td>
+          6172
+          -
+          6406
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          {
+  val xmlStr: String = {
+  final class $anon extends AnyRef with org.apache.maven.unbound.Writeable {
+    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writeable&gt; = {
+      $anon.super.&lt;init&gt;();
+      ()
+    };
+    private[this] val xml: scala.xml.Elem = unbound.this.`package`.configToElem(ReportPlugin.this.configuration);
+    &lt;stable&gt; &lt;accessor&gt; def xml: scala.xml.Elem = $anon.this.xml
+  };
+  new $anon()
+}.toXmlString;
+  val sReader: java.io.StringReader = new java.io.StringReader(xmlStr);
+  plugin.setConfiguration(org.apache.maven.shared.utils.xml.Xpp3DomBuilder.build(sReader))
+}
+        </td>
+      </tr><tr>
+        <td>
+          173
+        </td>
+        <td>
+          3553
+        </td>
+        <td>
+          6145
+          -
+          6145
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          175
+        </td>
+        <td>
+          3546
+        </td>
+        <td>
+          6202
+          -
+          6205
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ReportPlugin.$anon.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new $anon()
+        </td>
+      </tr><tr>
+        <td>
+          176
+        </td>
+        <td>
+          3545
+        </td>
+        <td>
+          6244
+          -
+          6271
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.configToElem
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.configToElem(ReportPlugin.this.configuration)
+        </td>
+      </tr><tr>
+        <td>
+          176
+        </td>
+        <td>
+          3544
+        </td>
+        <td>
+          6257
+          -
+          6270
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.ReportPlugin.configuration
+        </td>
+        <td style="background: #AEF1AE">
+          ReportPlugin.this.configuration
+        </td>
+      </tr><tr>
+        <td>
+          177
+        </td>
+        <td>
+          3547
+        </td>
+        <td>
+          6202
+          -
+          6294
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Writeable.toXmlString
+        </td>
+        <td style="background: #AEF1AE">
+          {
+  final class $anon extends AnyRef with org.apache.maven.unbound.Writeable {
+    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writeable&gt; = {
+      $anon.super.&lt;init&gt;();
+      ()
+    };
+    private[this] val xml: scala.xml.Elem = unbound.this.`package`.configToElem(ReportPlugin.this.configuration);
+    &lt;stable&gt; &lt;accessor&gt; def xml: scala.xml.Elem = $anon.this.xml
+  };
+  new $anon()
+}.toXmlString
+        </td>
+      </tr><tr>
+        <td>
+          178
+        </td>
+        <td>
+          3548
+        </td>
+        <td>
+          6315
+          -
+          6339
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.StringReader.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new java.io.StringReader(xmlStr)
+        </td>
+      </tr><tr>
+        <td>
+          179
+        </td>
+        <td>
+          3549
+        </td>
+        <td>
+          6370
+          -
+          6399
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.shared.utils.xml.Xpp3DomBuilder.build
+        </td>
+        <td style="background: #AEF1AE">
+          org.apache.maven.shared.utils.xml.Xpp3DomBuilder.build(sReader)
+        </td>
+      </tr><tr>
+        <td>
+          179
+        </td>
+        <td>
+          3550
+        </td>
+        <td>
+          6346
+          -
+          6400
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.ConfigurationContainer.setConfiguration
+        </td>
+        <td style="background: #AEF1AE">
+          plugin.setConfiguration(org.apache.maven.shared.utils.xml.Xpp3DomBuilder.build(sReader))
+        </td>
+      </tr><tr>
+        <td>
+          181
+        </td>
+        <td>
+          3558
+        </td>
+        <td>
+          6462
+          -
+          6473
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.FalseStr
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.SL.FalseStr
+        </td>
+      </tr><tr>
+        <td>
+          181
+        </td>
+        <td>
+          3555
+        </td>
+        <td>
+          6446
+          -
+          6456
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr
+        </td>
+      </tr><tr>
+        <td>
+          181
+        </td>
+        <td>
+          3554
+        </td>
+        <td>
+          6435
+          -
+          6444
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.ReportPlugin.inherited
+        </td>
+        <td style="background: #AEF1AE">
+          ReportPlugin.this.inherited
+        </td>
+      </tr><tr>
+        <td>
+          181
+        </td>
+        <td>
+          3557
+        </td>
+        <td>
+          6462
+          -
+          6473
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.FalseStr
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.SL.FalseStr
+        </td>
+      </tr><tr>
+        <td>
+          181
+        </td>
+        <td>
+          3560
+        </td>
+        <td>
+          6411
+          -
+          6474
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.ConfigurationContainer.setInherited
+        </td>
+        <td style="background: #AEF1AE">
+          plugin.setInherited(`package`.this.SL.strToString(if (ReportPlugin.this.inherited)
+  unbound.this.`package`.SL.TrueStr
+else
+  unbound.this.`package`.SL.FalseStr))
+        </td>
+      </tr><tr>
+        <td>
+          181
+        </td>
+        <td>
+          3556
+        </td>
+        <td>
+          6446
+          -
+          6456
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr
+        </td>
+      </tr><tr>
+        <td>
+          181
+        </td>
+        <td>
+          3559
+        </td>
+        <td>
+          6431
+          -
+          6473
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(if (ReportPlugin.this.inherited)
+  unbound.this.`package`.SL.TrueStr
+else
+  unbound.this.`package`.SL.FalseStr)
+        </td>
+      </tr><tr>
+        <td>
+          188
+        </td>
+        <td>
+          3561
+        </td>
+        <td>
+          6568
+          -
+          6586
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #AEF1AE">
+          JsonReader.formats
+        </td>
+      </tr><tr>
+        <td>
+          191
+        </td>
+        <td>
+          3562
+        </td>
+        <td>
+          6654
+          -
+          6681
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectOutputStream.defaultWriteObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultWriteObject()
+        </td>
+      </tr><tr>
+        <td>
+          194
+        </td>
+        <td>
+          3563
+        </td>
+        <td>
+          6747
+          -
+          6773
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectInputStream.defaultReadObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultReadObject()
+        </td>
+      </tr><tr>
+        <td>
+          226
+        </td>
+        <td>
+          3587
+        </td>
+        <td>
+          7715
+          -
+          7715
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          226
+        </td>
+        <td>
+          3586
+        </td>
+        <td>
+          7715
+          -
+          8056
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ReportSet.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ReportSet.this.&lt;init&gt;(unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Id)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.DefaultStr)), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Reports)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.ReportStr)).map[String, Seq[String]](((x$3: scala.xml.Node) =&gt; x$3.text))(immutable.this.Seq.canBuildFrom[String]), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Inherited)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString()), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Configuration)).headOption.map[com.typesafe.config.Config](((x0$1: scala.xml.Node) =&gt; x0$1 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; unbound.this.`package`.elemToConfig(e)
+})).getOrElse[com.typesafe.config.Config](null))
+        </td>
+      </tr><tr>
+        <td>
+          227
+        </td>
+        <td>
+          3567
+        </td>
+        <td>
+          7761
+          -
+          7774
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.DefaultStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.DefaultStr
+        </td>
+      </tr><tr>
+        <td>
+          227
+        </td>
+        <td>
+          3564
+        </td>
+        <td>
+          7748
+          -
+          7753
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Id
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Id
+        </td>
+      </tr><tr>
+        <td>
+          227
+        </td>
+        <td>
+          3566
+        </td>
+        <td>
+          7741
+          -
+          7759
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Id)).text
+        </td>
+      </tr><tr>
+        <td>
+          227
+        </td>
+        <td>
+          3569
+        </td>
+        <td>
+          7725
+          -
+          7775
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToDefault
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Id)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.DefaultStr))
+        </td>
+      </tr><tr>
+        <td>
+          227
+        </td>
+        <td>
+          3568
+        </td>
+        <td>
+          7761
+          -
+          7774
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.DefaultStr)
+        </td>
+      </tr><tr>
+        <td>
+          227
+        </td>
+        <td>
+          3565
+        </td>
+        <td>
+          7748
+          -
+          7753
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Id)
+        </td>
+      </tr><tr>
+        <td>
+          228
+        </td>
+        <td>
+          3576
+        </td>
+        <td>
+          7782
+          -
+          7830
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Reports)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.ReportStr)).map[String, Seq[String]](((x$3: scala.xml.Node) =&gt; x$3.text))(immutable.this.Seq.canBuildFrom[String])
+        </td>
+      </tr><tr>
+        <td>
+          228
+        </td>
+        <td>
+          3570
+        </td>
+        <td>
+          7789
+          -
+          7799
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Reports
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Reports
+        </td>
+      </tr><tr>
+        <td>
+          228
+        </td>
+        <td>
+          3573
+        </td>
+        <td>
+          7802
+          -
+          7814
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.ReportStr)
+        </td>
+      </tr><tr>
+        <td>
+          228
+        </td>
+        <td>
+          3572
+        </td>
+        <td>
+          7802
+          -
+          7814
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.ReportStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.ReportStr
+        </td>
+      </tr><tr>
+        <td>
+          228
+        </td>
+        <td>
+          3575
+        </td>
+        <td>
+          7820
+          -
+          7820
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Seq.canBuildFrom[String]
+        </td>
+      </tr><tr>
+        <td>
+          228
+        </td>
+        <td>
+          3571
+        </td>
+        <td>
+          7789
+          -
+          7799
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Reports)
+        </td>
+      </tr><tr>
+        <td>
+          228
+        </td>
+        <td>
+          3574
+        </td>
+        <td>
+          7822
+          -
+          7828
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Node.text
+        </td>
+        <td style="background: #AEF1AE">
+          x$3.text
+        </td>
+      </tr><tr>
+        <td>
+          230
+        </td>
+        <td>
+          3579
+        </td>
+        <td>
+          7897
+          -
+          7908
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          java.util.Locale.ROOT
+        </td>
+        <td style="background: #AEF1AE">
+          java.util.Locale.ROOT
+        </td>
+      </tr><tr>
+        <td>
+          230
+        </td>
+        <td>
+          3582
+        </td>
+        <td>
+          7911
+          -
+          7921
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)
+        </td>
+      </tr><tr>
+        <td>
+          230
+        </td>
+        <td>
+          3581
+        </td>
+        <td>
+          7911
+          -
+          7921
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr
+        </td>
+      </tr><tr>
+        <td>
+          230
+        </td>
+        <td>
+          3584
+        </td>
+        <td>
+          7836
+          -
+          7951
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Inherited)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString())
+        </td>
+      </tr><tr>
+        <td>
+          230
+        </td>
+        <td>
+          3578
+        </td>
+        <td>
+          7866
+          -
+          7878
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Inherited)
+        </td>
+      </tr><tr>
+        <td>
+          230
+        </td>
+        <td>
+          3577
+        </td>
+        <td>
+          7866
+          -
+          7878
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Inherited
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Inherited
+        </td>
+      </tr><tr>
+        <td>
+          230
+        </td>
+        <td>
+          3580
+        </td>
+        <td>
+          7859
+          -
+          7909
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.toLowerCase
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Inherited)).text.toLowerCase(java.util.Locale.ROOT)
+        </td>
+      </tr><tr>
+        <td>
+          231
+        </td>
+        <td>
+          3583
+        </td>
+        <td>
+          7932
+          -
+          7951
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr.toString
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr.toString()
+        </td>
+      </tr><tr>
+        <td>
+          233
+        </td>
+        <td>
+          3585
+        </td>
+        <td>
+          7958
+          -
+          8055
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Option.getOrElse
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Configuration)).headOption.map[com.typesafe.config.Config](((x0$1: scala.xml.Node) =&gt; x0$1 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; unbound.this.`package`.elemToConfig(e)
+})).getOrElse[com.typesafe.config.Config](null)
+        </td>
+      </tr><tr>
+        <td>
+          245
+        </td>
+        <td>
+          3588
+        </td>
+        <td>
+          8512
+          -
+          8550
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.ReportSet.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new org.apache.maven.model.ReportSet()
+        </td>
+      </tr><tr>
+        <td>
+          246
+        </td>
+        <td>
+          3590
+        </td>
+        <td>
+          8555
+          -
+          8567
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.ReportSet.setId
+        </td>
+        <td style="background: #AEF1AE">
+          rs.setId(ReportSet.this.id)
+        </td>
+      </tr><tr>
+        <td>
+          246
+        </td>
+        <td>
+          3589
+        </td>
+        <td>
+          8564
+          -
+          8566
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.ReportSet.id
+        </td>
+        <td style="background: #AEF1AE">
+          ReportSet.this.id
+        </td>
+      </tr><tr>
+        <td>
+          247
+        </td>
+        <td>
+          3591
+        </td>
+        <td>
+          8592
+          -
+          8601
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.ReportSet.inherited
+        </td>
+        <td style="background: #AEF1AE">
+          ReportSet.this.inherited
+        </td>
+      </tr><tr>
+        <td>
+          247
+        </td>
+        <td>
+          3594
+        </td>
+        <td>
+          8619
+          -
+          8630
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.FalseStr
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.SL.FalseStr
+        </td>
+      </tr><tr>
+        <td>
+          247
+        </td>
+        <td>
+          3597
+        </td>
+        <td>
+          8572
+          -
+          8631
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.ConfigurationContainer.setInherited
+        </td>
+        <td style="background: #AEF1AE">
+          rs.setInherited(`package`.this.SL.strToString(if (ReportSet.this.inherited)
+  unbound.this.`package`.SL.TrueStr
+else
+  unbound.this.`package`.SL.FalseStr))
+        </td>
+      </tr><tr>
+        <td>
+          247
+        </td>
+        <td>
+          3593
+        </td>
+        <td>
+          8603
+          -
+          8613
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr
+        </td>
+      </tr><tr>
+        <td>
+          247
+        </td>
+        <td>
+          3596
+        </td>
+        <td>
+          8588
+          -
+          8630
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(if (ReportSet.this.inherited)
+  unbound.this.`package`.SL.TrueStr
+else
+  unbound.this.`package`.SL.FalseStr)
+        </td>
+      </tr><tr>
+        <td>
+          247
+        </td>
+        <td>
+          3595
+        </td>
+        <td>
+          8619
+          -
+          8630
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.FalseStr
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.SL.FalseStr
+        </td>
+      </tr><tr>
+        <td>
+          247
+        </td>
+        <td>
+          3592
+        </td>
+        <td>
+          8603
+          -
+          8613
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr
+        </td>
+      </tr><tr>
+        <td>
+          248
+        </td>
+        <td>
+          3606
+        </td>
+        <td>
+          8663
+          -
+          8893
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          {
+  val xmlStr: String = {
+  final class $anon extends AnyRef with org.apache.maven.unbound.Writeable {
+    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writeable&gt; = {
+      $anon.super.&lt;init&gt;();
+      ()
+    };
+    private[this] val xml: scala.xml.Elem = unbound.this.`package`.configToElem(ReportSet.this.configuration);
+    &lt;stable&gt; &lt;accessor&gt; def xml: scala.xml.Elem = $anon.this.xml
+  };
+  new $anon()
+}.toXmlString;
+  val sReader: java.io.StringReader = new java.io.StringReader(xmlStr);
+  rs.setConfiguration(org.apache.maven.shared.utils.xml.Xpp3DomBuilder.build(sReader))
+}
+        </td>
+      </tr><tr>
+        <td>
+          248
+        </td>
+        <td>
+          3608
+        </td>
+        <td>
+          8636
+          -
+          8636
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          248
+        </td>
+        <td>
+          3598
+        </td>
+        <td>
+          8640
+          -
+          8661
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          ReportSet.this.configuration.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          248
+        </td>
+        <td>
+          3607
+        </td>
+        <td>
+          8636
+          -
+          8636
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          250
+        </td>
+        <td>
+          3601
+        </td>
+        <td>
+          8693
+          -
+          8696
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ReportSet.$anon.&lt;init&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          new $anon()
+        </td>
+      </tr><tr>
+        <td>
+          251
+        </td>
+        <td>
+          3600
+        </td>
+        <td>
+          8735
+          -
+          8762
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.configToElem
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.configToElem(ReportSet.this.configuration)
+        </td>
+      </tr><tr>
+        <td>
+          251
+        </td>
+        <td>
+          3599
+        </td>
+        <td>
+          8748
+          -
+          8761
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.ReportSet.configuration
+        </td>
+        <td style="background: #F0ADAD">
+          ReportSet.this.configuration
+        </td>
+      </tr><tr>
+        <td>
+          252
+        </td>
+        <td>
+          3602
+        </td>
+        <td>
+          8693
+          -
+          8785
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Writeable.toXmlString
+        </td>
+        <td style="background: #F0ADAD">
+          {
+  final class $anon extends AnyRef with org.apache.maven.unbound.Writeable {
+    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writeable&gt; = {
+      $anon.super.&lt;init&gt;();
+      ()
+    };
+    private[this] val xml: scala.xml.Elem = unbound.this.`package`.configToElem(ReportSet.this.configuration);
+    &lt;stable&gt; &lt;accessor&gt; def xml: scala.xml.Elem = $anon.this.xml
+  };
+  new $anon()
+}.toXmlString
+        </td>
+      </tr><tr>
+        <td>
+          253
+        </td>
+        <td>
+          3603
+        </td>
+        <td>
+          8806
+          -
+          8830
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.StringReader.&lt;init&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          new java.io.StringReader(xmlStr)
+        </td>
+      </tr><tr>
+        <td>
+          254
+        </td>
+        <td>
+          3605
+        </td>
+        <td>
+          8837
+          -
+          8887
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.ConfigurationContainer.setConfiguration
+        </td>
+        <td style="background: #F0ADAD">
+          rs.setConfiguration(org.apache.maven.shared.utils.xml.Xpp3DomBuilder.build(sReader))
+        </td>
+      </tr><tr>
+        <td>
+          254
+        </td>
+        <td>
+          3604
+        </td>
+        <td>
+          8857
+          -
+          8886
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.shared.utils.xml.Xpp3DomBuilder.build
+        </td>
+        <td style="background: #F0ADAD">
+          org.apache.maven.shared.utils.xml.Xpp3DomBuilder.build(sReader)
+        </td>
+      </tr><tr>
+        <td>
+          256
+        </td>
+        <td>
+          3609
+        </td>
+        <td>
+          8921
+          -
+          8936
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.ReportSet.addReport
+        </td>
+        <td style="background: #AEF1AE">
+          rs.addReport(r)
+        </td>
+      </tr><tr>
+        <td>
+          256
+        </td>
+        <td>
+          3610
+        </td>
+        <td>
+          8898
+          -
+          8938
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          ReportSet.this.reports.foreach[Unit](((r: String) =&gt; rs.addReport(r)))
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

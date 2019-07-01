@@ -1,0 +1,2399 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          org/apache/maven/unbound/CIManagement.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier, monospace;'>1 <span style=''>/*
+</span>2 <span style=''> * Licensed to the Apache Software Foundation (ASF) under one or more
+</span>3 <span style=''> * contributor license agreements.  See the NOTICE file distributed with
+</span>4 <span style=''> * this work for additional information regarding copyright ownership.
+</span>5 <span style=''> * The ASF licenses this file to You under the Apache License, Version 2.0
+</span>6 <span style=''> * (the &quot;License&quot;); you may not use this file except in compliance with
+</span>7 <span style=''> * the License.  You may obtain a copy of the License at
+</span>8 <span style=''> *
+</span>9 <span style=''> *    http://www.apache.org/licenses/LICENSE-2.0
+</span>10 <span style=''> *
+</span>11 <span style=''> * Unless required by applicable law or agreed to in writing, software
+</span>12 <span style=''> * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+</span>13 <span style=''> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+</span>14 <span style=''> * See the License for the specific language governing permissions and
+</span>15 <span style=''> * limitations under the License.
+</span>16 <span style=''> */
+</span>17 <span style=''>
+</span>18 <span style=''>package org.apache.maven.unbound
+</span>19 <span style=''>
+</span>20 <span style=''>import java.io.{ ObjectInputStream, ObjectOutputStream }
+</span>21 <span style=''>import java.util.Locale
+</span>22 <span style=''>
+</span>23 <span style=''>import scala.xml.Elem
+</span>24 <span style=''>
+</span>25 <span style=''>import com.typesafe.config.ConfigFactory
+</span>26 <span style=''>import org.json4s._
+</span>27 <span style=''>
+</span>28 <span style=''>case object CIManagement extends CommonJsonReader {
+</span>29 <span style=''>
+</span>30 <span style=''>  implicit val formats = </span><span style='background: #AEF1AE'>JsonReader.formats</span><span style=''>
+</span>31 <span style=''>  protected def None = </span><span style='background: #F0ADAD'>&quot;none&quot;</span><span style=''>
+</span>32 <span style=''>
+</span>33 <span style=''>  private def writeObject(stream: ObjectOutputStream): Unit =
+</span>34 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultWriteObject()</span><span style=''>
+</span>35 <span style=''>
+</span>36 <span style=''>  private def readObject(stream: ObjectInputStream): Unit =
+</span>37 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultReadObject()</span><span style=''>
+</span>38 <span style=''>
+</span>39 <span style=''>  class CIManagementSerializer
+</span>40 <span style=''>      extends CustomSerializer[CIManagement](format =&gt; (
+</span>41 <span style=''>    {
+</span>42 <span style=''>      case obj @ JObject(fields) =&gt;
+</span>43 <span style=''>        new CIManagement(
+</span>44 <span style=''>          readStr(fields, SystemStr).getOrElse(null),
+</span>45 <span style=''>          readStr(fields, UrlStr).getOrElse(null),
+</span>46 <span style=''>          readObjectSequence[Notifier](fields, Notifiers)
+</span>47 <span style=''>        )
+</span>48 <span style=''>    },
+</span>49 <span style=''>    {
+</span>50 <span style=''>      case c: CIManagement =&gt;
+</span>51 <span style=''>        JObject(Seq[Option[JField]](
+</span>52 <span style=''>          writeStr(SystemStr, c.system),
+</span>53 <span style=''>          writeStr(UrlStr, c.url),
+</span>54 <span style=''>          writeObjectSequence(Notifiers, c.notifiers)
+</span>55 <span style=''>        ).flatten.toList)
+</span>56 <span style=''>    }
+</span>57 <span style=''>  ))
+</span>58 <span style=''>}
+</span>59 <span style=''>
+</span>60 <span style=''>case class CIManagement(
+</span>61 <span style=''>  system: String = null, url: String = null,
+</span>62 <span style=''>  notifiers: Seq[Notifier] = Seq[Notifier]()) {
+</span>63 <span style=''>
+</span>64 <span style=''>  def this(elem: Elem) = </span><span style='background: #AEF1AE'>this(
+</span>65 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.SystemStr).text),
+</span>66 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.UrlStr).text),
+</span>67 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Notifiers \ SL.NotifierStr).map { case n: Elem =&gt;
+</span>68 <span style=''></span><span style='background: #AEF1AE'>      </span><span style='background: #F0ADAD'>new Notifier(n)</span><span style='background: #AEF1AE'> })</span><span style=''>
+</span>69 <span style=''>
+</span>70 <span style=''>  lazy val xml = &lt;ciManagement&gt;
+</span>71 <span style=''>                   { if (system != null) &lt;system&gt;{system}&lt;/system&gt; }
+</span>72 <span style=''>                   { if (url != null) &lt;url&gt;{url}&lt;/url&gt; }
+</span>73 <span style=''>                   { if (!notifiers.isEmpty) &lt;notifiers&gt;
+</span>74 <span style=''>                     { notifiers.map { _.xml } }
+</span>75 <span style=''>                   &lt;/notifiers&gt; }
+</span>76 <span style=''>                 &lt;/ciManagement&gt;
+</span>77 <span style=''>
+</span>78 <span style=''>  def makeModelObject(): org.apache.maven.model.CiManagement = {
+</span>79 <span style=''>    val cim = </span><span style='background: #AEF1AE'>new org.apache.maven.model.CiManagement()</span><span style=''>
+</span>80 <span style=''>    if (</span><span style='background: #AEF1AE'>system != null</span><span style=''>) </span><span style='background: #AEF1AE'>cim.setSystem(system)</span><span style=''>
+</span>81 <span style=''>    if (</span><span style='background: #AEF1AE'>url != null</span><span style=''>) </span><span style='background: #AEF1AE'>cim.setUrl(url)</span><span style=''>
+</span>82 <span style=''>    </span><span style='background: #AEF1AE'>notifiers.foreach { n =&gt; </span><span style='background: #F0ADAD'>cim.getNotifiers().add(n.makeModelObject())</span><span style='background: #AEF1AE'> }</span><span style=''>
+</span>83 <span style=''>    cim
+</span>84 <span style=''>  }
+</span>85 <span style=''>}
+</span>86 <span style=''>
+</span>87 <span style=''>case object Notifier extends CommonJsonReader {
+</span>88 <span style=''>
+</span>89 <span style=''>  implicit val formats = </span><span style='background: #AEF1AE'>JsonReader.formats</span><span style=''>
+</span>90 <span style=''>
+</span>91 <span style=''>  private def writeObject(stream: ObjectOutputStream): Unit =
+</span>92 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultWriteObject()</span><span style=''>
+</span>93 <span style=''>
+</span>94 <span style=''>  private def readObject(stream: ObjectInputStream): Unit =
+</span>95 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultReadObject()</span><span style=''>
+</span>96 <span style=''>
+</span>97 <span style=''>  class NotifierSerializer
+</span>98 <span style=''>      extends CustomSerializer[Notifier](format =&gt; (
+</span>99 <span style=''>    {
+</span>100 <span style=''>      case obj @ JObject(fields) =&gt;
+</span>101 <span style=''>        new Notifier(
+</span>102 <span style=''>          readStr(fields, TypeStr).getOrElse(Mail),
+</span>103 <span style=''>          readBool(fields, SendOnError).getOrElse(true),
+</span>104 <span style=''>          readBool(fields, SendOnFailure).getOrElse(true),
+</span>105 <span style=''>          readBool(fields, SendOnSuccess).getOrElse(true),
+</span>106 <span style=''>          readBool(fields, SendOnWarning).getOrElse(true),
+</span>107 <span style=''>          readProperties(obj, Configuration)
+</span>108 <span style=''>        )
+</span>109 <span style=''>    },
+</span>110 <span style=''>    {
+</span>111 <span style=''>      case n: Notifier =&gt;
+</span>112 <span style=''>        JObject(Seq[Option[JField]](
+</span>113 <span style=''>          writeStr(TypeStr, n.`type`, Mail),
+</span>114 <span style=''>          writeBool(SendOnError, n.sendOnError, true),
+</span>115 <span style=''>          writeBool(SendOnFailure, n.sendOnFailure, true),
+</span>116 <span style=''>          writeBool(SendOnSuccess, n.sendOnSuccess, true),
+</span>117 <span style=''>          writeBool(SendOnWarning, n.sendOnWarning, true),
+</span>118 <span style=''>          writeProperties(Configuration, n.configuration)
+</span>119 <span style=''>        ).flatten.toList)
+</span>120 <span style=''>    }
+</span>121 <span style=''>  ))
+</span>122 <span style=''>}
+</span>123 <span style=''>
+</span>124 <span style=''>case class Notifier(
+</span>125 <span style=''>  `type`: String = SL.Mail,
+</span>126 <span style=''>  sendOnError: Boolean = true, sendOnFailure: Boolean = true,
+</span>127 <span style=''>  sendOnSuccess: Boolean = true, sendOnWarning: Boolean = true,
+</span>128 <span style=''>  configuration: Map[String, String] = Map[String, String]()) {
+</span>129 <span style=''>
+</span>130 <span style=''>  def this(elem: Elem) = </span><span style='background: #AEF1AE'>this(
+</span>131 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault((elem \ SL.TypeStr).text, SL.Mail),
+</span>132 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault(
+</span>133 <span style=''></span><span style='background: #AEF1AE'>      (elem \ SL.SendOnError).text.toLowerCase(Locale.ROOT), SL.TrueStr) ==
+</span>134 <span style=''></span><span style='background: #AEF1AE'>      SL.TrueStr.toString,
+</span>135 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault(
+</span>136 <span style=''></span><span style='background: #AEF1AE'>      (elem \ SL.SendOnFailure).text.toLowerCase(Locale.ROOT), SL.TrueStr) ==
+</span>137 <span style=''></span><span style='background: #AEF1AE'>      SL.TrueStr.toString,
+</span>138 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault(
+</span>139 <span style=''></span><span style='background: #AEF1AE'>      (elem \ SL.SendOnSuccess).text.toLowerCase(Locale.ROOT), SL.TrueStr) ==
+</span>140 <span style=''></span><span style='background: #AEF1AE'>      SL.TrueStr.toString,
+</span>141 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault(
+</span>142 <span style=''></span><span style='background: #AEF1AE'>      (elem \ SL.SendOnWarning).text.toLowerCase(Locale.ROOT), SL.TrueStr) ==
+</span>143 <span style=''></span><span style='background: #AEF1AE'>      SL.TrueStr.toString,
+</span>144 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Configuration).flatMap(</span><span style='background: #F0ADAD'>_.map { e =&gt; (e.label, e.text) }</span><span style='background: #AEF1AE'>).toMap)</span><span style=''>
+</span>145 <span style=''>
+</span>146 <span style=''>  lazy val xml = &lt;notifier&gt;
+</span>147 <span style=''>                   &lt;type&gt;{`type`}&lt;/type&gt;
+</span>148 <span style=''>                   &lt;sendOnError&gt;{sendOnError}&lt;/sendOnError&gt;
+</span>149 <span style=''>                   &lt;sendOnWarning&gt;{sendOnWarning}&lt;/sendOnWarning&gt;
+</span>150 <span style=''>                   &lt;sendOnSuccess&gt;{sendOnSuccess}&lt;/sendOnSuccess&gt;
+</span>151 <span style=''>                   &lt;sendOnWarning&gt;{sendOnWarning}&lt;/sendOnWarning&gt;
+</span>152 <span style=''>                   { if (!configuration.isEmpty) &lt;configuration&gt;
+</span>153 <span style=''>                     { configuration.foreach { case(k, v) =&gt;
+</span>154 <span style=''>                       PropertyValue(k, v).xml } }
+</span>155 <span style=''>                   &lt;/configuration&gt; }
+</span>156 <span style=''>                 &lt;/notifier&gt;
+</span>157 <span style=''>
+</span>158 <span style=''>  def makeModelObject(): org.apache.maven.model.Notifier = {
+</span>159 <span style=''>    val notifier = </span><span style='background: #F0ADAD'>new org.apache.maven.model.Notifier()</span><span style=''>
+</span>160 <span style=''>    </span><span style='background: #F0ADAD'>notifier.setType(`type`)</span><span style=''>
+</span>161 <span style=''>    </span><span style='background: #F0ADAD'>notifier.setSendOnError(sendOnError)</span><span style=''>
+</span>162 <span style=''>    </span><span style='background: #F0ADAD'>notifier.setSendOnFailure(sendOnFailure)</span><span style=''>
+</span>163 <span style=''>    </span><span style='background: #F0ADAD'>notifier.setSendOnSuccess(sendOnSuccess)</span><span style=''>
+</span>164 <span style=''>    </span><span style='background: #F0ADAD'>notifier.setSendOnWarning(sendOnWarning)</span><span style=''>
+</span>165 <span style=''>    </span><span style='background: #F0ADAD'>configuration.map { case(k, v) =&gt; notifier.addConfiguration(k, v) }</span><span style=''>
+</span>166 <span style=''>    notifier
+</span>167 <span style=''>  }
+</span>168 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          401
+        </td>
+        <td>
+          1081
+          -
+          1099
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #AEF1AE">
+          JsonReader.formats
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          402
+        </td>
+        <td>
+          1123
+          -
+          1129
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;none&quot;
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          403
+        </td>
+        <td>
+          1197
+          -
+          1224
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectOutputStream.defaultWriteObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultWriteObject()
+        </td>
+      </tr><tr>
+        <td>
+          37
+        </td>
+        <td>
+          404
+        </td>
+        <td>
+          1290
+          -
+          1316
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectInputStream.defaultReadObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultReadObject()
+        </td>
+      </tr><tr>
+        <td>
+          64
+        </td>
+        <td>
+          421
+        </td>
+        <td>
+          2041
+          -
+          2041
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          64
+        </td>
+        <td>
+          420
+        </td>
+        <td>
+          2041
+          -
+          2223
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.CIManagement.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          CIManagement.this.&lt;init&gt;(unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SystemStr)).text), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.UrlStr)).text), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Notifiers)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.NotifierStr)).map[org.apache.maven.unbound.Notifier, Seq[org.apache.maven.unbound.Notifier]](((x0$1: scala.xml.Node) =&gt; x0$1 match {
+  case (n @ (_: scala.xml.Elem)) =&gt; new Notifier(n)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Notifier]))
+        </td>
+      </tr><tr>
+        <td>
+          65
+        </td>
+        <td>
+          406
+        </td>
+        <td>
+          2071
+          -
+          2083
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.SystemStr)
+        </td>
+      </tr><tr>
+        <td>
+          65
+        </td>
+        <td>
+          405
+        </td>
+        <td>
+          2071
+          -
+          2083
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.SystemStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.SystemStr
+        </td>
+      </tr><tr>
+        <td>
+          65
+        </td>
+        <td>
+          408
+        </td>
+        <td>
+          2051
+          -
+          2090
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SystemStr)).text)
+        </td>
+      </tr><tr>
+        <td>
+          65
+        </td>
+        <td>
+          407
+        </td>
+        <td>
+          2064
+          -
+          2089
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SystemStr)).text
+        </td>
+      </tr><tr>
+        <td>
+          66
+        </td>
+        <td>
+          409
+        </td>
+        <td>
+          2116
+          -
+          2125
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.UrlStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.UrlStr
+        </td>
+      </tr><tr>
+        <td>
+          66
+        </td>
+        <td>
+          412
+        </td>
+        <td>
+          2096
+          -
+          2132
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.UrlStr)).text)
+        </td>
+      </tr><tr>
+        <td>
+          66
+        </td>
+        <td>
+          411
+        </td>
+        <td>
+          2109
+          -
+          2131
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.UrlStr)).text
+        </td>
+      </tr><tr>
+        <td>
+          66
+        </td>
+        <td>
+          410
+        </td>
+        <td>
+          2116
+          -
+          2125
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.UrlStr)
+        </td>
+      </tr><tr>
+        <td>
+          67
+        </td>
+        <td>
+          415
+        </td>
+        <td>
+          2161
+          -
+          2175
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.NotifierStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.NotifierStr
+        </td>
+      </tr><tr>
+        <td>
+          67
+        </td>
+        <td>
+          418
+        </td>
+        <td>
+          2181
+          -
+          2181
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Notifier]
+        </td>
+      </tr><tr>
+        <td>
+          67
+        </td>
+        <td>
+          414
+        </td>
+        <td>
+          2146
+          -
+          2158
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Notifiers)
+        </td>
+      </tr><tr>
+        <td>
+          67
+        </td>
+        <td>
+          419
+        </td>
+        <td>
+          2139
+          -
+          2222
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Notifiers)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.NotifierStr)).map[org.apache.maven.unbound.Notifier, Seq[org.apache.maven.unbound.Notifier]](((x0$1: scala.xml.Node) =&gt; x0$1 match {
+  case (n @ (_: scala.xml.Elem)) =&gt; new Notifier(n)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Notifier])
+        </td>
+      </tr><tr>
+        <td>
+          67
+        </td>
+        <td>
+          413
+        </td>
+        <td>
+          2146
+          -
+          2158
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Notifiers
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Notifiers
+        </td>
+      </tr><tr>
+        <td>
+          67
+        </td>
+        <td>
+          416
+        </td>
+        <td>
+          2161
+          -
+          2175
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.NotifierStr)
+        </td>
+      </tr><tr>
+        <td>
+          68
+        </td>
+        <td>
+          417
+        </td>
+        <td>
+          2205
+          -
+          2220
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Notifier.&lt;init&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          new Notifier(n)
+        </td>
+      </tr><tr>
+        <td>
+          79
+        </td>
+        <td>
+          422
+        </td>
+        <td>
+          2636
+          -
+          2677
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.CiManagement.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new org.apache.maven.model.CiManagement()
+        </td>
+      </tr><tr>
+        <td>
+          80
+        </td>
+        <td>
+          424
+        </td>
+        <td>
+          2716
+          -
+          2722
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.CIManagement.system
+        </td>
+        <td style="background: #AEF1AE">
+          CIManagement.this.system
+        </td>
+      </tr><tr>
+        <td>
+          80
+        </td>
+        <td>
+          427
+        </td>
+        <td>
+          2682
+          -
+          2682
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          80
+        </td>
+        <td>
+          423
+        </td>
+        <td>
+          2686
+          -
+          2700
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          CIManagement.this.system.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          80
+        </td>
+        <td>
+          426
+        </td>
+        <td>
+          2702
+          -
+          2723
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.CiManagement.setSystem
+        </td>
+        <td style="background: #AEF1AE">
+          cim.setSystem(CIManagement.this.system)
+        </td>
+      </tr><tr>
+        <td>
+          80
+        </td>
+        <td>
+          428
+        </td>
+        <td>
+          2682
+          -
+          2682
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          80
+        </td>
+        <td>
+          425
+        </td>
+        <td>
+          2702
+          -
+          2723
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.CiManagement.setSystem
+        </td>
+        <td style="background: #AEF1AE">
+          cim.setSystem(CIManagement.this.system)
+        </td>
+      </tr><tr>
+        <td>
+          81
+        </td>
+        <td>
+          433
+        </td>
+        <td>
+          2728
+          -
+          2728
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          81
+        </td>
+        <td>
+          430
+        </td>
+        <td>
+          2756
+          -
+          2759
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.CIManagement.url
+        </td>
+        <td style="background: #AEF1AE">
+          CIManagement.this.url
+        </td>
+      </tr><tr>
+        <td>
+          81
+        </td>
+        <td>
+          429
+        </td>
+        <td>
+          2732
+          -
+          2743
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          CIManagement.this.url.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          81
+        </td>
+        <td>
+          432
+        </td>
+        <td>
+          2745
+          -
+          2760
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.CiManagement.setUrl
+        </td>
+        <td style="background: #AEF1AE">
+          cim.setUrl(CIManagement.this.url)
+        </td>
+      </tr><tr>
+        <td>
+          81
+        </td>
+        <td>
+          431
+        </td>
+        <td>
+          2745
+          -
+          2760
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.CiManagement.setUrl
+        </td>
+        <td style="background: #AEF1AE">
+          cim.setUrl(CIManagement.this.url)
+        </td>
+      </tr><tr>
+        <td>
+          81
+        </td>
+        <td>
+          434
+        </td>
+        <td>
+          2728
+          -
+          2728
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          82
+        </td>
+        <td>
+          436
+        </td>
+        <td>
+          2790
+          -
+          2833
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.util.List.add
+        </td>
+        <td style="background: #F0ADAD">
+          cim.getNotifiers().add(n.makeModelObject())
+        </td>
+      </tr><tr>
+        <td>
+          82
+        </td>
+        <td>
+          435
+        </td>
+        <td>
+          2813
+          -
+          2832
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Notifier.makeModelObject
+        </td>
+        <td style="background: #F0ADAD">
+          n.makeModelObject()
+        </td>
+      </tr><tr>
+        <td>
+          82
+        </td>
+        <td>
+          437
+        </td>
+        <td>
+          2765
+          -
+          2835
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          CIManagement.this.notifiers.foreach[Boolean](((n: org.apache.maven.unbound.Notifier) =&gt; cim.getNotifiers().add(n.makeModelObject())))
+        </td>
+      </tr><tr>
+        <td>
+          89
+        </td>
+        <td>
+          438
+        </td>
+        <td>
+          2925
+          -
+          2943
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #AEF1AE">
+          JsonReader.formats
+        </td>
+      </tr><tr>
+        <td>
+          92
+        </td>
+        <td>
+          439
+        </td>
+        <td>
+          3011
+          -
+          3038
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectOutputStream.defaultWriteObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultWriteObject()
+        </td>
+      </tr><tr>
+        <td>
+          95
+        </td>
+        <td>
+          440
+        </td>
+        <td>
+          3104
+          -
+          3130
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectInputStream.defaultReadObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultReadObject()
+        </td>
+      </tr><tr>
+        <td>
+          130
+        </td>
+        <td>
+          490
+        </td>
+        <td>
+          4333
+          -
+          4333
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          130
+        </td>
+        <td>
+          489
+        </td>
+        <td>
+          4333
+          -
+          4970
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Notifier.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          Notifier.this.&lt;init&gt;(unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TypeStr)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.Mail)), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SendOnError)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString()), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SendOnFailure)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString()), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SendOnSuccess)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString()), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SendOnWarning)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString()), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Configuration)).flatMap[(String, String), scala.collection.immutable.Seq[(String, String)]](((x$2: scala.xml.Node) =&gt; x$2.map[(String, String), scala.collection.immutable.Seq[(String, String)]](((e: scala.xml.Node) =&gt; scala.Tuple2.apply[String, String](e.label, e.text)))(immutable.this.Seq.canBuildFrom[(String, String)])))(immutable.this.Seq.canBuildFrom[(String, String)]).toMap[String, String](scala.Predef.$conforms[(String, String)]))
+        </td>
+      </tr><tr>
+        <td>
+          131
+        </td>
+        <td>
+          442
+        </td>
+        <td>
+          4366
+          -
+          4376
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.TypeStr)
+        </td>
+      </tr><tr>
+        <td>
+          131
+        </td>
+        <td>
+          445
+        </td>
+        <td>
+          4384
+          -
+          4391
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Mail)
+        </td>
+      </tr><tr>
+        <td>
+          131
+        </td>
+        <td>
+          441
+        </td>
+        <td>
+          4366
+          -
+          4376
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TypeStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TypeStr
+        </td>
+      </tr><tr>
+        <td>
+          131
+        </td>
+        <td>
+          444
+        </td>
+        <td>
+          4384
+          -
+          4391
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Mail
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Mail
+        </td>
+      </tr><tr>
+        <td>
+          131
+        </td>
+        <td>
+          443
+        </td>
+        <td>
+          4359
+          -
+          4382
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TypeStr)).text
+        </td>
+      </tr><tr>
+        <td>
+          131
+        </td>
+        <td>
+          446
+        </td>
+        <td>
+          4343
+          -
+          4392
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToDefault
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TypeStr)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.Mail))
+        </td>
+      </tr><tr>
+        <td>
+          133
+        </td>
+        <td>
+          451
+        </td>
+        <td>
+          4475
+          -
+          4485
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr
+        </td>
+      </tr><tr>
+        <td>
+          133
+        </td>
+        <td>
+          454
+        </td>
+        <td>
+          4398
+          -
+          4515
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SendOnError)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString())
+        </td>
+      </tr><tr>
+        <td>
+          133
+        </td>
+        <td>
+          448
+        </td>
+        <td>
+          4428
+          -
+          4442
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.SendOnError)
+        </td>
+      </tr><tr>
+        <td>
+          133
+        </td>
+        <td>
+          447
+        </td>
+        <td>
+          4428
+          -
+          4442
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.SendOnError
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.SendOnError
+        </td>
+      </tr><tr>
+        <td>
+          133
+        </td>
+        <td>
+          450
+        </td>
+        <td>
+          4421
+          -
+          4473
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.toLowerCase
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SendOnError)).text.toLowerCase(java.util.Locale.ROOT)
+        </td>
+      </tr><tr>
+        <td>
+          133
+        </td>
+        <td>
+          452
+        </td>
+        <td>
+          4475
+          -
+          4485
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)
+        </td>
+      </tr><tr>
+        <td>
+          133
+        </td>
+        <td>
+          449
+        </td>
+        <td>
+          4461
+          -
+          4472
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          java.util.Locale.ROOT
+        </td>
+        <td style="background: #AEF1AE">
+          java.util.Locale.ROOT
+        </td>
+      </tr><tr>
+        <td>
+          134
+        </td>
+        <td>
+          453
+        </td>
+        <td>
+          4496
+          -
+          4515
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr.toString
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr.toString()
+        </td>
+      </tr><tr>
+        <td>
+          136
+        </td>
+        <td>
+          460
+        </td>
+        <td>
+          4600
+          -
+          4610
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)
+        </td>
+      </tr><tr>
+        <td>
+          136
+        </td>
+        <td>
+          457
+        </td>
+        <td>
+          4586
+          -
+          4597
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          java.util.Locale.ROOT
+        </td>
+        <td style="background: #AEF1AE">
+          java.util.Locale.ROOT
+        </td>
+      </tr><tr>
+        <td>
+          136
+        </td>
+        <td>
+          456
+        </td>
+        <td>
+          4551
+          -
+          4567
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.SendOnFailure)
+        </td>
+      </tr><tr>
+        <td>
+          136
+        </td>
+        <td>
+          459
+        </td>
+        <td>
+          4600
+          -
+          4610
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr
+        </td>
+      </tr><tr>
+        <td>
+          136
+        </td>
+        <td>
+          462
+        </td>
+        <td>
+          4521
+          -
+          4640
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SendOnFailure)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString())
+        </td>
+      </tr><tr>
+        <td>
+          136
+        </td>
+        <td>
+          455
+        </td>
+        <td>
+          4551
+          -
+          4567
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.SendOnFailure
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.SendOnFailure
+        </td>
+      </tr><tr>
+        <td>
+          136
+        </td>
+        <td>
+          458
+        </td>
+        <td>
+          4544
+          -
+          4598
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.toLowerCase
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SendOnFailure)).text.toLowerCase(java.util.Locale.ROOT)
+        </td>
+      </tr><tr>
+        <td>
+          137
+        </td>
+        <td>
+          461
+        </td>
+        <td>
+          4621
+          -
+          4640
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr.toString
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr.toString()
+        </td>
+      </tr><tr>
+        <td>
+          139
+        </td>
+        <td>
+          463
+        </td>
+        <td>
+          4676
+          -
+          4692
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.SendOnSuccess
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.SendOnSuccess
+        </td>
+      </tr><tr>
+        <td>
+          139
+        </td>
+        <td>
+          465
+        </td>
+        <td>
+          4711
+          -
+          4722
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          java.util.Locale.ROOT
+        </td>
+        <td style="background: #AEF1AE">
+          java.util.Locale.ROOT
+        </td>
+      </tr><tr>
+        <td>
+          139
+        </td>
+        <td>
+          468
+        </td>
+        <td>
+          4725
+          -
+          4735
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)
+        </td>
+      </tr><tr>
+        <td>
+          139
+        </td>
+        <td>
+          470
+        </td>
+        <td>
+          4646
+          -
+          4765
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SendOnSuccess)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString())
+        </td>
+      </tr><tr>
+        <td>
+          139
+        </td>
+        <td>
+          464
+        </td>
+        <td>
+          4676
+          -
+          4692
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.SendOnSuccess)
+        </td>
+      </tr><tr>
+        <td>
+          139
+        </td>
+        <td>
+          467
+        </td>
+        <td>
+          4725
+          -
+          4735
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr
+        </td>
+      </tr><tr>
+        <td>
+          139
+        </td>
+        <td>
+          466
+        </td>
+        <td>
+          4669
+          -
+          4723
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.toLowerCase
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SendOnSuccess)).text.toLowerCase(java.util.Locale.ROOT)
+        </td>
+      </tr><tr>
+        <td>
+          140
+        </td>
+        <td>
+          469
+        </td>
+        <td>
+          4746
+          -
+          4765
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr.toString
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr.toString()
+        </td>
+      </tr><tr>
+        <td>
+          142
+        </td>
+        <td>
+          478
+        </td>
+        <td>
+          4771
+          -
+          4890
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SendOnWarning)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString())
+        </td>
+      </tr><tr>
+        <td>
+          142
+        </td>
+        <td>
+          472
+        </td>
+        <td>
+          4801
+          -
+          4817
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.SendOnWarning)
+        </td>
+      </tr><tr>
+        <td>
+          142
+        </td>
+        <td>
+          474
+        </td>
+        <td>
+          4794
+          -
+          4848
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.toLowerCase
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SendOnWarning)).text.toLowerCase(java.util.Locale.ROOT)
+        </td>
+      </tr><tr>
+        <td>
+          142
+        </td>
+        <td>
+          471
+        </td>
+        <td>
+          4801
+          -
+          4817
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.SendOnWarning
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.SendOnWarning
+        </td>
+      </tr><tr>
+        <td>
+          142
+        </td>
+        <td>
+          473
+        </td>
+        <td>
+          4836
+          -
+          4847
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          java.util.Locale.ROOT
+        </td>
+        <td style="background: #AEF1AE">
+          java.util.Locale.ROOT
+        </td>
+      </tr><tr>
+        <td>
+          142
+        </td>
+        <td>
+          476
+        </td>
+        <td>
+          4850
+          -
+          4860
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)
+        </td>
+      </tr><tr>
+        <td>
+          142
+        </td>
+        <td>
+          475
+        </td>
+        <td>
+          4850
+          -
+          4860
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr
+        </td>
+      </tr><tr>
+        <td>
+          143
+        </td>
+        <td>
+          477
+        </td>
+        <td>
+          4871
+          -
+          4890
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr.toString
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr.toString()
+        </td>
+      </tr><tr>
+        <td>
+          144
+        </td>
+        <td>
+          487
+        </td>
+        <td>
+          4964
+          -
+          4964
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.Predef.$conforms
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Predef.$conforms[(String, String)]
+        </td>
+      </tr><tr>
+        <td>
+          144
+        </td>
+        <td>
+          481
+        </td>
+        <td>
+          4944
+          -
+          4951
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Node.label
+        </td>
+        <td style="background: #F0ADAD">
+          e.label
+        </td>
+      </tr><tr>
+        <td>
+          144
+        </td>
+        <td>
+          480
+        </td>
+        <td>
+          4904
+          -
+          4920
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Configuration)
+        </td>
+      </tr><tr>
+        <td>
+          144
+        </td>
+        <td>
+          483
+        </td>
+        <td>
+          4943
+          -
+          4960
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Tuple2.apply
+        </td>
+        <td style="background: #F0ADAD">
+          scala.Tuple2.apply[String, String](e.label, e.text)
+        </td>
+      </tr><tr>
+        <td>
+          144
+        </td>
+        <td>
+          486
+        </td>
+        <td>
+          4929
+          -
+          4929
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Seq.canBuildFrom[(String, String)]
+        </td>
+      </tr><tr>
+        <td>
+          144
+        </td>
+        <td>
+          488
+        </td>
+        <td>
+          4897
+          -
+          4969
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableOnce.toMap
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Configuration)).flatMap[(String, String), scala.collection.immutable.Seq[(String, String)]](((x$2: scala.xml.Node) =&gt; x$2.map[(String, String), scala.collection.immutable.Seq[(String, String)]](((e: scala.xml.Node) =&gt; scala.Tuple2.apply[String, String](e.label, e.text)))(immutable.this.Seq.canBuildFrom[(String, String)])))(immutable.this.Seq.canBuildFrom[(String, String)]).toMap[String, String](scala.Predef.$conforms[(String, String)])
+        </td>
+      </tr><tr>
+        <td>
+          144
+        </td>
+        <td>
+          479
+        </td>
+        <td>
+          4904
+          -
+          4920
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Configuration
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Configuration
+        </td>
+      </tr><tr>
+        <td>
+          144
+        </td>
+        <td>
+          482
+        </td>
+        <td>
+          4953
+          -
+          4959
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Node.text
+        </td>
+        <td style="background: #F0ADAD">
+          e.text
+        </td>
+      </tr><tr>
+        <td>
+          144
+        </td>
+        <td>
+          485
+        </td>
+        <td>
+          4930
+          -
+          4962
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #F0ADAD">
+          x$2.map[(String, String), scala.collection.immutable.Seq[(String, String)]](((e: scala.xml.Node) =&gt; scala.Tuple2.apply[String, String](e.label, e.text)))(immutable.this.Seq.canBuildFrom[(String, String)])
+        </td>
+      </tr><tr>
+        <td>
+          144
+        </td>
+        <td>
+          484
+        </td>
+        <td>
+          4936
+          -
+          4936
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #F0ADAD">
+          immutable.this.Seq.canBuildFrom[(String, String)]
+        </td>
+      </tr><tr>
+        <td>
+          159
+        </td>
+        <td>
+          491
+        </td>
+        <td>
+          5624
+          -
+          5661
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Notifier.&lt;init&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          new org.apache.maven.model.Notifier()
+        </td>
+      </tr><tr>
+        <td>
+          160
+        </td>
+        <td>
+          492
+        </td>
+        <td>
+          5683
+          -
+          5689
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Notifier.type
+        </td>
+        <td style="background: #F0ADAD">
+          Notifier.this.`type`
+        </td>
+      </tr><tr>
+        <td>
+          160
+        </td>
+        <td>
+          493
+        </td>
+        <td>
+          5666
+          -
+          5690
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Notifier.setType
+        </td>
+        <td style="background: #F0ADAD">
+          notifier.setType(Notifier.this.`type`)
+        </td>
+      </tr><tr>
+        <td>
+          161
+        </td>
+        <td>
+          495
+        </td>
+        <td>
+          5695
+          -
+          5731
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Notifier.setSendOnError
+        </td>
+        <td style="background: #F0ADAD">
+          notifier.setSendOnError(Notifier.this.sendOnError)
+        </td>
+      </tr><tr>
+        <td>
+          161
+        </td>
+        <td>
+          494
+        </td>
+        <td>
+          5719
+          -
+          5730
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Notifier.sendOnError
+        </td>
+        <td style="background: #F0ADAD">
+          Notifier.this.sendOnError
+        </td>
+      </tr><tr>
+        <td>
+          162
+        </td>
+        <td>
+          496
+        </td>
+        <td>
+          5762
+          -
+          5775
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Notifier.sendOnFailure
+        </td>
+        <td style="background: #F0ADAD">
+          Notifier.this.sendOnFailure
+        </td>
+      </tr><tr>
+        <td>
+          162
+        </td>
+        <td>
+          497
+        </td>
+        <td>
+          5736
+          -
+          5776
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Notifier.setSendOnFailure
+        </td>
+        <td style="background: #F0ADAD">
+          notifier.setSendOnFailure(Notifier.this.sendOnFailure)
+        </td>
+      </tr><tr>
+        <td>
+          163
+        </td>
+        <td>
+          499
+        </td>
+        <td>
+          5781
+          -
+          5821
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Notifier.setSendOnSuccess
+        </td>
+        <td style="background: #F0ADAD">
+          notifier.setSendOnSuccess(Notifier.this.sendOnSuccess)
+        </td>
+      </tr><tr>
+        <td>
+          163
+        </td>
+        <td>
+          498
+        </td>
+        <td>
+          5807
+          -
+          5820
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Notifier.sendOnSuccess
+        </td>
+        <td style="background: #F0ADAD">
+          Notifier.this.sendOnSuccess
+        </td>
+      </tr><tr>
+        <td>
+          164
+        </td>
+        <td>
+          501
+        </td>
+        <td>
+          5826
+          -
+          5866
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Notifier.setSendOnWarning
+        </td>
+        <td style="background: #F0ADAD">
+          notifier.setSendOnWarning(Notifier.this.sendOnWarning)
+        </td>
+      </tr><tr>
+        <td>
+          164
+        </td>
+        <td>
+          500
+        </td>
+        <td>
+          5852
+          -
+          5865
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Notifier.sendOnWarning
+        </td>
+        <td style="background: #F0ADAD">
+          Notifier.this.sendOnWarning
+        </td>
+      </tr><tr>
+        <td>
+          165
+        </td>
+        <td>
+          504
+        </td>
+        <td>
+          5871
+          -
+          5938
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #F0ADAD">
+          Notifier.this.configuration.map[Unit, scala.collection.immutable.Iterable[Unit]](((x0$1: (String, String)) =&gt; x0$1 match {
+  case (_1: String, _2: String)(String, String)((k @ _), (v @ _)) =&gt; notifier.addConfiguration(k, v)
+}))(immutable.this.Iterable.canBuildFrom[Unit])
+        </td>
+      </tr><tr>
+        <td>
+          165
+        </td>
+        <td>
+          503
+        </td>
+        <td>
+          5889
+          -
+          5889
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Iterable.canBuildFrom
+        </td>
+        <td style="background: #F0ADAD">
+          immutable.this.Iterable.canBuildFrom[Unit]
+        </td>
+      </tr><tr>
+        <td>
+          165
+        </td>
+        <td>
+          502
+        </td>
+        <td>
+          5905
+          -
+          5936
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Notifier.addConfiguration
+        </td>
+        <td style="background: #F0ADAD">
+          notifier.addConfiguration(k, v)
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

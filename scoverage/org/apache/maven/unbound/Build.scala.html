@@ -1,0 +1,6036 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          org/apache/maven/unbound/Build.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier, monospace;'>1 <span style=''>/*
+</span>2 <span style=''> * Licensed to the Apache Software Foundation (ASF) under one or more
+</span>3 <span style=''> * contributor license agreements.  See the NOTICE file distributed with
+</span>4 <span style=''> * this work for additional information regarding copyright ownership.
+</span>5 <span style=''> * The ASF licenses this file to You under the Apache License, Version 2.0
+</span>6 <span style=''> * (the &quot;License&quot;); you may not use this file except in compliance with
+</span>7 <span style=''> * the License.  You may obtain a copy of the License at
+</span>8 <span style=''> *
+</span>9 <span style=''> *    http://www.apache.org/licenses/LICENSE-2.0
+</span>10 <span style=''> *
+</span>11 <span style=''> * Unless required by applicable law or agreed to in writing, software
+</span>12 <span style=''> * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+</span>13 <span style=''> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+</span>14 <span style=''> * See the License for the specific language governing permissions and
+</span>15 <span style=''> * limitations under the License.
+</span>16 <span style=''> */
+</span>17 <span style=''>
+</span>18 <span style=''>package org.apache.maven.unbound
+</span>19 <span style=''>
+</span>20 <span style=''>import java.io.{ ObjectInputStream, ObjectOutputStream, StringReader }
+</span>21 <span style=''>import java.util.Locale
+</span>22 <span style=''>
+</span>23 <span style=''>import scala.xml.Elem
+</span>24 <span style=''>
+</span>25 <span style=''>import com.typesafe.config.{ Config, ConfigFactory, ConfigObject }
+</span>26 <span style=''>import org.json4s._
+</span>27 <span style=''>
+</span>28 <span style=''>case object Build extends CommonJsonReader {
+</span>29 <span style=''>
+</span>30 <span style=''>  implicit val formats = </span><span style='background: #AEF1AE'>JsonReader.formats</span><span style=''>
+</span>31 <span style=''>  val defSourceDir = </span><span style='background: #AEF1AE'>&quot;src/main/java&quot;</span><span style=''>
+</span>32 <span style=''>  val defScriptDir = </span><span style='background: #AEF1AE'>&quot;src/main/scripts&quot;</span><span style=''>
+</span>33 <span style=''>  val defTestDir = </span><span style='background: #AEF1AE'>&quot;src/test/java&quot;</span><span style=''>
+</span>34 <span style=''>  val defOutputDir = </span><span style='background: #AEF1AE'>&quot;target/classes&quot;</span><span style=''>
+</span>35 <span style=''>  val defTestOutputDir = </span><span style='background: #AEF1AE'>&quot;target/test-classes&quot;</span><span style=''>
+</span>36 <span style=''>  val defResourcesDir = </span><span style='background: #AEF1AE'>&quot;src/main/resources&quot;</span><span style=''>
+</span>37 <span style=''>  val defTestResourcesDir = </span><span style='background: #AEF1AE'>&quot;src/test/resources&quot;</span><span style=''>
+</span>38 <span style=''>
+</span>39 <span style=''>  private def writeObject(stream: ObjectOutputStream): Unit =
+</span>40 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultWriteObject()</span><span style=''>
+</span>41 <span style=''>
+</span>42 <span style=''>  private def readObject(stream: ObjectInputStream): Unit =
+</span>43 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultReadObject()</span><span style=''>
+</span>44 <span style=''>
+</span>45 <span style=''>  class BuildSerializer extends CustomSerializer[Build](format =&gt; (
+</span>46 <span style=''>    {
+</span>47 <span style=''>      case JObject(fields) =&gt;
+</span>48 <span style=''>        new Build(
+</span>49 <span style=''>          readStr(fields, SourceDirectory).getOrElse(defSourceDir),
+</span>50 <span style=''>          readStr(
+</span>51 <span style=''>            fields, ScriptSourceDirectory).getOrElse(defScriptDir),
+</span>52 <span style=''>          readStr(fields, TestSourceDirectory).getOrElse(defTestDir),
+</span>53 <span style=''>          readStr(fields, OutputDirectory).getOrElse(defOutputDir),
+</span>54 <span style=''>          readStr(
+</span>55 <span style=''>            fields, TestOutputDirectory).getOrElse(defTestOutputDir),
+</span>56 <span style=''>          readObjectSequence[Extension](fields, Extensions),
+</span>57 <span style=''>          readStr(fields, DefaultGoal).getOrElse(null),
+</span>58 <span style=''>          readObjectSequence[Resource](
+</span>59 <span style=''>            fields, Resources,
+</span>60 <span style=''>            Seq[Resource](new Resource(defResourcesDir))),
+</span>61 <span style=''>          readObjectSequence[Resource](
+</span>62 <span style=''>            fields, TestResources,
+</span>63 <span style=''>            Seq[Resource](new Resource(defTestResourcesDir))),
+</span>64 <span style=''>          readStr(fields, DirectoryStr).getOrElse(Target),
+</span>65 <span style=''>          readStr(fields, FinalName).getOrElse(null),
+</span>66 <span style=''>          readStringSequence(fields, Filters),
+</span>67 <span style=''>          readObjectSequence[Plugin](fields, PluginManagement),
+</span>68 <span style=''>          readObjectSequence[Plugin](fields, Plugins)
+</span>69 <span style=''>        )
+</span>70 <span style=''>    },
+</span>71 <span style=''>    {
+</span>72 <span style=''>      case b: Build =&gt;
+</span>73 <span style=''>        JObject(Seq[Option[JField]](
+</span>74 <span style=''>          writeStr(SourceDirectory, b.sourceDirectory, defSourceDir),
+</span>75 <span style=''>          writeStr(
+</span>76 <span style=''>            ScriptSourceDirectory, b.scriptSourceDirectory, defScriptDir),
+</span>77 <span style=''>          writeStr(TestSourceDirectory, b.testSourceDirectory, defTestDir),
+</span>78 <span style=''>          writeStr(OutputDirectory, b.outputDirectory, defSourceDir),
+</span>79 <span style=''>          writeStr(
+</span>80 <span style=''>            TestOutputDirectory, b.testOutputDirectory, defTestOutputDir),
+</span>81 <span style=''>          writeObjectSequence(Extensions, b.extensions),
+</span>82 <span style=''>          writeStr(DefaultGoal, b.defaultGoal),
+</span>83 <span style=''>          if (!isDefaultResources(b.resources))
+</span>84 <span style=''>            writeObjectSequence(Resources, b.resources)
+</span>85 <span style=''>          else None,
+</span>86 <span style=''>          if (!isDefaultResources(b.testResources))
+</span>87 <span style=''>            writeObjectSequence(TestResources, b.testResources)
+</span>88 <span style=''>          else None,
+</span>89 <span style=''>          writeStr(DirectoryStr, b.directory, Target),
+</span>90 <span style=''>          writeStr(FinalName, b.finalName),
+</span>91 <span style=''>          writeStringSequence(Filters, b.filters),
+</span>92 <span style=''>          writeObjectSequence(PluginManagement, b.pluginManagement),
+</span>93 <span style=''>          writeObjectSequence(Plugins, b.plugins)
+</span>94 <span style=''>        ).flatten.toList)
+</span>95 <span style=''>    }
+</span>96 <span style=''>  ))
+</span>97 <span style=''>
+</span>98 <span style=''>  protected[unbound] def isDefaultResources(res: Seq[Resource]): Boolean = {
+</span>99 <span style=''>    </span><span style='background: #AEF1AE'>res.size == 1 &amp;&amp; null == res(0).targetPath &amp;&amp;
+</span>100 <span style=''></span><span style='background: #AEF1AE'>    res(0).directory == SL.Dot.toString &amp;&amp; res(0).includes.size == 1 &amp;&amp;
+</span>101 <span style=''></span><span style='background: #AEF1AE'>    res(0).excludes.size == 0 &amp;&amp; res(0).includes(0) == Build.defResourcesDir</span><span style=''>
+</span>102 <span style=''>  }
+</span>103 <span style=''>
+</span>104 <span style=''>  protected[unbound] def isDefaultTestResources(res: Seq[Resource]): Boolean = {
+</span>105 <span style=''>    </span><span style='background: #AEF1AE'>res.size == 1 &amp;&amp; null == res(0).targetPath &amp;&amp;
+</span>106 <span style=''></span><span style='background: #AEF1AE'>    res(0).directory == SL.Dot.toString &amp;&amp; res(0).includes.size == 1 &amp;&amp;
+</span>107 <span style=''></span><span style='background: #AEF1AE'>    res(0).excludes.size == 0 &amp;&amp; res(0).includes(0) == Build.defTestResourcesDir</span><span style=''>
+</span>108 <span style=''>  }
+</span>109 <span style=''>}
+</span>110 <span style=''>
+</span>111 <span style=''>case class Build(
+</span>112 <span style=''>  sourceDirectory: String = Build.defSourceDir,
+</span>113 <span style=''>  scriptSourceDirectory: String = Build.defScriptDir,
+</span>114 <span style=''>  testSourceDirectory: String = Build.defTestDir,
+</span>115 <span style=''>  outputDirectory: String = Build.defOutputDir,
+</span>116 <span style=''>  testOutputDirectory: String = Build.defTestOutputDir,
+</span>117 <span style=''>  extensions: Seq[Extension] = Seq[Extension](),
+</span>118 <span style=''>  defaultGoal: String = null,
+</span>119 <span style=''>  resources: Seq[Resource] = Seq[Resource](new Resource(Build.defResourcesDir)),
+</span>120 <span style=''>  testResources: Seq[Resource] =
+</span>121 <span style=''>    Seq[Resource](new Resource(Build.defTestResourcesDir)),
+</span>122 <span style=''>  directory: String = SL.Target,
+</span>123 <span style=''>  finalName: String = null, /* ${artifactId}-${version} */
+</span>124 <span style=''>  filters: Seq[String] = Seq[String](),
+</span>125 <span style=''>  pluginManagement: Seq[Plugin] = Seq[Plugin](),
+</span>126 <span style=''>  plugins: Seq[Plugin] = Seq[Plugin]()) {
+</span>127 <span style=''>
+</span>128 <span style=''>  def this(elem: Elem) = </span><span style='background: #AEF1AE'>this(
+</span>129 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault((elem \ SL.SourceDirectory).text, Build.defSourceDir),
+</span>130 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault((elem \ SL.ScriptSourceDirectory).text, Build.defScriptDir),
+</span>131 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault((elem \ SL.TestSourceDirectory).text, Build.defTestDir),
+</span>132 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault((elem \ SL.OutputDirectory).text, Build.defOutputDir),
+</span>133 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault(
+</span>134 <span style=''></span><span style='background: #AEF1AE'>      (elem \ SL.TestOutputDirectory).text, Build.defTestOutputDir),
+</span>135 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Extensions \ SL.ExtensionStr).map { case e: Elem =&gt;
+</span>136 <span style=''></span><span style='background: #AEF1AE'>      </span><span style='background: #F0ADAD'>new Extension(e)</span><span style='background: #AEF1AE'>},
+</span>137 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.DefaultGoal).text),
+</span>138 <span style=''></span><span style='background: #AEF1AE'>    ensureDefault(
+</span>139 <span style=''></span><span style='background: #AEF1AE'>      (elem \ SL.Resources \ SL.ResourceStr).map { case e: Elem =&gt;
+</span>140 <span style=''></span><span style='background: #AEF1AE'>        </span><span style='background: #F0ADAD'>new Resource(e)</span><span style='background: #AEF1AE'> },
+</span>141 <span style=''></span><span style='background: #AEF1AE'>      new Resource(Build.defResourcesDir)),
+</span>142 <span style=''></span><span style='background: #AEF1AE'>    ensureDefault(
+</span>143 <span style=''></span><span style='background: #AEF1AE'>      (elem \ SL.TestResources \ SL.TestResource).map { case e: Elem =&gt;
+</span>144 <span style=''></span><span style='background: #AEF1AE'>        new Resource(e) },
+</span>145 <span style=''></span><span style='background: #AEF1AE'>      new Resource(Build.defTestResourcesDir)),
+</span>146 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault((elem \ SL.DirectoryStr).text, SL.Target),
+</span>147 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.FinalName).text),
+</span>148 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Filters \ SL.FilterStr).map { </span><span style='background: #F0ADAD'>_.text</span><span style='background: #AEF1AE'> },
+</span>149 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.PluginManagement \ SL.Plugins \ SL.PluginStr).map {
+</span>150 <span style=''></span><span style='background: #AEF1AE'>      case e: Elem =&gt; new Plugin(e) },
+</span>151 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Plugins \ SL.PluginStr).map { case e: Elem =&gt; new Plugin(e) })</span><span style=''>
+</span>152 <span style=''>
+</span>153 <span style=''>  lazy val xml =
+</span>154 <span style=''>    &lt;build&gt;
+</span>155 <span style=''>      { if (sourceDirectory != null &amp;&amp; sourceDirectory != Build.defSourceDir)
+</span>156 <span style=''>        &lt;sourceDirectory&gt;{sourceDirectory}&lt;/sourceDirectory&gt; }
+</span>157 <span style=''>      { if (scriptSourceDirectory != null &amp;&amp;
+</span>158 <span style=''>        scriptSourceDirectory != Build.defScriptDir)
+</span>159 <span style=''>        &lt;scriptSourceDirectory&gt;{scriptSourceDirectory}&lt;/scriptSourceDirectory&gt; }
+</span>160 <span style=''>      { if (testSourceDirectory != null &amp;&amp;
+</span>161 <span style=''>        testSourceDirectory != Build.defTestDir)
+</span>162 <span style=''>        &lt;testSourceDirectory&gt;{testSourceDirectory}&lt;/testSourceDirectory&gt; }
+</span>163 <span style=''>      { if (outputDirectory != null &amp;&amp; outputDirectory != Build.defOutputDir)
+</span>164 <span style=''>        &lt;outputDirectory&gt;{outputDirectory}&lt;/outputDirectory&gt; }
+</span>165 <span style=''>      { if (testOutputDirectory != null &amp;&amp;
+</span>166 <span style=''>        testOutputDirectory != Build.defTestOutputDir)
+</span>167 <span style=''>        &lt;testOutputDirectory&gt;{testOutputDirectory}&lt;/testOutputDirectory&gt; }
+</span>168 <span style=''>      { if (!extensions.isEmpty) &lt;extensions&gt;
+</span>169 <span style=''>        { extensions.map { _.xml } }
+</span>170 <span style=''>        &lt;/extensions&gt; }
+</span>171 <span style=''>      { if (defaultGoal != null) &lt;defaultGoal&gt;{defaultGoal}&lt;/defaultGoal&gt; }
+</span>172 <span style=''>      { if (!resources.isEmpty &amp;&amp; !Build.isDefaultResources(resources))
+</span>173 <span style=''>        &lt;resources&gt; { resources.map { _.xml } } &lt;/resources&gt; }
+</span>174 <span style=''>      { if (!testResources.isEmpty &amp;&amp;
+</span>175 <span style=''>        !Build.isDefaultTestResources(testResources))
+</span>176 <span style=''>        &lt;testResources&gt; { testResources.map { _.testXml } } &lt;/testResources&gt; }
+</span>177 <span style=''>      { if (directory != null &amp;&amp; directory != SL.Target.toString)
+</span>178 <span style=''>        &lt;directory&gt;{directory}&lt;/directory&gt; }
+</span>179 <span style=''>      { if (finalName != null) &lt;finalName&gt;{finalName}&lt;/finalName&gt; }
+</span>180 <span style=''>      { if (!filters.isEmpty) &lt;filters&gt;
+</span>181 <span style=''>        { filters.map { Filter(_).xml } }
+</span>182 <span style=''>        &lt;/filters&gt; }
+</span>183 <span style=''>      { if (!pluginManagement.isEmpty) &lt;pluginManagement&gt;&lt;plugins&gt;
+</span>184 <span style=''>        { pluginManagement.map { _.xml } }
+</span>185 <span style=''>        &lt;/plugins&gt;&lt;/pluginManagement&gt; }
+</span>186 <span style=''>      { if (!plugins.isEmpty) &lt;plugins&gt;
+</span>187 <span style=''>        { plugins.map { _.xml } }
+</span>188 <span style=''>        &lt;/plugins&gt; }
+</span>189 <span style=''>    &lt;/build&gt;
+</span>190 <span style=''>
+</span>191 <span style=''>  def makeModelObject(): org.apache.maven.model.Build = {
+</span>192 <span style=''>    val build = </span><span style='background: #AEF1AE'>new org.apache.maven.model.Build()</span><span style=''>
+</span>193 <span style=''>    </span><span style='background: #AEF1AE'>build.setSourceDirectory(sourceDirectory)</span><span style=''>
+</span>194 <span style=''>    </span><span style='background: #AEF1AE'>build.setScriptSourceDirectory(scriptSourceDirectory)</span><span style=''>
+</span>195 <span style=''>    </span><span style='background: #AEF1AE'>build.setTestSourceDirectory(testSourceDirectory)</span><span style=''>
+</span>196 <span style=''>    </span><span style='background: #AEF1AE'>build.setOutputDirectory(outputDirectory)</span><span style=''>
+</span>197 <span style=''>    </span><span style='background: #AEF1AE'>build.setTestOutputDirectory(testOutputDirectory)</span><span style=''>
+</span>198 <span style=''>    </span><span style='background: #AEF1AE'>extensions.foreach { ex =&gt; build.addExtension(ex.makeModelObject()) }</span><span style=''>
+</span>199 <span style=''>    if (</span><span style='background: #AEF1AE'>defaultGoal != null</span><span style=''>) </span><span style='background: #F0ADAD'>build.setDefaultGoal(defaultGoal)</span><span style=''>
+</span>200 <span style=''>    </span><span style='background: #AEF1AE'>resources.foreach { r =&gt; build.addResource(r.makeModelObject()) }</span><span style=''>
+</span>201 <span style=''>    </span><span style='background: #AEF1AE'>testResources.foreach { r =&gt; build.addTestResource(r.makeModelObject()) }</span><span style=''>
+</span>202 <span style=''>    if (</span><span style='background: #AEF1AE'>directory != null</span><span style=''>) </span><span style='background: #AEF1AE'>build.setDirectory(directory)</span><span style=''>
+</span>203 <span style=''>    if (</span><span style='background: #AEF1AE'>finalName != null</span><span style=''>) </span><span style='background: #F0ADAD'>build.setFinalName(finalName)</span><span style=''>
+</span>204 <span style=''>    </span><span style='background: #AEF1AE'>filters.foreach { f =&gt; </span><span style='background: #F0ADAD'>build.addFilter(f)</span><span style='background: #AEF1AE'> }</span><span style=''>
+</span>205 <span style=''>    val pm = </span><span style='background: #AEF1AE'>new org.apache.maven.model.PluginManagement()</span><span style=''>
+</span>206 <span style=''>    </span><span style='background: #AEF1AE'>pluginManagement.foreach { p =&gt; pm.addPlugin(p.makeModelObject()) }</span><span style=''>
+</span>207 <span style=''>    </span><span style='background: #AEF1AE'>build.setPluginManagement(pm)</span><span style=''>
+</span>208 <span style=''>    </span><span style='background: #AEF1AE'>plugins.foreach { p =&gt; build.addPlugin(p.makeModelObject()) }</span><span style=''>
+</span>209 <span style=''>    build
+</span>210 <span style=''>  }
+</span>211 <span style=''>}
+</span>212 <span style=''>
+</span>213 <span style=''>case class Filter(filter: String) {
+</span>214 <span style=''>  lazy val xml = &lt;filter&gt;{filter}&lt;/filter&gt;
+</span>215 <span style=''>}
+</span>216 <span style=''>
+</span>217 <span style=''>case object Extension extends CommonJsonReader {
+</span>218 <span style=''>
+</span>219 <span style=''>  implicit val formats = </span><span style='background: #AEF1AE'>JsonReader.formats</span><span style=''>
+</span>220 <span style=''>
+</span>221 <span style=''>  private def writeObject(stream: ObjectOutputStream): Unit =
+</span>222 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultWriteObject()</span><span style=''>
+</span>223 <span style=''>
+</span>224 <span style=''>  private def readObject(stream: ObjectInputStream): Unit =
+</span>225 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultReadObject()</span><span style=''>
+</span>226 <span style=''>
+</span>227 <span style=''>  class ExtensionSerializer extends CustomSerializer[Extension](format =&gt; (
+</span>228 <span style=''>    {
+</span>229 <span style=''>      case JObject(fields) =&gt;
+</span>230 <span style=''>        new Extension(
+</span>231 <span style=''>          readStr(fields, GroupId).getOrElse(null),
+</span>232 <span style=''>          readStr(fields, ArtifactId).getOrElse(null),
+</span>233 <span style=''>          readStr(fields, Version).getOrElse(null)
+</span>234 <span style=''>        )
+</span>235 <span style=''>    },
+</span>236 <span style=''>    {
+</span>237 <span style=''>      case e: Extension =&gt;
+</span>238 <span style=''>        JObject(Seq[Option[JField]](
+</span>239 <span style=''>          writeStr(GroupId, e.groupId),
+</span>240 <span style=''>          writeStr(ArtifactId, e.artifactId),
+</span>241 <span style=''>          writeStr(Version, e.version)
+</span>242 <span style=''>        ).flatten.toList)
+</span>243 <span style=''>    }
+</span>244 <span style=''>  ))
+</span>245 <span style=''>}
+</span>246 <span style=''>
+</span>247 <span style=''>case class Extension(
+</span>248 <span style=''>  groupId: String = null, artifactId: String = null, version: String = null) {
+</span>249 <span style=''>
+</span>250 <span style=''>  def this(elem: Elem) = </span><span style='background: #AEF1AE'>this(
+</span>251 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.GroupId).text),
+</span>252 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.ArtifactId).text),
+</span>253 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.Version).text))</span><span style=''>
+</span>254 <span style=''>
+</span>255 <span style=''>  lazy val xml =
+</span>256 <span style=''>    &lt;extension&gt;
+</span>257 <span style=''>      { if (groupId != null) &lt;groupId&gt;{groupId}&lt;/groupId&gt; }
+</span>258 <span style=''>      { if (artifactId != null) &lt;artifactId&gt;{artifactId}&lt;/artifactId&gt; }
+</span>259 <span style=''>      { if (version != null) &lt;version&gt;{version}&lt;/version&gt; }
+</span>260 <span style=''>    &lt;/extension&gt;
+</span>261 <span style=''>
+</span>262 <span style=''>  def makeModelObject(): org.apache.maven.model.Extension = {
+</span>263 <span style=''>    val extension = </span><span style='background: #AEF1AE'>new org.apache.maven.model.Extension()</span><span style=''>
+</span>264 <span style=''>    </span><span style='background: #AEF1AE'>extension.setGroupId(groupId)</span><span style=''>
+</span>265 <span style=''>    </span><span style='background: #AEF1AE'>extension.setArtifactId(artifactId)</span><span style=''>
+</span>266 <span style=''>    if (</span><span style='background: #AEF1AE'>version != null</span><span style=''>) </span><span style='background: #AEF1AE'>extension.setVersion(version)</span><span style=''>
+</span>267 <span style=''>    extension
+</span>268 <span style=''>  }
+</span>269 <span style=''>}
+</span>270 <span style=''>
+</span>271 <span style=''>case object Resource extends CommonJsonReader {
+</span>272 <span style=''>
+</span>273 <span style=''>  implicit val formats = </span><span style='background: #AEF1AE'>JsonReader.formats</span><span style=''>
+</span>274 <span style=''>
+</span>275 <span style=''>  private def writeObject(stream: ObjectOutputStream): Unit =
+</span>276 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultWriteObject()</span><span style=''>
+</span>277 <span style=''>
+</span>278 <span style=''>  private def readObject(stream: ObjectInputStream): Unit =
+</span>279 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultReadObject()</span><span style=''>
+</span>280 <span style=''>
+</span>281 <span style=''>  class ResourceSerializer extends CustomSerializer[Resource](format =&gt; (
+</span>282 <span style=''>    {
+</span>283 <span style=''>      case JObject(fields) =&gt;
+</span>284 <span style=''>        new Resource(
+</span>285 <span style=''>          readStr(fields, TargetPath).getOrElse(null),
+</span>286 <span style=''>          readBool(fields, Filtering).getOrElse(false),
+</span>287 <span style=''>          readStr(fields, DirectoryStr).getOrElse(SL.Dot),
+</span>288 <span style=''>          readStringSequence(fields, Includes),
+</span>289 <span style=''>          readStringSequence(fields, Excludes)
+</span>290 <span style=''>        )
+</span>291 <span style=''>    },
+</span>292 <span style=''>    {
+</span>293 <span style=''>      case r: Resource =&gt;
+</span>294 <span style=''>        JObject(Seq[Option[JField]](
+</span>295 <span style=''>          writeStr(TargetPath, r.targetPath),
+</span>296 <span style=''>          writeBool(Filtering, r.filtering, false),
+</span>297 <span style=''>          writeStr(DirectoryStr, r.directory, Dot),
+</span>298 <span style=''>          writeStringSequence(Includes, r.includes),
+</span>299 <span style=''>          writeStringSequence(Excludes, r.excludes)
+</span>300 <span style=''>        ).flatten.toList)
+</span>301 <span style=''>    }
+</span>302 <span style=''>  ))
+</span>303 <span style=''>}
+</span>304 <span style=''>
+</span>305 <span style=''>case class Resource(
+</span>306 <span style=''>  targetPath: String = null, filtering: Boolean = false,
+</span>307 <span style=''>  directory: String = SL.Dot,
+</span>308 <span style=''>  includes: Seq[String], excludes: Seq[String] = Seq[String]()) {
+</span>309 <span style=''>
+</span>310 <span style=''>  def this(name: String) = </span><span style='background: #AEF1AE'>this(null, false, SL.Dot, Seq[String](name))</span><span style=''>
+</span>311 <span style=''>
+</span>312 <span style=''>  def this(elem: Elem) = </span><span style='background: #AEF1AE'>this(
+</span>313 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.TargetPath).text),
+</span>314 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault(
+</span>315 <span style=''></span><span style='background: #AEF1AE'>      (elem \ SL.Filtering).text.toLowerCase(Locale.ROOT), SL.FalseStr) ==
+</span>316 <span style=''></span><span style='background: #AEF1AE'>      SL.TrueStr.toString,
+</span>317 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault((elem \ SL.DirectoryStr).text, SL.Dot),
+</span>318 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Includes \ SL.IncludeStr).map { _.text },
+</span>319 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Excludes \ SL.ExcludeStr).map { </span><span style='background: #F0ADAD'>_.text</span><span style='background: #AEF1AE'> })</span><span style=''>
+</span>320 <span style=''>
+</span>321 <span style=''>  lazy val xml =
+</span>322 <span style=''>    &lt;resource&gt;
+</span>323 <span style=''>      { if (targetPath != null) &lt;targetPath&gt;{targetPath}&lt;/targetPath&gt; }
+</span>324 <span style=''>      &lt;filtering&gt;{filtering}&lt;/filtering&gt;
+</span>325 <span style=''>      &lt;directory&gt;{directory}&lt;/directory&gt;
+</span>326 <span style=''>      { if (!includes.isEmpty) &lt;includes&gt;
+</span>327 <span style=''>        { includes.map { Include(_).xml } }
+</span>328 <span style=''>        &lt;/includes&gt; }
+</span>329 <span style=''>      { if (!excludes.isEmpty) &lt;excludes&gt;
+</span>330 <span style=''>        { excludes.map { Exclude(_).xml } }
+</span>331 <span style=''>        &lt;/excludes&gt; }
+</span>332 <span style=''>    &lt;/resource&gt;
+</span>333 <span style=''>
+</span>334 <span style=''>  lazy val testXml =
+</span>335 <span style=''>    &lt;testResource&gt;
+</span>336 <span style=''>      { if (targetPath != null) &lt;targetPath&gt;{targetPath}&lt;/targetPath&gt; }
+</span>337 <span style=''>      &lt;filtering&gt;{filtering}&lt;/filtering&gt;
+</span>338 <span style=''>      &lt;directory&gt;{directory}&lt;/directory&gt;
+</span>339 <span style=''>      { if (!includes.isEmpty) &lt;includes&gt;
+</span>340 <span style=''>        { includes.map { Include(_).xml } }
+</span>341 <span style=''>        &lt;/includes&gt; }
+</span>342 <span style=''>      { if (!excludes.isEmpty) &lt;excludes&gt;
+</span>343 <span style=''>        { excludes.map { Exclude(_).xml } }
+</span>344 <span style=''>        &lt;/excludes&gt; }
+</span>345 <span style=''>    &lt;/testResource&gt;
+</span>346 <span style=''>
+</span>347 <span style=''>  def makeModelObject(): org.apache.maven.model.Resource = {
+</span>348 <span style=''>    val resource = </span><span style='background: #AEF1AE'>new org.apache.maven.model.Resource()</span><span style=''>
+</span>349 <span style=''>    if (</span><span style='background: #AEF1AE'>targetPath != null</span><span style=''>) </span><span style='background: #AEF1AE'>resource.setTargetPath(targetPath)</span><span style=''>
+</span>350 <span style=''>    </span><span style='background: #AEF1AE'>resource.setFiltering(filtering)</span><span style=''>
+</span>351 <span style=''>    </span><span style='background: #AEF1AE'>resource.setDirectory(directory)</span><span style=''>
+</span>352 <span style=''>    </span><span style='background: #AEF1AE'>includes.foreach { inc =&gt; resource.addInclude(inc) }</span><span style=''>
+</span>353 <span style=''>    </span><span style='background: #AEF1AE'>excludes.foreach { exc =&gt; </span><span style='background: #F0ADAD'>resource.addExclude(exc)</span><span style='background: #AEF1AE'> }</span><span style=''>
+</span>354 <span style=''>    resource
+</span>355 <span style=''>  }
+</span>356 <span style=''>}
+</span>357 <span style=''>
+</span>358 <span style=''>case class Include(include: String) {
+</span>359 <span style=''>  lazy val xml = &lt;include&gt;{include}&lt;/include&gt;
+</span>360 <span style=''>}
+</span>361 <span style=''>
+</span>362 <span style=''>case class Exclude(exclude: String) {
+</span>363 <span style=''>  lazy val xml = &lt;exclude&gt;{exclude}&lt;/exclude&gt;
+</span>364 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          134
+        </td>
+        <td>
+          1114
+          -
+          1132
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #AEF1AE">
+          JsonReader.formats
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          135
+        </td>
+        <td>
+          1154
+          -
+          1169
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          &quot;src/main/java&quot;
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          136
+        </td>
+        <td>
+          1191
+          -
+          1209
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          &quot;src/main/scripts&quot;
+        </td>
+      </tr><tr>
+        <td>
+          33
+        </td>
+        <td>
+          137
+        </td>
+        <td>
+          1229
+          -
+          1244
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          &quot;src/test/java&quot;
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          138
+        </td>
+        <td>
+          1266
+          -
+          1282
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          &quot;target/classes&quot;
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          139
+        </td>
+        <td>
+          1308
+          -
+          1329
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          &quot;target/test-classes&quot;
+        </td>
+      </tr><tr>
+        <td>
+          36
+        </td>
+        <td>
+          140
+        </td>
+        <td>
+          1354
+          -
+          1374
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          &quot;src/main/resources&quot;
+        </td>
+      </tr><tr>
+        <td>
+          37
+        </td>
+        <td>
+          141
+        </td>
+        <td>
+          1403
+          -
+          1423
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          &quot;src/test/resources&quot;
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          142
+        </td>
+        <td>
+          1491
+          -
+          1518
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectOutputStream.defaultWriteObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultWriteObject()
+        </td>
+      </tr><tr>
+        <td>
+          43
+        </td>
+        <td>
+          143
+        </td>
+        <td>
+          1584
+          -
+          1610
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectInputStream.defaultReadObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultReadObject()
+        </td>
+      </tr><tr>
+        <td>
+          99
+        </td>
+        <td>
+          146
+        </td>
+        <td>
+          4053
+          -
+          4054
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          0
+        </td>
+      </tr><tr>
+        <td>
+          99
+        </td>
+        <td>
+          145
+        </td>
+        <td>
+          4041
+          -
+          4045
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          null
+        </td>
+      </tr><tr>
+        <td>
+          99
+        </td>
+        <td>
+          148
+        </td>
+        <td>
+          4041
+          -
+          4066
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          null.==(res.apply(0).targetPath)
+        </td>
+      </tr><tr>
+        <td>
+          99
+        </td>
+        <td>
+          147
+        </td>
+        <td>
+          4049
+          -
+          4066
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Resource.targetPath
+        </td>
+        <td style="background: #AEF1AE">
+          res.apply(0).targetPath
+        </td>
+      </tr><tr>
+        <td>
+          99
+        </td>
+        <td>
+          144
+        </td>
+        <td>
+          4036
+          -
+          4037
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          1
+        </td>
+      </tr><tr>
+        <td>
+          100
+        </td>
+        <td>
+          149
+        </td>
+        <td>
+          4078
+          -
+          4079
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          0
+        </td>
+      </tr><tr>
+        <td>
+          100
+        </td>
+        <td>
+          151
+        </td>
+        <td>
+          4074
+          -
+          4109
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          res.apply(0).directory.==(unbound.this.`package`.SL.Dot.toString())
+        </td>
+      </tr><tr>
+        <td>
+          100
+        </td>
+        <td>
+          150
+        </td>
+        <td>
+          4094
+          -
+          4109
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Dot.toString
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Dot.toString()
+        </td>
+      </tr><tr>
+        <td>
+          100
+        </td>
+        <td>
+          152
+        </td>
+        <td>
+          4113
+          -
+          4138
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Int.==
+        </td>
+        <td style="background: #AEF1AE">
+          res.apply(0).includes.size.==(1)
+        </td>
+      </tr><tr>
+        <td>
+          101
+        </td>
+        <td>
+          155
+        </td>
+        <td>
+          4191
+          -
+          4192
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          0
+        </td>
+      </tr><tr>
+        <td>
+          101
+        </td>
+        <td>
+          158
+        </td>
+        <td>
+          4024
+          -
+          4218
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Boolean.&amp;&amp;
+        </td>
+        <td style="background: #AEF1AE">
+          res.size.==(1).&amp;&amp;(null.==(res.apply(0).targetPath)).&amp;&amp;(res.apply(0).directory.==(unbound.this.`package`.SL.Dot.toString())).&amp;&amp;(res.apply(0).includes.size.==(1)).&amp;&amp;(res.apply(0).excludes.size.==(0)).&amp;&amp;(res.apply(0).includes.apply(0).==(Build.defResourcesDir))
+        </td>
+      </tr><tr>
+        <td>
+          101
+        </td>
+        <td>
+          154
+        </td>
+        <td>
+          4179
+          -
+          4180
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          0
+        </td>
+      </tr><tr>
+        <td>
+          101
+        </td>
+        <td>
+          157
+        </td>
+        <td>
+          4175
+          -
+          4218
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          res.apply(0).includes.apply(0).==(Build.defResourcesDir)
+        </td>
+      </tr><tr>
+        <td>
+          101
+        </td>
+        <td>
+          156
+        </td>
+        <td>
+          4197
+          -
+          4218
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Build.defResourcesDir
+        </td>
+        <td style="background: #AEF1AE">
+          Build.defResourcesDir
+        </td>
+      </tr><tr>
+        <td>
+          101
+        </td>
+        <td>
+          153
+        </td>
+        <td>
+          4146
+          -
+          4171
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Int.==
+        </td>
+        <td style="background: #AEF1AE">
+          res.apply(0).excludes.size.==(0)
+        </td>
+      </tr><tr>
+        <td>
+          105
+        </td>
+        <td>
+          160
+        </td>
+        <td>
+          4326
+          -
+          4330
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          null
+        </td>
+      </tr><tr>
+        <td>
+          105
+        </td>
+        <td>
+          163
+        </td>
+        <td>
+          4326
+          -
+          4351
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          null.==(res.apply(0).targetPath)
+        </td>
+      </tr><tr>
+        <td>
+          105
+        </td>
+        <td>
+          159
+        </td>
+        <td>
+          4321
+          -
+          4322
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          1
+        </td>
+      </tr><tr>
+        <td>
+          105
+        </td>
+        <td>
+          162
+        </td>
+        <td>
+          4334
+          -
+          4351
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Resource.targetPath
+        </td>
+        <td style="background: #AEF1AE">
+          res.apply(0).targetPath
+        </td>
+      </tr><tr>
+        <td>
+          105
+        </td>
+        <td>
+          161
+        </td>
+        <td>
+          4338
+          -
+          4339
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          0
+        </td>
+      </tr><tr>
+        <td>
+          106
+        </td>
+        <td>
+          164
+        </td>
+        <td>
+          4363
+          -
+          4364
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          0
+        </td>
+      </tr><tr>
+        <td>
+          106
+        </td>
+        <td>
+          167
+        </td>
+        <td>
+          4398
+          -
+          4423
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Int.==
+        </td>
+        <td style="background: #AEF1AE">
+          res.apply(0).includes.size.==(1)
+        </td>
+      </tr><tr>
+        <td>
+          106
+        </td>
+        <td>
+          166
+        </td>
+        <td>
+          4359
+          -
+          4394
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          res.apply(0).directory.==(unbound.this.`package`.SL.Dot.toString())
+        </td>
+      </tr><tr>
+        <td>
+          106
+        </td>
+        <td>
+          165
+        </td>
+        <td>
+          4379
+          -
+          4394
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Dot.toString
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Dot.toString()
+        </td>
+      </tr><tr>
+        <td>
+          107
+        </td>
+        <td>
+          173
+        </td>
+        <td>
+          4309
+          -
+          4507
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Boolean.&amp;&amp;
+        </td>
+        <td style="background: #AEF1AE">
+          res.size.==(1).&amp;&amp;(null.==(res.apply(0).targetPath)).&amp;&amp;(res.apply(0).directory.==(unbound.this.`package`.SL.Dot.toString())).&amp;&amp;(res.apply(0).includes.size.==(1)).&amp;&amp;(res.apply(0).excludes.size.==(0)).&amp;&amp;(res.apply(0).includes.apply(0).==(Build.defTestResourcesDir))
+        </td>
+      </tr><tr>
+        <td>
+          107
+        </td>
+        <td>
+          169
+        </td>
+        <td>
+          4464
+          -
+          4465
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          0
+        </td>
+      </tr><tr>
+        <td>
+          107
+        </td>
+        <td>
+          172
+        </td>
+        <td>
+          4460
+          -
+          4507
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          res.apply(0).includes.apply(0).==(Build.defTestResourcesDir)
+        </td>
+      </tr><tr>
+        <td>
+          107
+        </td>
+        <td>
+          168
+        </td>
+        <td>
+          4431
+          -
+          4456
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Int.==
+        </td>
+        <td style="background: #AEF1AE">
+          res.apply(0).excludes.size.==(0)
+        </td>
+      </tr><tr>
+        <td>
+          107
+        </td>
+        <td>
+          171
+        </td>
+        <td>
+          4482
+          -
+          4507
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Build.defTestResourcesDir
+        </td>
+        <td style="background: #AEF1AE">
+          Build.defTestResourcesDir
+        </td>
+      </tr><tr>
+        <td>
+          107
+        </td>
+        <td>
+          170
+        </td>
+        <td>
+          4476
+          -
+          4477
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          0
+        </td>
+      </tr><tr>
+        <td>
+          128
+        </td>
+        <td>
+          264
+        </td>
+        <td>
+          5291
+          -
+          5291
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          128
+        </td>
+        <td>
+          263
+        </td>
+        <td>
+          5291
+          -
+          6497
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Build.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          Build.this.&lt;init&gt;(unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SourceDirectory)).text, Build.defSourceDir), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.ScriptSourceDirectory)).text, Build.defScriptDir), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TestSourceDirectory)).text, Build.defTestDir), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.OutputDirectory)).text, Build.defOutputDir), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TestOutputDirectory)).text, Build.defTestOutputDir), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Extensions)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.ExtensionStr)).map[org.apache.maven.unbound.Extension, Seq[org.apache.maven.unbound.Extension]](((x0$1: scala.xml.Node) =&gt; x0$1 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new Extension(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Extension]), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.DefaultGoal)).text), unbound.this.`package`.ensureDefault[org.apache.maven.unbound.Resource](elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Resources)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.ResourceStr)).map[org.apache.maven.unbound.Resource, Seq[org.apache.maven.unbound.Resource]](((x0$2: scala.xml.Node) =&gt; x0$2 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new Resource(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Resource]), new Resource(Build.defResourcesDir)), unbound.this.`package`.ensureDefault[org.apache.maven.unbound.Resource](elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TestResources)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.TestResource)).map[org.apache.maven.unbound.Resource, Seq[org.apache.maven.unbound.Resource]](((x0$3: scala.xml.Node) =&gt; x0$3 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new Resource(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Resource]), new Resource(Build.defTestResourcesDir)), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryStr)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.Target)), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.FinalName)).text), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Filters)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.FilterStr)).map[String, Seq[String]](((x$1: scala.xml.Node) =&gt; x$1.text))(immutable.this.Seq.canBuildFrom[String]), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.PluginManagement)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.Plugins)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.PluginStr)).map[org.apache.maven.unbound.Plugin, Seq[org.apache.maven.unbound.Plugin]](((x0$4: scala.xml.Node) =&gt; x0$4 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new Plugin(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Plugin]), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Plugins)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.PluginStr)).map[org.apache.maven.unbound.Plugin, Seq[org.apache.maven.unbound.Plugin]](((x0$5: scala.xml.Node) =&gt; x0$5 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new Plugin(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Plugin]))
+        </td>
+      </tr><tr>
+        <td>
+          129
+        </td>
+        <td>
+          176
+        </td>
+        <td>
+          5317
+          -
+          5348
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SourceDirectory)).text
+        </td>
+      </tr><tr>
+        <td>
+          129
+        </td>
+        <td>
+          175
+        </td>
+        <td>
+          5324
+          -
+          5342
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.SourceDirectory)
+        </td>
+      </tr><tr>
+        <td>
+          129
+        </td>
+        <td>
+          178
+        </td>
+        <td>
+          5301
+          -
+          5369
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToDefault
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SourceDirectory)).text, Build.defSourceDir)
+        </td>
+      </tr><tr>
+        <td>
+          129
+        </td>
+        <td>
+          174
+        </td>
+        <td>
+          5324
+          -
+          5342
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.SourceDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.SourceDirectory
+        </td>
+      </tr><tr>
+        <td>
+          129
+        </td>
+        <td>
+          177
+        </td>
+        <td>
+          5350
+          -
+          5368
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Build.defSourceDir
+        </td>
+        <td style="background: #AEF1AE">
+          Build.defSourceDir
+        </td>
+      </tr><tr>
+        <td>
+          130
+        </td>
+        <td>
+          182
+        </td>
+        <td>
+          5430
+          -
+          5448
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Build.defScriptDir
+        </td>
+        <td style="background: #AEF1AE">
+          Build.defScriptDir
+        </td>
+      </tr><tr>
+        <td>
+          130
+        </td>
+        <td>
+          181
+        </td>
+        <td>
+          5391
+          -
+          5428
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.ScriptSourceDirectory)).text
+        </td>
+      </tr><tr>
+        <td>
+          130
+        </td>
+        <td>
+          180
+        </td>
+        <td>
+          5398
+          -
+          5422
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.ScriptSourceDirectory)
+        </td>
+      </tr><tr>
+        <td>
+          130
+        </td>
+        <td>
+          183
+        </td>
+        <td>
+          5375
+          -
+          5449
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToDefault
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.ScriptSourceDirectory)).text, Build.defScriptDir)
+        </td>
+      </tr><tr>
+        <td>
+          130
+        </td>
+        <td>
+          179
+        </td>
+        <td>
+          5398
+          -
+          5422
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.ScriptSourceDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.ScriptSourceDirectory
+        </td>
+      </tr><tr>
+        <td>
+          131
+        </td>
+        <td>
+          185
+        </td>
+        <td>
+          5478
+          -
+          5500
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.TestSourceDirectory)
+        </td>
+      </tr><tr>
+        <td>
+          131
+        </td>
+        <td>
+          184
+        </td>
+        <td>
+          5478
+          -
+          5500
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TestSourceDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TestSourceDirectory
+        </td>
+      </tr><tr>
+        <td>
+          131
+        </td>
+        <td>
+          187
+        </td>
+        <td>
+          5508
+          -
+          5524
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Build.defTestDir
+        </td>
+        <td style="background: #AEF1AE">
+          Build.defTestDir
+        </td>
+      </tr><tr>
+        <td>
+          131
+        </td>
+        <td>
+          186
+        </td>
+        <td>
+          5471
+          -
+          5506
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TestSourceDirectory)).text
+        </td>
+      </tr><tr>
+        <td>
+          131
+        </td>
+        <td>
+          188
+        </td>
+        <td>
+          5455
+          -
+          5525
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToDefault
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TestSourceDirectory)).text, Build.defTestDir)
+        </td>
+      </tr><tr>
+        <td>
+          132
+        </td>
+        <td>
+          191
+        </td>
+        <td>
+          5547
+          -
+          5578
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.OutputDirectory)).text
+        </td>
+      </tr><tr>
+        <td>
+          132
+        </td>
+        <td>
+          193
+        </td>
+        <td>
+          5531
+          -
+          5599
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToDefault
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.OutputDirectory)).text, Build.defOutputDir)
+        </td>
+      </tr><tr>
+        <td>
+          132
+        </td>
+        <td>
+          190
+        </td>
+        <td>
+          5554
+          -
+          5572
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.OutputDirectory)
+        </td>
+      </tr><tr>
+        <td>
+          132
+        </td>
+        <td>
+          189
+        </td>
+        <td>
+          5554
+          -
+          5572
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.OutputDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.OutputDirectory
+        </td>
+      </tr><tr>
+        <td>
+          132
+        </td>
+        <td>
+          192
+        </td>
+        <td>
+          5580
+          -
+          5598
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Build.defOutputDir
+        </td>
+        <td style="background: #AEF1AE">
+          Build.defOutputDir
+        </td>
+      </tr><tr>
+        <td>
+          133
+        </td>
+        <td>
+          198
+        </td>
+        <td>
+          5605
+          -
+          5688
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToDefault
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TestOutputDirectory)).text, Build.defTestOutputDir)
+        </td>
+      </tr><tr>
+        <td>
+          134
+        </td>
+        <td>
+          194
+        </td>
+        <td>
+          5635
+          -
+          5657
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TestOutputDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TestOutputDirectory
+        </td>
+      </tr><tr>
+        <td>
+          134
+        </td>
+        <td>
+          196
+        </td>
+        <td>
+          5628
+          -
+          5663
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TestOutputDirectory)).text
+        </td>
+      </tr><tr>
+        <td>
+          134
+        </td>
+        <td>
+          195
+        </td>
+        <td>
+          5635
+          -
+          5657
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.TestOutputDirectory)
+        </td>
+      </tr><tr>
+        <td>
+          134
+        </td>
+        <td>
+          197
+        </td>
+        <td>
+          5665
+          -
+          5687
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Build.defTestOutputDir
+        </td>
+        <td style="background: #AEF1AE">
+          Build.defTestOutputDir
+        </td>
+      </tr><tr>
+        <td>
+          135
+        </td>
+        <td>
+          200
+        </td>
+        <td>
+          5702
+          -
+          5715
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Extensions)
+        </td>
+      </tr><tr>
+        <td>
+          135
+        </td>
+        <td>
+          202
+        </td>
+        <td>
+          5718
+          -
+          5733
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.ExtensionStr)
+        </td>
+      </tr><tr>
+        <td>
+          135
+        </td>
+        <td>
+          205
+        </td>
+        <td>
+          5695
+          -
+          5780
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Extensions)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.ExtensionStr)).map[org.apache.maven.unbound.Extension, Seq[org.apache.maven.unbound.Extension]](((x0$1: scala.xml.Node) =&gt; x0$1 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new Extension(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Extension])
+        </td>
+      </tr><tr>
+        <td>
+          135
+        </td>
+        <td>
+          199
+        </td>
+        <td>
+          5702
+          -
+          5715
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Extensions
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Extensions
+        </td>
+      </tr><tr>
+        <td>
+          135
+        </td>
+        <td>
+          201
+        </td>
+        <td>
+          5718
+          -
+          5733
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.ExtensionStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.ExtensionStr
+        </td>
+      </tr><tr>
+        <td>
+          135
+        </td>
+        <td>
+          204
+        </td>
+        <td>
+          5739
+          -
+          5739
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Extension]
+        </td>
+      </tr><tr>
+        <td>
+          136
+        </td>
+        <td>
+          203
+        </td>
+        <td>
+          5763
+          -
+          5779
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Extension.&lt;init&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          new Extension(e)
+        </td>
+      </tr><tr>
+        <td>
+          137
+        </td>
+        <td>
+          209
+        </td>
+        <td>
+          5786
+          -
+          5827
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.DefaultGoal)).text)
+        </td>
+      </tr><tr>
+        <td>
+          137
+        </td>
+        <td>
+          208
+        </td>
+        <td>
+          5799
+          -
+          5826
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.DefaultGoal)).text
+        </td>
+      </tr><tr>
+        <td>
+          137
+        </td>
+        <td>
+          207
+        </td>
+        <td>
+          5806
+          -
+          5820
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.DefaultGoal)
+        </td>
+      </tr><tr>
+        <td>
+          137
+        </td>
+        <td>
+          206
+        </td>
+        <td>
+          5806
+          -
+          5820
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.DefaultGoal
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.DefaultGoal
+        </td>
+      </tr><tr>
+        <td>
+          138
+        </td>
+        <td>
+          219
+        </td>
+        <td>
+          5833
+          -
+          5984
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ensureDefault
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.ensureDefault[org.apache.maven.unbound.Resource](elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Resources)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.ResourceStr)).map[org.apache.maven.unbound.Resource, Seq[org.apache.maven.unbound.Resource]](((x0$2: scala.xml.Node) =&gt; x0$2 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new Resource(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Resource]), new Resource(Build.defResourcesDir))
+        </td>
+      </tr><tr>
+        <td>
+          139
+        </td>
+        <td>
+          211
+        </td>
+        <td>
+          5862
+          -
+          5874
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Resources)
+        </td>
+      </tr><tr>
+        <td>
+          139
+        </td>
+        <td>
+          216
+        </td>
+        <td>
+          5855
+          -
+          5940
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Resources)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.ResourceStr)).map[org.apache.maven.unbound.Resource, Seq[org.apache.maven.unbound.Resource]](((x0$2: scala.xml.Node) =&gt; x0$2 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new Resource(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Resource])
+        </td>
+      </tr><tr>
+        <td>
+          139
+        </td>
+        <td>
+          210
+        </td>
+        <td>
+          5862
+          -
+          5874
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Resources
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Resources
+        </td>
+      </tr><tr>
+        <td>
+          139
+        </td>
+        <td>
+          213
+        </td>
+        <td>
+          5877
+          -
+          5891
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.ResourceStr)
+        </td>
+      </tr><tr>
+        <td>
+          139
+        </td>
+        <td>
+          212
+        </td>
+        <td>
+          5877
+          -
+          5891
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.ResourceStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.ResourceStr
+        </td>
+      </tr><tr>
+        <td>
+          139
+        </td>
+        <td>
+          215
+        </td>
+        <td>
+          5897
+          -
+          5897
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Resource]
+        </td>
+      </tr><tr>
+        <td>
+          140
+        </td>
+        <td>
+          214
+        </td>
+        <td>
+          5923
+          -
+          5938
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Resource.&lt;init&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          new Resource(e)
+        </td>
+      </tr><tr>
+        <td>
+          141
+        </td>
+        <td>
+          218
+        </td>
+        <td>
+          5948
+          -
+          5983
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Resource.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Resource(Build.defResourcesDir)
+        </td>
+      </tr><tr>
+        <td>
+          141
+        </td>
+        <td>
+          217
+        </td>
+        <td>
+          5961
+          -
+          5982
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Build.defResourcesDir
+        </td>
+        <td style="background: #AEF1AE">
+          Build.defResourcesDir
+        </td>
+      </tr><tr>
+        <td>
+          142
+        </td>
+        <td>
+          229
+        </td>
+        <td>
+          5990
+          -
+          6150
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ensureDefault
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.ensureDefault[org.apache.maven.unbound.Resource](elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TestResources)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.TestResource)).map[org.apache.maven.unbound.Resource, Seq[org.apache.maven.unbound.Resource]](((x0$3: scala.xml.Node) =&gt; x0$3 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new Resource(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Resource]), new Resource(Build.defTestResourcesDir))
+        </td>
+      </tr><tr>
+        <td>
+          143
+        </td>
+        <td>
+          226
+        </td>
+        <td>
+          6012
+          -
+          6102
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TestResources)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.TestResource)).map[org.apache.maven.unbound.Resource, Seq[org.apache.maven.unbound.Resource]](((x0$3: scala.xml.Node) =&gt; x0$3 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new Resource(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Resource])
+        </td>
+      </tr><tr>
+        <td>
+          143
+        </td>
+        <td>
+          220
+        </td>
+        <td>
+          6019
+          -
+          6035
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TestResources
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TestResources
+        </td>
+      </tr><tr>
+        <td>
+          143
+        </td>
+        <td>
+          223
+        </td>
+        <td>
+          6038
+          -
+          6053
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.TestResource)
+        </td>
+      </tr><tr>
+        <td>
+          143
+        </td>
+        <td>
+          225
+        </td>
+        <td>
+          6059
+          -
+          6059
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Resource]
+        </td>
+      </tr><tr>
+        <td>
+          143
+        </td>
+        <td>
+          222
+        </td>
+        <td>
+          6038
+          -
+          6053
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TestResource
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TestResource
+        </td>
+      </tr><tr>
+        <td>
+          143
+        </td>
+        <td>
+          221
+        </td>
+        <td>
+          6019
+          -
+          6035
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.TestResources)
+        </td>
+      </tr><tr>
+        <td>
+          144
+        </td>
+        <td>
+          224
+        </td>
+        <td>
+          6085
+          -
+          6100
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Resource.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Resource(e)
+        </td>
+      </tr><tr>
+        <td>
+          145
+        </td>
+        <td>
+          227
+        </td>
+        <td>
+          6123
+          -
+          6148
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Build.defTestResourcesDir
+        </td>
+        <td style="background: #AEF1AE">
+          Build.defTestResourcesDir
+        </td>
+      </tr><tr>
+        <td>
+          145
+        </td>
+        <td>
+          228
+        </td>
+        <td>
+          6110
+          -
+          6149
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Resource.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Resource(Build.defTestResourcesDir)
+        </td>
+      </tr><tr>
+        <td>
+          146
+        </td>
+        <td>
+          235
+        </td>
+        <td>
+          6156
+          -
+          6212
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToDefault
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryStr)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.Target))
+        </td>
+      </tr><tr>
+        <td>
+          146
+        </td>
+        <td>
+          232
+        </td>
+        <td>
+          6172
+          -
+          6200
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryStr)).text
+        </td>
+      </tr><tr>
+        <td>
+          146
+        </td>
+        <td>
+          234
+        </td>
+        <td>
+          6202
+          -
+          6211
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Target)
+        </td>
+      </tr><tr>
+        <td>
+          146
+        </td>
+        <td>
+          231
+        </td>
+        <td>
+          6179
+          -
+          6194
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryStr)
+        </td>
+      </tr><tr>
+        <td>
+          146
+        </td>
+        <td>
+          230
+        </td>
+        <td>
+          6179
+          -
+          6194
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.DirectoryStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.DirectoryStr
+        </td>
+      </tr><tr>
+        <td>
+          146
+        </td>
+        <td>
+          233
+        </td>
+        <td>
+          6202
+          -
+          6211
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Target
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Target
+        </td>
+      </tr><tr>
+        <td>
+          147
+        </td>
+        <td>
+          236
+        </td>
+        <td>
+          6238
+          -
+          6250
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.FinalName
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.FinalName
+        </td>
+      </tr><tr>
+        <td>
+          147
+        </td>
+        <td>
+          238
+        </td>
+        <td>
+          6231
+          -
+          6256
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.FinalName)).text
+        </td>
+      </tr><tr>
+        <td>
+          147
+        </td>
+        <td>
+          237
+        </td>
+        <td>
+          6238
+          -
+          6250
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.FinalName)
+        </td>
+      </tr><tr>
+        <td>
+          147
+        </td>
+        <td>
+          239
+        </td>
+        <td>
+          6218
+          -
+          6257
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.FinalName)).text)
+        </td>
+      </tr><tr>
+        <td>
+          148
+        </td>
+        <td>
+          245
+        </td>
+        <td>
+          6302
+          -
+          6302
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Seq.canBuildFrom[String]
+        </td>
+      </tr><tr>
+        <td>
+          148
+        </td>
+        <td>
+          244
+        </td>
+        <td>
+          6304
+          -
+          6310
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Node.text
+        </td>
+        <td style="background: #F0ADAD">
+          x$1.text
+        </td>
+      </tr><tr>
+        <td>
+          148
+        </td>
+        <td>
+          241
+        </td>
+        <td>
+          6271
+          -
+          6281
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Filters)
+        </td>
+      </tr><tr>
+        <td>
+          148
+        </td>
+        <td>
+          240
+        </td>
+        <td>
+          6271
+          -
+          6281
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Filters
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Filters
+        </td>
+      </tr><tr>
+        <td>
+          148
+        </td>
+        <td>
+          243
+        </td>
+        <td>
+          6284
+          -
+          6296
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.FilterStr)
+        </td>
+      </tr><tr>
+        <td>
+          148
+        </td>
+        <td>
+          246
+        </td>
+        <td>
+          6264
+          -
+          6312
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Filters)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.FilterStr)).map[String, Seq[String]](((x$1: scala.xml.Node) =&gt; x$1.text))(immutable.this.Seq.canBuildFrom[String])
+        </td>
+      </tr><tr>
+        <td>
+          148
+        </td>
+        <td>
+          242
+        </td>
+        <td>
+          6284
+          -
+          6296
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.FilterStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.FilterStr
+        </td>
+      </tr><tr>
+        <td>
+          149
+        </td>
+        <td>
+          254
+        </td>
+        <td>
+          6379
+          -
+          6379
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Plugin]
+        </td>
+      </tr><tr>
+        <td>
+          149
+        </td>
+        <td>
+          247
+        </td>
+        <td>
+          6326
+          -
+          6345
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.PluginManagement
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.PluginManagement
+        </td>
+      </tr><tr>
+        <td>
+          149
+        </td>
+        <td>
+          250
+        </td>
+        <td>
+          6348
+          -
+          6358
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Plugins)
+        </td>
+      </tr><tr>
+        <td>
+          149
+        </td>
+        <td>
+          249
+        </td>
+        <td>
+          6348
+          -
+          6358
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Plugins
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Plugins
+        </td>
+      </tr><tr>
+        <td>
+          149
+        </td>
+        <td>
+          252
+        </td>
+        <td>
+          6361
+          -
+          6373
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.PluginStr)
+        </td>
+      </tr><tr>
+        <td>
+          149
+        </td>
+        <td>
+          255
+        </td>
+        <td>
+          6319
+          -
+          6418
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.PluginManagement)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.Plugins)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.PluginStr)).map[org.apache.maven.unbound.Plugin, Seq[org.apache.maven.unbound.Plugin]](((x0$4: scala.xml.Node) =&gt; x0$4 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new Plugin(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Plugin])
+        </td>
+      </tr><tr>
+        <td>
+          149
+        </td>
+        <td>
+          248
+        </td>
+        <td>
+          6326
+          -
+          6345
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.PluginManagement)
+        </td>
+      </tr><tr>
+        <td>
+          149
+        </td>
+        <td>
+          251
+        </td>
+        <td>
+          6361
+          -
+          6373
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.PluginStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.PluginStr
+        </td>
+      </tr><tr>
+        <td>
+          150
+        </td>
+        <td>
+          253
+        </td>
+        <td>
+          6403
+          -
+          6416
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Plugin.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Plugin(e)
+        </td>
+      </tr><tr>
+        <td>
+          151
+        </td>
+        <td>
+          262
+        </td>
+        <td>
+          6425
+          -
+          6496
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Plugins)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.PluginStr)).map[org.apache.maven.unbound.Plugin, Seq[org.apache.maven.unbound.Plugin]](((x0$5: scala.xml.Node) =&gt; x0$5 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new Plugin(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Plugin])
+        </td>
+      </tr><tr>
+        <td>
+          151
+        </td>
+        <td>
+          256
+        </td>
+        <td>
+          6432
+          -
+          6442
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Plugins
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Plugins
+        </td>
+      </tr><tr>
+        <td>
+          151
+        </td>
+        <td>
+          259
+        </td>
+        <td>
+          6445
+          -
+          6457
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.PluginStr)
+        </td>
+      </tr><tr>
+        <td>
+          151
+        </td>
+        <td>
+          258
+        </td>
+        <td>
+          6445
+          -
+          6457
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.PluginStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.PluginStr
+        </td>
+      </tr><tr>
+        <td>
+          151
+        </td>
+        <td>
+          261
+        </td>
+        <td>
+          6463
+          -
+          6463
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Plugin]
+        </td>
+      </tr><tr>
+        <td>
+          151
+        </td>
+        <td>
+          257
+        </td>
+        <td>
+          6432
+          -
+          6442
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Plugins)
+        </td>
+      </tr><tr>
+        <td>
+          151
+        </td>
+        <td>
+          260
+        </td>
+        <td>
+          6481
+          -
+          6494
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Plugin.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Plugin(e)
+        </td>
+      </tr><tr>
+        <td>
+          192
+        </td>
+        <td>
+          265
+        </td>
+        <td>
+          8433
+          -
+          8467
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Build.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new org.apache.maven.model.Build()
+        </td>
+      </tr><tr>
+        <td>
+          193
+        </td>
+        <td>
+          267
+        </td>
+        <td>
+          8472
+          -
+          8513
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Build.setSourceDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          build.setSourceDirectory(Build.this.sourceDirectory)
+        </td>
+      </tr><tr>
+        <td>
+          193
+        </td>
+        <td>
+          266
+        </td>
+        <td>
+          8497
+          -
+          8512
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Build.sourceDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          Build.this.sourceDirectory
+        </td>
+      </tr><tr>
+        <td>
+          194
+        </td>
+        <td>
+          268
+        </td>
+        <td>
+          8549
+          -
+          8570
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Build.scriptSourceDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          Build.this.scriptSourceDirectory
+        </td>
+      </tr><tr>
+        <td>
+          194
+        </td>
+        <td>
+          269
+        </td>
+        <td>
+          8518
+          -
+          8571
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Build.setScriptSourceDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          build.setScriptSourceDirectory(Build.this.scriptSourceDirectory)
+        </td>
+      </tr><tr>
+        <td>
+          195
+        </td>
+        <td>
+          271
+        </td>
+        <td>
+          8576
+          -
+          8625
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Build.setTestSourceDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          build.setTestSourceDirectory(Build.this.testSourceDirectory)
+        </td>
+      </tr><tr>
+        <td>
+          195
+        </td>
+        <td>
+          270
+        </td>
+        <td>
+          8605
+          -
+          8624
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Build.testSourceDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          Build.this.testSourceDirectory
+        </td>
+      </tr><tr>
+        <td>
+          196
+        </td>
+        <td>
+          273
+        </td>
+        <td>
+          8630
+          -
+          8671
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Build.setOutputDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          build.setOutputDirectory(Build.this.outputDirectory)
+        </td>
+      </tr><tr>
+        <td>
+          196
+        </td>
+        <td>
+          272
+        </td>
+        <td>
+          8655
+          -
+          8670
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Build.outputDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          Build.this.outputDirectory
+        </td>
+      </tr><tr>
+        <td>
+          197
+        </td>
+        <td>
+          274
+        </td>
+        <td>
+          8705
+          -
+          8724
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Build.testOutputDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          Build.this.testOutputDirectory
+        </td>
+      </tr><tr>
+        <td>
+          197
+        </td>
+        <td>
+          275
+        </td>
+        <td>
+          8676
+          -
+          8725
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Build.setTestOutputDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          build.setTestOutputDirectory(Build.this.testOutputDirectory)
+        </td>
+      </tr><tr>
+        <td>
+          198
+        </td>
+        <td>
+          277
+        </td>
+        <td>
+          8757
+          -
+          8797
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Build.addExtension
+        </td>
+        <td style="background: #AEF1AE">
+          build.addExtension(ex.makeModelObject())
+        </td>
+      </tr><tr>
+        <td>
+          198
+        </td>
+        <td>
+          276
+        </td>
+        <td>
+          8776
+          -
+          8796
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Extension.makeModelObject
+        </td>
+        <td style="background: #AEF1AE">
+          ex.makeModelObject()
+        </td>
+      </tr><tr>
+        <td>
+          198
+        </td>
+        <td>
+          278
+        </td>
+        <td>
+          8730
+          -
+          8799
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          Build.this.extensions.foreach[Unit](((ex: org.apache.maven.unbound.Extension) =&gt; build.addExtension(ex.makeModelObject())))
+        </td>
+      </tr><tr>
+        <td>
+          199
+        </td>
+        <td>
+          280
+        </td>
+        <td>
+          8850
+          -
+          8861
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Build.defaultGoal
+        </td>
+        <td style="background: #F0ADAD">
+          Build.this.defaultGoal
+        </td>
+      </tr><tr>
+        <td>
+          199
+        </td>
+        <td>
+          283
+        </td>
+        <td>
+          8804
+          -
+          8804
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          199
+        </td>
+        <td>
+          279
+        </td>
+        <td>
+          8808
+          -
+          8827
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Build.this.defaultGoal.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          199
+        </td>
+        <td>
+          282
+        </td>
+        <td>
+          8829
+          -
+          8862
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.BuildBase.setDefaultGoal
+        </td>
+        <td style="background: #F0ADAD">
+          build.setDefaultGoal(Build.this.defaultGoal)
+        </td>
+      </tr><tr>
+        <td>
+          199
+        </td>
+        <td>
+          281
+        </td>
+        <td>
+          8829
+          -
+          8862
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.BuildBase.setDefaultGoal
+        </td>
+        <td style="background: #F0ADAD">
+          build.setDefaultGoal(Build.this.defaultGoal)
+        </td>
+      </tr><tr>
+        <td>
+          199
+        </td>
+        <td>
+          284
+        </td>
+        <td>
+          8804
+          -
+          8804
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          200
+        </td>
+        <td>
+          286
+        </td>
+        <td>
+          8892
+          -
+          8930
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.BuildBase.addResource
+        </td>
+        <td style="background: #AEF1AE">
+          build.addResource(r.makeModelObject())
+        </td>
+      </tr><tr>
+        <td>
+          200
+        </td>
+        <td>
+          285
+        </td>
+        <td>
+          8910
+          -
+          8929
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Resource.makeModelObject
+        </td>
+        <td style="background: #AEF1AE">
+          r.makeModelObject()
+        </td>
+      </tr><tr>
+        <td>
+          200
+        </td>
+        <td>
+          287
+        </td>
+        <td>
+          8867
+          -
+          8932
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          Build.this.resources.foreach[Unit](((r: org.apache.maven.unbound.Resource) =&gt; build.addResource(r.makeModelObject())))
+        </td>
+      </tr><tr>
+        <td>
+          201
+        </td>
+        <td>
+          289
+        </td>
+        <td>
+          8966
+          -
+          9008
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.BuildBase.addTestResource
+        </td>
+        <td style="background: #AEF1AE">
+          build.addTestResource(r.makeModelObject())
+        </td>
+      </tr><tr>
+        <td>
+          201
+        </td>
+        <td>
+          288
+        </td>
+        <td>
+          8988
+          -
+          9007
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Resource.makeModelObject
+        </td>
+        <td style="background: #AEF1AE">
+          r.makeModelObject()
+        </td>
+      </tr><tr>
+        <td>
+          201
+        </td>
+        <td>
+          290
+        </td>
+        <td>
+          8937
+          -
+          9010
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          Build.this.testResources.foreach[Unit](((r: org.apache.maven.unbound.Resource) =&gt; build.addTestResource(r.makeModelObject())))
+        </td>
+      </tr><tr>
+        <td>
+          202
+        </td>
+        <td>
+          295
+        </td>
+        <td>
+          9015
+          -
+          9015
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          202
+        </td>
+        <td>
+          292
+        </td>
+        <td>
+          9057
+          -
+          9066
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Build.directory
+        </td>
+        <td style="background: #AEF1AE">
+          Build.this.directory
+        </td>
+      </tr><tr>
+        <td>
+          202
+        </td>
+        <td>
+          294
+        </td>
+        <td>
+          9038
+          -
+          9067
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.BuildBase.setDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          build.setDirectory(Build.this.directory)
+        </td>
+      </tr><tr>
+        <td>
+          202
+        </td>
+        <td>
+          291
+        </td>
+        <td>
+          9019
+          -
+          9036
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Build.this.directory.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          202
+        </td>
+        <td>
+          293
+        </td>
+        <td>
+          9038
+          -
+          9067
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.BuildBase.setDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          build.setDirectory(Build.this.directory)
+        </td>
+      </tr><tr>
+        <td>
+          202
+        </td>
+        <td>
+          296
+        </td>
+        <td>
+          9015
+          -
+          9015
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          203
+        </td>
+        <td>
+          298
+        </td>
+        <td>
+          9114
+          -
+          9123
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Build.finalName
+        </td>
+        <td style="background: #F0ADAD">
+          Build.this.finalName
+        </td>
+      </tr><tr>
+        <td>
+          203
+        </td>
+        <td>
+          301
+        </td>
+        <td>
+          9072
+          -
+          9072
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          203
+        </td>
+        <td>
+          300
+        </td>
+        <td>
+          9095
+          -
+          9124
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.BuildBase.setFinalName
+        </td>
+        <td style="background: #F0ADAD">
+          build.setFinalName(Build.this.finalName)
+        </td>
+      </tr><tr>
+        <td>
+          203
+        </td>
+        <td>
+          297
+        </td>
+        <td>
+          9076
+          -
+          9093
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Build.this.finalName.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          203
+        </td>
+        <td>
+          299
+        </td>
+        <td>
+          9095
+          -
+          9124
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.BuildBase.setFinalName
+        </td>
+        <td style="background: #F0ADAD">
+          build.setFinalName(Build.this.finalName)
+        </td>
+      </tr><tr>
+        <td>
+          203
+        </td>
+        <td>
+          302
+        </td>
+        <td>
+          9072
+          -
+          9072
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          204
+        </td>
+        <td>
+          304
+        </td>
+        <td>
+          9129
+          -
+          9172
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          Build.this.filters.foreach[Unit](((f: String) =&gt; build.addFilter(f)))
+        </td>
+      </tr><tr>
+        <td>
+          204
+        </td>
+        <td>
+          303
+        </td>
+        <td>
+          9152
+          -
+          9170
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.BuildBase.addFilter
+        </td>
+        <td style="background: #F0ADAD">
+          build.addFilter(f)
+        </td>
+      </tr><tr>
+        <td>
+          205
+        </td>
+        <td>
+          305
+        </td>
+        <td>
+          9186
+          -
+          9231
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.PluginManagement.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new org.apache.maven.model.PluginManagement()
+        </td>
+      </tr><tr>
+        <td>
+          206
+        </td>
+        <td>
+          307
+        </td>
+        <td>
+          9268
+          -
+          9301
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.PluginContainer.addPlugin
+        </td>
+        <td style="background: #AEF1AE">
+          pm.addPlugin(p.makeModelObject())
+        </td>
+      </tr><tr>
+        <td>
+          206
+        </td>
+        <td>
+          306
+        </td>
+        <td>
+          9281
+          -
+          9300
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Plugin.makeModelObject
+        </td>
+        <td style="background: #AEF1AE">
+          p.makeModelObject()
+        </td>
+      </tr><tr>
+        <td>
+          206
+        </td>
+        <td>
+          308
+        </td>
+        <td>
+          9236
+          -
+          9303
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          Build.this.pluginManagement.foreach[Unit](((p: org.apache.maven.unbound.Plugin) =&gt; pm.addPlugin(p.makeModelObject())))
+        </td>
+      </tr><tr>
+        <td>
+          207
+        </td>
+        <td>
+          309
+        </td>
+        <td>
+          9308
+          -
+          9337
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.PluginConfiguration.setPluginManagement
+        </td>
+        <td style="background: #AEF1AE">
+          build.setPluginManagement(pm)
+        </td>
+      </tr><tr>
+        <td>
+          208
+        </td>
+        <td>
+          310
+        </td>
+        <td>
+          9381
+          -
+          9400
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Plugin.makeModelObject
+        </td>
+        <td style="background: #AEF1AE">
+          p.makeModelObject()
+        </td>
+      </tr><tr>
+        <td>
+          208
+        </td>
+        <td>
+          312
+        </td>
+        <td>
+          9342
+          -
+          9403
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          Build.this.plugins.foreach[Unit](((p: org.apache.maven.unbound.Plugin) =&gt; build.addPlugin(p.makeModelObject())))
+        </td>
+      </tr><tr>
+        <td>
+          208
+        </td>
+        <td>
+          311
+        </td>
+        <td>
+          9365
+          -
+          9401
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.PluginContainer.addPlugin
+        </td>
+        <td style="background: #AEF1AE">
+          build.addPlugin(p.makeModelObject())
+        </td>
+      </tr><tr>
+        <td>
+          219
+        </td>
+        <td>
+          313
+        </td>
+        <td>
+          9578
+          -
+          9596
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #AEF1AE">
+          JsonReader.formats
+        </td>
+      </tr><tr>
+        <td>
+          222
+        </td>
+        <td>
+          314
+        </td>
+        <td>
+          9664
+          -
+          9691
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectOutputStream.defaultWriteObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultWriteObject()
+        </td>
+      </tr><tr>
+        <td>
+          225
+        </td>
+        <td>
+          315
+        </td>
+        <td>
+          9757
+          -
+          9783
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectInputStream.defaultReadObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultReadObject()
+        </td>
+      </tr><tr>
+        <td>
+          250
+        </td>
+        <td>
+          328
+        </td>
+        <td>
+          10457
+          -
+          10594
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Extension.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          Extension.this.&lt;init&gt;(unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.GroupId)).text), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.ArtifactId)).text), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Version)).text))
+        </td>
+      </tr><tr>
+        <td>
+          250
+        </td>
+        <td>
+          329
+        </td>
+        <td>
+          10457
+          -
+          10457
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          251
+        </td>
+        <td>
+          316
+        </td>
+        <td>
+          10487
+          -
+          10497
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.GroupId
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.GroupId
+        </td>
+      </tr><tr>
+        <td>
+          251
+        </td>
+        <td>
+          319
+        </td>
+        <td>
+          10467
+          -
+          10504
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.GroupId)).text)
+        </td>
+      </tr><tr>
+        <td>
+          251
+        </td>
+        <td>
+          318
+        </td>
+        <td>
+          10480
+          -
+          10503
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.GroupId)).text
+        </td>
+      </tr><tr>
+        <td>
+          251
+        </td>
+        <td>
+          317
+        </td>
+        <td>
+          10487
+          -
+          10497
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.GroupId)
+        </td>
+      </tr><tr>
+        <td>
+          252
+        </td>
+        <td>
+          322
+        </td>
+        <td>
+          10523
+          -
+          10549
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.ArtifactId)).text
+        </td>
+      </tr><tr>
+        <td>
+          252
+        </td>
+        <td>
+          321
+        </td>
+        <td>
+          10530
+          -
+          10543
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.ArtifactId)
+        </td>
+      </tr><tr>
+        <td>
+          252
+        </td>
+        <td>
+          323
+        </td>
+        <td>
+          10510
+          -
+          10550
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.ArtifactId)).text)
+        </td>
+      </tr><tr>
+        <td>
+          252
+        </td>
+        <td>
+          320
+        </td>
+        <td>
+          10530
+          -
+          10543
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.ArtifactId
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.ArtifactId
+        </td>
+      </tr><tr>
+        <td>
+          253
+        </td>
+        <td>
+          325
+        </td>
+        <td>
+          10576
+          -
+          10586
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Version)
+        </td>
+      </tr><tr>
+        <td>
+          253
+        </td>
+        <td>
+          327
+        </td>
+        <td>
+          10556
+          -
+          10593
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Version)).text)
+        </td>
+      </tr><tr>
+        <td>
+          253
+        </td>
+        <td>
+          324
+        </td>
+        <td>
+          10576
+          -
+          10586
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Version
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Version
+        </td>
+      </tr><tr>
+        <td>
+          253
+        </td>
+        <td>
+          326
+        </td>
+        <td>
+          10569
+          -
+          10592
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Version)).text
+        </td>
+      </tr><tr>
+        <td>
+          263
+        </td>
+        <td>
+          330
+        </td>
+        <td>
+          10921
+          -
+          10959
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Extension.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new org.apache.maven.model.Extension()
+        </td>
+      </tr><tr>
+        <td>
+          264
+        </td>
+        <td>
+          331
+        </td>
+        <td>
+          10985
+          -
+          10992
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Extension.groupId
+        </td>
+        <td style="background: #AEF1AE">
+          Extension.this.groupId
+        </td>
+      </tr><tr>
+        <td>
+          264
+        </td>
+        <td>
+          332
+        </td>
+        <td>
+          10964
+          -
+          10993
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Extension.setGroupId
+        </td>
+        <td style="background: #AEF1AE">
+          extension.setGroupId(Extension.this.groupId)
+        </td>
+      </tr><tr>
+        <td>
+          265
+        </td>
+        <td>
+          334
+        </td>
+        <td>
+          10998
+          -
+          11033
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Extension.setArtifactId
+        </td>
+        <td style="background: #AEF1AE">
+          extension.setArtifactId(Extension.this.artifactId)
+        </td>
+      </tr><tr>
+        <td>
+          265
+        </td>
+        <td>
+          333
+        </td>
+        <td>
+          11022
+          -
+          11032
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Extension.artifactId
+        </td>
+        <td style="background: #AEF1AE">
+          Extension.this.artifactId
+        </td>
+      </tr><tr>
+        <td>
+          266
+        </td>
+        <td>
+          340
+        </td>
+        <td>
+          11038
+          -
+          11038
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          266
+        </td>
+        <td>
+          337
+        </td>
+        <td>
+          11059
+          -
+          11088
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Extension.setVersion
+        </td>
+        <td style="background: #AEF1AE">
+          extension.setVersion(Extension.this.version)
+        </td>
+      </tr><tr>
+        <td>
+          266
+        </td>
+        <td>
+          336
+        </td>
+        <td>
+          11080
+          -
+          11087
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Extension.version
+        </td>
+        <td style="background: #AEF1AE">
+          Extension.this.version
+        </td>
+      </tr><tr>
+        <td>
+          266
+        </td>
+        <td>
+          339
+        </td>
+        <td>
+          11038
+          -
+          11038
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          266
+        </td>
+        <td>
+          335
+        </td>
+        <td>
+          11042
+          -
+          11057
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Extension.this.version.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          266
+        </td>
+        <td>
+          338
+        </td>
+        <td>
+          11059
+          -
+          11088
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.Extension.setVersion
+        </td>
+        <td style="background: #AEF1AE">
+          extension.setVersion(Extension.this.version)
+        </td>
+      </tr><tr>
+        <td>
+          273
+        </td>
+        <td>
+          341
+        </td>
+        <td>
+          11184
+          -
+          11202
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #AEF1AE">
+          JsonReader.formats
+        </td>
+      </tr><tr>
+        <td>
+          276
+        </td>
+        <td>
+          342
+        </td>
+        <td>
+          11270
+          -
+          11297
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectOutputStream.defaultWriteObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultWriteObject()
+        </td>
+      </tr><tr>
+        <td>
+          279
+        </td>
+        <td>
+          343
+        </td>
+        <td>
+          11363
+          -
+          11389
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectInputStream.defaultReadObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultReadObject()
+        </td>
+      </tr><tr>
+        <td>
+          310
+        </td>
+        <td>
+          346
+        </td>
+        <td>
+          12389
+          -
+          12395
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Dot
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Dot
+        </td>
+      </tr><tr>
+        <td>
+          310
+        </td>
+        <td>
+          349
+        </td>
+        <td>
+          12371
+          -
+          12371
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Resource.&lt;init&gt;$default$5
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.Resource.&lt;init&gt;$default$5
+        </td>
+      </tr><tr>
+        <td>
+          310
+        </td>
+        <td>
+          345
+        </td>
+        <td>
+          12382
+          -
+          12387
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          false
+        </td>
+      </tr><tr>
+        <td>
+          310
+        </td>
+        <td>
+          348
+        </td>
+        <td>
+          12397
+          -
+          12414
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.generic.GenericCompanion.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.collection.Seq.apply[String](name)
+        </td>
+      </tr><tr>
+        <td>
+          310
+        </td>
+        <td>
+          351
+        </td>
+        <td>
+          12371
+          -
+          12371
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          310
+        </td>
+        <td>
+          350
+        </td>
+        <td>
+          12371
+          -
+          12415
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Resource.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          Resource.this.&lt;init&gt;(null, false, `package`.this.SL.strToString(unbound.this.`package`.SL.Dot), scala.collection.Seq.apply[String](name), unbound.this.Resource.&lt;init&gt;$default$5)
+        </td>
+      </tr><tr>
+        <td>
+          310
+        </td>
+        <td>
+          344
+        </td>
+        <td>
+          12376
+          -
+          12380
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          null
+        </td>
+      </tr><tr>
+        <td>
+          310
+        </td>
+        <td>
+          347
+        </td>
+        <td>
+          12389
+          -
+          12395
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Dot)
+        </td>
+      </tr><tr>
+        <td>
+          312
+        </td>
+        <td>
+          385
+        </td>
+        <td>
+          12442
+          -
+          12442
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          312
+        </td>
+        <td>
+          384
+        </td>
+        <td>
+          12442
+          -
+          12788
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Resource.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          Resource.this.&lt;init&gt;(unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TargetPath)).text), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Filtering)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.FalseStr)).==(unbound.this.`package`.SL.TrueStr.toString()), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryStr)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.Dot)), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Includes)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.IncludeStr)).map[String, Seq[String]](((x$8: scala.xml.Node) =&gt; x$8.text))(immutable.this.Seq.canBuildFrom[String]), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Excludes)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.ExcludeStr)).map[String, Seq[String]](((x$9: scala.xml.Node) =&gt; x$9.text))(immutable.this.Seq.canBuildFrom[String]))
+        </td>
+      </tr><tr>
+        <td>
+          313
+        </td>
+        <td>
+          355
+        </td>
+        <td>
+          12452
+          -
+          12492
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TargetPath)).text)
+        </td>
+      </tr><tr>
+        <td>
+          313
+        </td>
+        <td>
+          352
+        </td>
+        <td>
+          12472
+          -
+          12485
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TargetPath
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TargetPath
+        </td>
+      </tr><tr>
+        <td>
+          313
+        </td>
+        <td>
+          354
+        </td>
+        <td>
+          12465
+          -
+          12491
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TargetPath)).text
+        </td>
+      </tr><tr>
+        <td>
+          313
+        </td>
+        <td>
+          353
+        </td>
+        <td>
+          12472
+          -
+          12485
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.TargetPath)
+        </td>
+      </tr><tr>
+        <td>
+          315
+        </td>
+        <td>
+          358
+        </td>
+        <td>
+          12559
+          -
+          12570
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          java.util.Locale.ROOT
+        </td>
+        <td style="background: #AEF1AE">
+          java.util.Locale.ROOT
+        </td>
+      </tr><tr>
+        <td>
+          315
+        </td>
+        <td>
+          361
+        </td>
+        <td>
+          12573
+          -
+          12584
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.FalseStr)
+        </td>
+      </tr><tr>
+        <td>
+          315
+        </td>
+        <td>
+          360
+        </td>
+        <td>
+          12573
+          -
+          12584
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.FalseStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.FalseStr
+        </td>
+      </tr><tr>
+        <td>
+          315
+        </td>
+        <td>
+          363
+        </td>
+        <td>
+          12498
+          -
+          12614
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Filtering)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.FalseStr)).==(unbound.this.`package`.SL.TrueStr.toString())
+        </td>
+      </tr><tr>
+        <td>
+          315
+        </td>
+        <td>
+          357
+        </td>
+        <td>
+          12528
+          -
+          12540
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Filtering)
+        </td>
+      </tr><tr>
+        <td>
+          315
+        </td>
+        <td>
+          359
+        </td>
+        <td>
+          12521
+          -
+          12571
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.toLowerCase
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Filtering)).text.toLowerCase(java.util.Locale.ROOT)
+        </td>
+      </tr><tr>
+        <td>
+          315
+        </td>
+        <td>
+          356
+        </td>
+        <td>
+          12528
+          -
+          12540
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Filtering
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Filtering
+        </td>
+      </tr><tr>
+        <td>
+          316
+        </td>
+        <td>
+          362
+        </td>
+        <td>
+          12595
+          -
+          12614
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr.toString
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr.toString()
+        </td>
+      </tr><tr>
+        <td>
+          317
+        </td>
+        <td>
+          364
+        </td>
+        <td>
+          12643
+          -
+          12658
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.DirectoryStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.DirectoryStr
+        </td>
+      </tr><tr>
+        <td>
+          317
+        </td>
+        <td>
+          367
+        </td>
+        <td>
+          12666
+          -
+          12672
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Dot
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Dot
+        </td>
+      </tr><tr>
+        <td>
+          317
+        </td>
+        <td>
+          369
+        </td>
+        <td>
+          12620
+          -
+          12673
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToDefault
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryStr)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.Dot))
+        </td>
+      </tr><tr>
+        <td>
+          317
+        </td>
+        <td>
+          366
+        </td>
+        <td>
+          12636
+          -
+          12664
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryStr)).text
+        </td>
+      </tr><tr>
+        <td>
+          317
+        </td>
+        <td>
+          368
+        </td>
+        <td>
+          12666
+          -
+          12672
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Dot)
+        </td>
+      </tr><tr>
+        <td>
+          317
+        </td>
+        <td>
+          365
+        </td>
+        <td>
+          12643
+          -
+          12658
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryStr)
+        </td>
+      </tr><tr>
+        <td>
+          318
+        </td>
+        <td>
+          373
+        </td>
+        <td>
+          12701
+          -
+          12714
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.IncludeStr)
+        </td>
+      </tr><tr>
+        <td>
+          318
+        </td>
+        <td>
+          376
+        </td>
+        <td>
+          12680
+          -
+          12730
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Includes)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.IncludeStr)).map[String, Seq[String]](((x$8: scala.xml.Node) =&gt; x$8.text))(immutable.this.Seq.canBuildFrom[String])
+        </td>
+      </tr><tr>
+        <td>
+          318
+        </td>
+        <td>
+          370
+        </td>
+        <td>
+          12687
+          -
+          12698
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Includes
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Includes
+        </td>
+      </tr><tr>
+        <td>
+          318
+        </td>
+        <td>
+          372
+        </td>
+        <td>
+          12701
+          -
+          12714
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.IncludeStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.IncludeStr
+        </td>
+      </tr><tr>
+        <td>
+          318
+        </td>
+        <td>
+          375
+        </td>
+        <td>
+          12720
+          -
+          12720
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Seq.canBuildFrom[String]
+        </td>
+      </tr><tr>
+        <td>
+          318
+        </td>
+        <td>
+          371
+        </td>
+        <td>
+          12687
+          -
+          12698
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Includes)
+        </td>
+      </tr><tr>
+        <td>
+          318
+        </td>
+        <td>
+          374
+        </td>
+        <td>
+          12722
+          -
+          12728
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Node.text
+        </td>
+        <td style="background: #AEF1AE">
+          x$8.text
+        </td>
+      </tr><tr>
+        <td>
+          319
+        </td>
+        <td>
+          382
+        </td>
+        <td>
+          12777
+          -
+          12777
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Seq.canBuildFrom[String]
+        </td>
+      </tr><tr>
+        <td>
+          319
+        </td>
+        <td>
+          379
+        </td>
+        <td>
+          12758
+          -
+          12771
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.ExcludeStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.ExcludeStr
+        </td>
+      </tr><tr>
+        <td>
+          319
+        </td>
+        <td>
+          378
+        </td>
+        <td>
+          12744
+          -
+          12755
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Excludes)
+        </td>
+      </tr><tr>
+        <td>
+          319
+        </td>
+        <td>
+          381
+        </td>
+        <td>
+          12779
+          -
+          12785
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Node.text
+        </td>
+        <td style="background: #F0ADAD">
+          x$9.text
+        </td>
+      </tr><tr>
+        <td>
+          319
+        </td>
+        <td>
+          383
+        </td>
+        <td>
+          12737
+          -
+          12787
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Excludes)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.ExcludeStr)).map[String, Seq[String]](((x$9: scala.xml.Node) =&gt; x$9.text))(immutable.this.Seq.canBuildFrom[String])
+        </td>
+      </tr><tr>
+        <td>
+          319
+        </td>
+        <td>
+          377
+        </td>
+        <td>
+          12744
+          -
+          12755
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Excludes
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Excludes
+        </td>
+      </tr><tr>
+        <td>
+          319
+        </td>
+        <td>
+          380
+        </td>
+        <td>
+          12758
+          -
+          12771
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.ExcludeStr)
+        </td>
+      </tr><tr>
+        <td>
+          348
+        </td>
+        <td>
+          386
+        </td>
+        <td>
+          13720
+          -
+          13757
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Resource.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new org.apache.maven.model.Resource()
+        </td>
+      </tr><tr>
+        <td>
+          349
+        </td>
+        <td>
+          391
+        </td>
+        <td>
+          13762
+          -
+          13762
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          349
+        </td>
+        <td>
+          388
+        </td>
+        <td>
+          13809
+          -
+          13819
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Resource.targetPath
+        </td>
+        <td style="background: #AEF1AE">
+          Resource.this.targetPath
+        </td>
+      </tr><tr>
+        <td>
+          349
+        </td>
+        <td>
+          387
+        </td>
+        <td>
+          13766
+          -
+          13784
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Resource.this.targetPath.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          349
+        </td>
+        <td>
+          390
+        </td>
+        <td>
+          13786
+          -
+          13820
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.Resource.setTargetPath
+        </td>
+        <td style="background: #AEF1AE">
+          resource.setTargetPath(Resource.this.targetPath)
+        </td>
+      </tr><tr>
+        <td>
+          349
+        </td>
+        <td>
+          392
+        </td>
+        <td>
+          13762
+          -
+          13762
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          349
+        </td>
+        <td>
+          389
+        </td>
+        <td>
+          13786
+          -
+          13820
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Resource.setTargetPath
+        </td>
+        <td style="background: #AEF1AE">
+          resource.setTargetPath(Resource.this.targetPath)
+        </td>
+      </tr><tr>
+        <td>
+          350
+        </td>
+        <td>
+          394
+        </td>
+        <td>
+          13825
+          -
+          13857
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Resource.setFiltering
+        </td>
+        <td style="background: #AEF1AE">
+          resource.setFiltering(Resource.this.filtering)
+        </td>
+      </tr><tr>
+        <td>
+          350
+        </td>
+        <td>
+          393
+        </td>
+        <td>
+          13847
+          -
+          13856
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Resource.filtering
+        </td>
+        <td style="background: #AEF1AE">
+          Resource.this.filtering
+        </td>
+      </tr><tr>
+        <td>
+          351
+        </td>
+        <td>
+          396
+        </td>
+        <td>
+          13862
+          -
+          13894
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.FileSet.setDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          resource.setDirectory(Resource.this.directory)
+        </td>
+      </tr><tr>
+        <td>
+          351
+        </td>
+        <td>
+          395
+        </td>
+        <td>
+          13884
+          -
+          13893
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Resource.directory
+        </td>
+        <td style="background: #AEF1AE">
+          Resource.this.directory
+        </td>
+      </tr><tr>
+        <td>
+          352
+        </td>
+        <td>
+          397
+        </td>
+        <td>
+          13925
+          -
+          13949
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.PatternSet.addInclude
+        </td>
+        <td style="background: #AEF1AE">
+          resource.addInclude(inc)
+        </td>
+      </tr><tr>
+        <td>
+          352
+        </td>
+        <td>
+          398
+        </td>
+        <td>
+          13899
+          -
+          13951
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          Resource.this.includes.foreach[Unit](((inc: String) =&gt; resource.addInclude(inc)))
+        </td>
+      </tr><tr>
+        <td>
+          353
+        </td>
+        <td>
+          400
+        </td>
+        <td>
+          13956
+          -
+          14008
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          Resource.this.excludes.foreach[Unit](((exc: String) =&gt; resource.addExclude(exc)))
+        </td>
+      </tr><tr>
+        <td>
+          353
+        </td>
+        <td>
+          399
+        </td>
+        <td>
+          13982
+          -
+          14006
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.PatternSet.addExclude
+        </td>
+        <td style="background: #F0ADAD">
+          resource.addExclude(exc)
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

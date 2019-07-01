@@ -1,0 +1,3116 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          org/apache/maven/unbound/Plugin.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier, monospace;'>1 <span style=''>/*
+</span>2 <span style=''> * Licensed to the Apache Software Foundation (ASF) under one or more
+</span>3 <span style=''> * contributor license agreements.  See the NOTICE file distributed with
+</span>4 <span style=''> * this work for additional information regarding copyright ownership.
+</span>5 <span style=''> * The ASF licenses this file to You under the Apache License, Version 2.0
+</span>6 <span style=''> * (the &quot;License&quot;); you may not use this file except in compliance with
+</span>7 <span style=''> * the License.  You may obtain a copy of the License at
+</span>8 <span style=''> *
+</span>9 <span style=''> *    http://www.apache.org/licenses/LICENSE-2.0
+</span>10 <span style=''> *
+</span>11 <span style=''> * Unless required by applicable law or agreed to in writing, software
+</span>12 <span style=''> * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+</span>13 <span style=''> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+</span>14 <span style=''> * See the License for the specific language governing permissions and
+</span>15 <span style=''> * limitations under the License.
+</span>16 <span style=''> */
+</span>17 <span style=''>
+</span>18 <span style=''>package org.apache.maven.unbound
+</span>19 <span style=''>
+</span>20 <span style=''>import java.io.{ ObjectInputStream, ObjectOutputStream, StringReader }
+</span>21 <span style=''>import java.util.Locale
+</span>22 <span style=''>
+</span>23 <span style=''>import scala.xml.Elem
+</span>24 <span style=''>
+</span>25 <span style=''>import com.typesafe.config.{ Config, ConfigFactory, ConfigObject }
+</span>26 <span style=''>import org.json4s._
+</span>27 <span style=''>
+</span>28 <span style=''>import org.apache.maven.shared.utils.xml.Xpp3DomBuilder
+</span>29 <span style=''>
+</span>30 <span style=''>case object Plugin extends CommonJsonReader {
+</span>31 <span style=''>
+</span>32 <span style=''>  implicit val formats = </span><span style='background: #AEF1AE'>JsonReader.formats</span><span style=''>
+</span>33 <span style=''>
+</span>34 <span style=''>  private def writeObject(stream: ObjectOutputStream): Unit =
+</span>35 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultWriteObject()</span><span style=''>
+</span>36 <span style=''>
+</span>37 <span style=''>  private def readObject(stream: ObjectInputStream): Unit =
+</span>38 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultReadObject()</span><span style=''>
+</span>39 <span style=''>
+</span>40 <span style=''>  class PluginSerializer extends CustomSerializer[Plugin](format =&gt; (
+</span>41 <span style=''>    {
+</span>42 <span style=''>      case obj @ JObject(fields) =&gt;
+</span>43 <span style=''>        new Plugin(
+</span>44 <span style=''>          readStr(fields, GroupId).getOrElse(DefaultPluginGroup),
+</span>45 <span style=''>          readStr(fields, ArtifactId).getOrElse(null),
+</span>46 <span style=''>          readStr(fields, Version).getOrElse(null),
+</span>47 <span style=''>          readBool(fields, Extensions).getOrElse(false),
+</span>48 <span style=''>          readObjectSequence[Execution](fields, Executions),
+</span>49 <span style=''>          readObjectSequence[Dependency](fields, Dependencies),
+</span>50 <span style=''>          readBool(fields, Inherited).getOrElse(true),
+</span>51 <span style=''>          (obj \ Configuration) match {
+</span>52 <span style=''>            case o: JObject =&gt; jsonToConfig(o)
+</span>53 <span style=''>            case _ =&gt; null
+</span>54 <span style=''>          }
+</span>55 <span style=''>        )
+</span>56 <span style=''>    },
+</span>57 <span style=''>    {
+</span>58 <span style=''>      case p: Plugin =&gt;
+</span>59 <span style=''>        JObject(Seq[Option[JField]](
+</span>60 <span style=''>          writeStr(GroupId, p.groupId),
+</span>61 <span style=''>          writeStr(ArtifactId, p.artifactId),
+</span>62 <span style=''>          writeStr(Version, p.version),
+</span>63 <span style=''>          writeBool(Extensions, p.extensions, false),
+</span>64 <span style=''>          writeObjectSequence(Executions, p.executions),
+</span>65 <span style=''>          writeObjectSequence(Dependencies, p.dependencies),
+</span>66 <span style=''>          writeBool(Inherited, p.inherited, true),
+</span>67 <span style=''>          writeObject(Configuration, configToJson(p.configuration))
+</span>68 <span style=''>        ).flatten.toList)
+</span>69 <span style=''>    }
+</span>70 <span style=''>  ))
+</span>71 <span style=''>}
+</span>72 <span style=''>
+</span>73 <span style=''>case class Plugin(
+</span>74 <span style=''>  groupId: String = SL.DefaultPluginGroup,
+</span>75 <span style=''>  artifactId: String = null, version: String = null,
+</span>76 <span style=''>  extensions: Boolean = false,
+</span>77 <span style=''>  executions: Seq[Execution] = Seq[Execution](),
+</span>78 <span style=''>  dependencies: Seq[Dependency] = Seq[Dependency](),
+</span>79 <span style=''>  inherited: Boolean = true,
+</span>80 <span style=''>  configuration: Config = null) {
+</span>81 <span style=''>
+</span>82 <span style=''>  def this(elem: Elem) = </span><span style='background: #AEF1AE'>this(
+</span>83 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault((elem \ SL.GroupId).text, SL.DefaultPluginGroup),
+</span>84 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.ArtifactId).text),
+</span>85 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.Version).text),
+</span>86 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault(
+</span>87 <span style=''></span><span style='background: #AEF1AE'>      (elem \ SL.Extensions).text.toLowerCase(Locale.ROOT), SL.FalseStr) ==
+</span>88 <span style=''></span><span style='background: #AEF1AE'>      SL.TrueStr.toString,
+</span>89 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Executions \ SL.ExecutionStr).map { case e: Elem =&gt;
+</span>90 <span style=''></span><span style='background: #AEF1AE'>      new Execution(e) },
+</span>91 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Dependencies \ SL.DependencyStr).map { case e: Elem =&gt;
+</span>92 <span style=''></span><span style='background: #AEF1AE'>      </span><span style='background: #F0ADAD'>new Dependency(e)</span><span style='background: #AEF1AE'> },
+</span>93 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault(
+</span>94 <span style=''></span><span style='background: #AEF1AE'>      (elem \ SL.Inherited).text.toLowerCase(Locale.ROOT), SL.TrueStr) ==
+</span>95 <span style=''></span><span style='background: #AEF1AE'>      SL.TrueStr.toString,
+</span>96 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Configuration).headOption.map { case e: Elem =&gt;
+</span>97 <span style=''></span><span style='background: #AEF1AE'>      elemToConfig(e) }.getOrElse(null))</span><span style=''>
+</span>98 <span style=''>
+</span>99 <span style=''>  lazy val xml = &lt;plugin&gt;
+</span>100 <span style=''>                   &lt;groupId&gt;{groupId}&lt;/groupId&gt;
+</span>101 <span style=''>                   &lt;artifactId&gt;{artifactId}&lt;/artifactId&gt;
+</span>102 <span style=''>                   { if (version != null) &lt;version&gt;{version}&lt;/version&gt; }
+</span>103 <span style=''>                   { if (extensions) &lt;extensions&gt;true&lt;/extensions&gt; }
+</span>104 <span style=''>                   { if (!executions.isEmpty) &lt;executions&gt;
+</span>105 <span style=''>                       { executions.map { _.xml } }
+</span>106 <span style=''>                     &lt;/executions&gt; }
+</span>107 <span style=''>                   { if (!dependencies.isEmpty) &lt;dependencies&gt;
+</span>108 <span style=''>                       { dependencies.map { _.xml } }
+</span>109 <span style=''>                     &lt;/dependencies&gt; }
+</span>110 <span style=''>                   { if (!inherited) &lt;inherited&gt;false&lt;/inherited&gt; }
+</span>111 <span style=''>                   { if (configuration != null) configToElem(configuration) }
+</span>112 <span style=''>                 &lt;/plugin&gt;
+</span>113 <span style=''>
+</span>114 <span style=''>  def makeModelObject(): org.apache.maven.model.Plugin = {
+</span>115 <span style=''>    val plugin = </span><span style='background: #AEF1AE'>new org.apache.maven.model.Plugin()</span><span style=''>
+</span>116 <span style=''>    </span><span style='background: #AEF1AE'>plugin.setGroupId(groupId)</span><span style=''>
+</span>117 <span style=''>    </span><span style='background: #AEF1AE'>plugin.setArtifactId(artifactId)</span><span style=''>
+</span>118 <span style=''>    </span><span style='background: #AEF1AE'>plugin.setVersion(version)</span><span style=''>
+</span>119 <span style=''>    </span><span style='background: #AEF1AE'>plugin.setExtensions(extensions)</span><span style=''>
+</span>120 <span style=''>    </span><span style='background: #AEF1AE'>executions.foreach { ex =&gt; plugin.addExecution(ex.makeModelObject()) }</span><span style=''>
+</span>121 <span style=''>    </span><span style='background: #AEF1AE'>dependencies.foreach { d =&gt; </span><span style='background: #F0ADAD'>plugin.addDependency(d.makeModelObject())</span><span style='background: #AEF1AE'> }</span><span style=''>
+</span>122 <span style=''>    </span><span style='background: #AEF1AE'>plugin.setInherited(inherited)</span><span style=''>
+</span>123 <span style=''>    if (</span><span style='background: #AEF1AE'>configuration != null</span><span style=''>) </span><span style='background: #AEF1AE'>{
+</span>124 <span style=''></span><span style='background: #AEF1AE'>      val xmlStr =
+</span>125 <span style=''></span><span style='background: #AEF1AE'>        (new Writeable {
+</span>126 <span style=''></span><span style='background: #AEF1AE'>          val xml: Elem = configToElem(configuration)
+</span>127 <span style=''></span><span style='background: #AEF1AE'>        }).toXmlString
+</span>128 <span style=''></span><span style='background: #AEF1AE'>      val sReader = new StringReader(xmlStr)
+</span>129 <span style=''></span><span style='background: #AEF1AE'>      plugin.setConfiguration(Xpp3DomBuilder.build(sReader))
+</span>130 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
+</span>131 <span style=''>    plugin
+</span>132 <span style=''>  }
+</span>133 <span style=''>}
+</span>134 <span style=''>
+</span>135 <span style=''>case object Execution extends CommonJsonReader {
+</span>136 <span style=''>
+</span>137 <span style=''>  implicit val formats = </span><span style='background: #AEF1AE'>JsonReader.formats</span><span style=''>
+</span>138 <span style=''>
+</span>139 <span style=''>  private def writeObject(stream: ObjectOutputStream): Unit =
+</span>140 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultWriteObject()</span><span style=''>
+</span>141 <span style=''>
+</span>142 <span style=''>  private def readObject(stream: ObjectInputStream): Unit =
+</span>143 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultReadObject()</span><span style=''>
+</span>144 <span style=''>
+</span>145 <span style=''>  class ExecutionSerializer extends CustomSerializer[Execution](format =&gt; (
+</span>146 <span style=''>    {
+</span>147 <span style=''>      case obj @ JObject(fields) =&gt;
+</span>148 <span style=''>        new Execution(
+</span>149 <span style=''>          readStr(fields, Id).getOrElse(DefaultStr),
+</span>150 <span style=''>          readStr(fields, Phase).getOrElse(null),
+</span>151 <span style=''>          readStringSequence(fields, Goals),
+</span>152 <span style=''>          readBool(fields, Inherited).getOrElse(true),
+</span>153 <span style=''>          (obj \ Configuration) match {
+</span>154 <span style=''>            case o: JObject =&gt; jsonToConfig(o)
+</span>155 <span style=''>            case _ =&gt; null
+</span>156 <span style=''>          }
+</span>157 <span style=''>        )
+</span>158 <span style=''>    },
+</span>159 <span style=''>    {
+</span>160 <span style=''>      case e: Execution =&gt;
+</span>161 <span style=''>        JObject(Seq[Option[JField]](
+</span>162 <span style=''>          writeStr(Id, e.id, DefaultStr),
+</span>163 <span style=''>          writeStr(Phase, e.phase),
+</span>164 <span style=''>          writeStringSequence(Goals, e.goals),
+</span>165 <span style=''>          writeBool(Inherited, e.inherited, true),
+</span>166 <span style=''>          writeObject(Configuration, configToJson(e.configuration))
+</span>167 <span style=''>        ).flatten.toList)
+</span>168 <span style=''>    }
+</span>169 <span style=''>  ))
+</span>170 <span style=''>}
+</span>171 <span style=''>
+</span>172 <span style=''>case class Execution(
+</span>173 <span style=''>  id: String = SL.DefaultStr, phase: String = null,
+</span>174 <span style=''>  goals: Seq[String] = Seq[String](), inherited: Boolean = true,
+</span>175 <span style=''>  configuration: Config = null) {
+</span>176 <span style=''>
+</span>177 <span style=''>  def this(elem: Elem) = </span><span style='background: #AEF1AE'>this(
+</span>178 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault((elem \ SL.Id).text, SL.DefaultStr),
+</span>179 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.Phase).text),
+</span>180 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Goals \ SL.GoalStr).map { _.text },
+</span>181 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault(
+</span>182 <span style=''></span><span style='background: #AEF1AE'>      (elem \ SL.Inherited).text.toLowerCase(Locale.ROOT), SL.TrueStr) ==
+</span>183 <span style=''></span><span style='background: #AEF1AE'>      SL.TrueStr.toString,
+</span>184 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Configuration).headOption.map { case e: Elem =&gt;
+</span>185 <span style=''></span><span style='background: #AEF1AE'>      elemToConfig(e) }.getOrElse(null))</span><span style=''>
+</span>186 <span style=''>
+</span>187 <span style=''>  lazy val xml = &lt;execution&gt;
+</span>188 <span style=''>                   { if (id != null &amp;&amp; id != SL.DefaultStr.toString)
+</span>189 <span style=''>                     &lt;id&gt;{id}&lt;/id&gt; }
+</span>190 <span style=''>                   { if (phase != null) &lt;phase&gt;{phase}&lt;/phase&gt; }
+</span>191 <span style=''>                   { if (!goals.isEmpty) &lt;goals&gt;
+</span>192 <span style=''>                     { goals.map { Goal(_).xml } }
+</span>193 <span style=''>                   &lt;/goals&gt; }
+</span>194 <span style=''>                   { if (!inherited) &lt;inherited&gt;false&lt;/inherited&gt; }
+</span>195 <span style=''>                   { if (configuration != null) configToElem(configuration) }
+</span>196 <span style=''>                 &lt;/execution&gt;
+</span>197 <span style=''>
+</span>198 <span style=''>  def makeModelObject(): org.apache.maven.model.PluginExecution = {
+</span>199 <span style=''>    val exec = </span><span style='background: #AEF1AE'>new org.apache.maven.model.PluginExecution()</span><span style=''>
+</span>200 <span style=''>    </span><span style='background: #AEF1AE'>exec.setId(id)</span><span style=''>
+</span>201 <span style=''>    if (</span><span style='background: #AEF1AE'>phase != null</span><span style=''>) </span><span style='background: #AEF1AE'>exec.setPhase(phase)</span><span style=''>
+</span>202 <span style=''>    </span><span style='background: #AEF1AE'>goals.foreach { goal =&gt; exec.addGoal(goal) }</span><span style=''>
+</span>203 <span style=''>    </span><span style='background: #AEF1AE'>exec.setInherited(inherited)</span><span style=''>
+</span>204 <span style=''>    if (</span><span style='background: #AEF1AE'>configuration != null</span><span style=''>) </span><span style='background: #AEF1AE'>{
+</span>205 <span style=''></span><span style='background: #AEF1AE'>      val xmlStr =
+</span>206 <span style=''></span><span style='background: #AEF1AE'>        (new Writeable {
+</span>207 <span style=''></span><span style='background: #AEF1AE'>          val xml: Elem = configToElem(configuration)
+</span>208 <span style=''></span><span style='background: #AEF1AE'>        }).toXmlString
+</span>209 <span style=''></span><span style='background: #AEF1AE'>      val sReader = new StringReader(xmlStr)
+</span>210 <span style=''></span><span style='background: #AEF1AE'>      exec.setConfiguration(Xpp3DomBuilder.build(sReader))
+</span>211 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
+</span>212 <span style=''>    exec
+</span>213 <span style=''>  }
+</span>214 <span style=''>}
+</span>215 <span style=''>
+</span>216 <span style=''>case class Goal(goal: String) {
+</span>217 <span style=''>  lazy val xml = &lt;goal&gt;{goal}&lt;/goal&gt;
+</span>218 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          2307
+        </td>
+        <td>
+          1172
+          -
+          1190
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #AEF1AE">
+          JsonReader.formats
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          2308
+        </td>
+        <td>
+          1258
+          -
+          1285
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectOutputStream.defaultWriteObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultWriteObject()
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          2309
+        </td>
+        <td>
+          1351
+          -
+          1377
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectInputStream.defaultReadObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultReadObject()
+        </td>
+      </tr><tr>
+        <td>
+          82
+        </td>
+        <td>
+          2356
+        </td>
+        <td>
+          2925
+          -
+          2925
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          82
+        </td>
+        <td>
+          2355
+        </td>
+        <td>
+          2925
+          -
+          3626
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Plugin.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          Plugin.this.&lt;init&gt;(unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.GroupId)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.DefaultPluginGroup)), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.ArtifactId)).text), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Version)).text), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Extensions)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.FalseStr)).==(unbound.this.`package`.SL.TrueStr.toString()), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Executions)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.ExecutionStr)).map[org.apache.maven.unbound.Execution, Seq[org.apache.maven.unbound.Execution]](((x0$1: scala.xml.Node) =&gt; x0$1 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new Execution(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Execution]), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Dependencies)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.DependencyStr)).map[org.apache.maven.unbound.Dependency, Seq[org.apache.maven.unbound.Dependency]](((x0$2: scala.xml.Node) =&gt; x0$2 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new Dependency(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Dependency]), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Inherited)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString()), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Configuration)).headOption.map[com.typesafe.config.Config](((x0$3: scala.xml.Node) =&gt; x0$3 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; unbound.this.`package`.elemToConfig(e)
+})).getOrElse[com.typesafe.config.Config](null))
+        </td>
+      </tr><tr>
+        <td>
+          83
+        </td>
+        <td>
+          2311
+        </td>
+        <td>
+          2958
+          -
+          2968
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.GroupId)
+        </td>
+      </tr><tr>
+        <td>
+          83
+        </td>
+        <td>
+          2314
+        </td>
+        <td>
+          2976
+          -
+          2997
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.DefaultPluginGroup)
+        </td>
+      </tr><tr>
+        <td>
+          83
+        </td>
+        <td>
+          2310
+        </td>
+        <td>
+          2958
+          -
+          2968
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.GroupId
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.GroupId
+        </td>
+      </tr><tr>
+        <td>
+          83
+        </td>
+        <td>
+          2313
+        </td>
+        <td>
+          2976
+          -
+          2997
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.DefaultPluginGroup
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.DefaultPluginGroup
+        </td>
+      </tr><tr>
+        <td>
+          83
+        </td>
+        <td>
+          2312
+        </td>
+        <td>
+          2951
+          -
+          2974
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.GroupId)).text
+        </td>
+      </tr><tr>
+        <td>
+          83
+        </td>
+        <td>
+          2315
+        </td>
+        <td>
+          2935
+          -
+          2998
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToDefault
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.GroupId)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.DefaultPluginGroup))
+        </td>
+      </tr><tr>
+        <td>
+          84
+        </td>
+        <td>
+          2317
+        </td>
+        <td>
+          3024
+          -
+          3037
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.ArtifactId)
+        </td>
+      </tr><tr>
+        <td>
+          84
+        </td>
+        <td>
+          2316
+        </td>
+        <td>
+          3024
+          -
+          3037
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.ArtifactId
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.ArtifactId
+        </td>
+      </tr><tr>
+        <td>
+          84
+        </td>
+        <td>
+          2319
+        </td>
+        <td>
+          3004
+          -
+          3044
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.ArtifactId)).text)
+        </td>
+      </tr><tr>
+        <td>
+          84
+        </td>
+        <td>
+          2318
+        </td>
+        <td>
+          3017
+          -
+          3043
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.ArtifactId)).text
+        </td>
+      </tr><tr>
+        <td>
+          85
+        </td>
+        <td>
+          2320
+        </td>
+        <td>
+          3070
+          -
+          3080
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Version
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Version
+        </td>
+      </tr><tr>
+        <td>
+          85
+        </td>
+        <td>
+          2323
+        </td>
+        <td>
+          3050
+          -
+          3087
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Version)).text)
+        </td>
+      </tr><tr>
+        <td>
+          85
+        </td>
+        <td>
+          2322
+        </td>
+        <td>
+          3063
+          -
+          3086
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Version)).text
+        </td>
+      </tr><tr>
+        <td>
+          85
+        </td>
+        <td>
+          2321
+        </td>
+        <td>
+          3070
+          -
+          3080
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Version)
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          2326
+        </td>
+        <td>
+          3155
+          -
+          3166
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          java.util.Locale.ROOT
+        </td>
+        <td style="background: #AEF1AE">
+          java.util.Locale.ROOT
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          2329
+        </td>
+        <td>
+          3169
+          -
+          3180
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.FalseStr)
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          2331
+        </td>
+        <td>
+          3093
+          -
+          3210
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Extensions)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.FalseStr)).==(unbound.this.`package`.SL.TrueStr.toString())
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          2325
+        </td>
+        <td>
+          3123
+          -
+          3136
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Extensions)
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          2328
+        </td>
+        <td>
+          3169
+          -
+          3180
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.FalseStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.FalseStr
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          2324
+        </td>
+        <td>
+          3123
+          -
+          3136
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Extensions
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Extensions
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          2327
+        </td>
+        <td>
+          3116
+          -
+          3167
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.toLowerCase
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Extensions)).text.toLowerCase(java.util.Locale.ROOT)
+        </td>
+      </tr><tr>
+        <td>
+          88
+        </td>
+        <td>
+          2330
+        </td>
+        <td>
+          3191
+          -
+          3210
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr.toString
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr.toString()
+        </td>
+      </tr><tr>
+        <td>
+          89
+        </td>
+        <td>
+          2335
+        </td>
+        <td>
+          3240
+          -
+          3255
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.ExecutionStr)
+        </td>
+      </tr><tr>
+        <td>
+          89
+        </td>
+        <td>
+          2338
+        </td>
+        <td>
+          3217
+          -
+          3303
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Executions)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.ExecutionStr)).map[org.apache.maven.unbound.Execution, Seq[org.apache.maven.unbound.Execution]](((x0$1: scala.xml.Node) =&gt; x0$1 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new Execution(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Execution])
+        </td>
+      </tr><tr>
+        <td>
+          89
+        </td>
+        <td>
+          2332
+        </td>
+        <td>
+          3224
+          -
+          3237
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Executions
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Executions
+        </td>
+      </tr><tr>
+        <td>
+          89
+        </td>
+        <td>
+          2334
+        </td>
+        <td>
+          3240
+          -
+          3255
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.ExecutionStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.ExecutionStr
+        </td>
+      </tr><tr>
+        <td>
+          89
+        </td>
+        <td>
+          2337
+        </td>
+        <td>
+          3261
+          -
+          3261
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Execution]
+        </td>
+      </tr><tr>
+        <td>
+          89
+        </td>
+        <td>
+          2333
+        </td>
+        <td>
+          3224
+          -
+          3237
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Executions)
+        </td>
+      </tr><tr>
+        <td>
+          90
+        </td>
+        <td>
+          2336
+        </td>
+        <td>
+          3285
+          -
+          3301
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Execution.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Execution(e)
+        </td>
+      </tr><tr>
+        <td>
+          91
+        </td>
+        <td>
+          2344
+        </td>
+        <td>
+          3357
+          -
+          3357
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Dependency]
+        </td>
+      </tr><tr>
+        <td>
+          91
+        </td>
+        <td>
+          2341
+        </td>
+        <td>
+          3335
+          -
+          3351
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.DependencyStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.DependencyStr
+        </td>
+      </tr><tr>
+        <td>
+          91
+        </td>
+        <td>
+          2340
+        </td>
+        <td>
+          3317
+          -
+          3332
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Dependencies)
+        </td>
+      </tr><tr>
+        <td>
+          91
+        </td>
+        <td>
+          2339
+        </td>
+        <td>
+          3317
+          -
+          3332
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Dependencies
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Dependencies
+        </td>
+      </tr><tr>
+        <td>
+          91
+        </td>
+        <td>
+          2342
+        </td>
+        <td>
+          3335
+          -
+          3351
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.DependencyStr)
+        </td>
+      </tr><tr>
+        <td>
+          91
+        </td>
+        <td>
+          2345
+        </td>
+        <td>
+          3310
+          -
+          3400
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Dependencies)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.DependencyStr)).map[org.apache.maven.unbound.Dependency, Seq[org.apache.maven.unbound.Dependency]](((x0$2: scala.xml.Node) =&gt; x0$2 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new Dependency(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Dependency])
+        </td>
+      </tr><tr>
+        <td>
+          92
+        </td>
+        <td>
+          2343
+        </td>
+        <td>
+          3381
+          -
+          3398
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Dependency.&lt;init&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          new Dependency(e)
+        </td>
+      </tr><tr>
+        <td>
+          94
+        </td>
+        <td>
+          2353
+        </td>
+        <td>
+          3406
+          -
+          3521
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Inherited)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString())
+        </td>
+      </tr><tr>
+        <td>
+          94
+        </td>
+        <td>
+          2347
+        </td>
+        <td>
+          3436
+          -
+          3448
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Inherited)
+        </td>
+      </tr><tr>
+        <td>
+          94
+        </td>
+        <td>
+          2350
+        </td>
+        <td>
+          3481
+          -
+          3491
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr
+        </td>
+      </tr><tr>
+        <td>
+          94
+        </td>
+        <td>
+          2349
+        </td>
+        <td>
+          3429
+          -
+          3479
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.toLowerCase
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Inherited)).text.toLowerCase(java.util.Locale.ROOT)
+        </td>
+      </tr><tr>
+        <td>
+          94
+        </td>
+        <td>
+          2346
+        </td>
+        <td>
+          3436
+          -
+          3448
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Inherited
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Inherited
+        </td>
+      </tr><tr>
+        <td>
+          94
+        </td>
+        <td>
+          2348
+        </td>
+        <td>
+          3467
+          -
+          3478
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          java.util.Locale.ROOT
+        </td>
+        <td style="background: #AEF1AE">
+          java.util.Locale.ROOT
+        </td>
+      </tr><tr>
+        <td>
+          94
+        </td>
+        <td>
+          2351
+        </td>
+        <td>
+          3481
+          -
+          3491
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)
+        </td>
+      </tr><tr>
+        <td>
+          95
+        </td>
+        <td>
+          2352
+        </td>
+        <td>
+          3502
+          -
+          3521
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr.toString
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr.toString()
+        </td>
+      </tr><tr>
+        <td>
+          97
+        </td>
+        <td>
+          2354
+        </td>
+        <td>
+          3528
+          -
+          3625
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Option.getOrElse
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Configuration)).headOption.map[com.typesafe.config.Config](((x0$3: scala.xml.Node) =&gt; x0$3 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; unbound.this.`package`.elemToConfig(e)
+})).getOrElse[com.typesafe.config.Config](null)
+        </td>
+      </tr><tr>
+        <td>
+          115
+        </td>
+        <td>
+          2357
+        </td>
+        <td>
+          4455
+          -
+          4490
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Plugin.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new org.apache.maven.model.Plugin()
+        </td>
+      </tr><tr>
+        <td>
+          116
+        </td>
+        <td>
+          2359
+        </td>
+        <td>
+          4495
+          -
+          4521
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Plugin.setGroupId
+        </td>
+        <td style="background: #AEF1AE">
+          plugin.setGroupId(Plugin.this.groupId)
+        </td>
+      </tr><tr>
+        <td>
+          116
+        </td>
+        <td>
+          2358
+        </td>
+        <td>
+          4513
+          -
+          4520
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Plugin.groupId
+        </td>
+        <td style="background: #AEF1AE">
+          Plugin.this.groupId
+        </td>
+      </tr><tr>
+        <td>
+          117
+        </td>
+        <td>
+          2361
+        </td>
+        <td>
+          4526
+          -
+          4558
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Plugin.setArtifactId
+        </td>
+        <td style="background: #AEF1AE">
+          plugin.setArtifactId(Plugin.this.artifactId)
+        </td>
+      </tr><tr>
+        <td>
+          117
+        </td>
+        <td>
+          2360
+        </td>
+        <td>
+          4547
+          -
+          4557
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Plugin.artifactId
+        </td>
+        <td style="background: #AEF1AE">
+          Plugin.this.artifactId
+        </td>
+      </tr><tr>
+        <td>
+          118
+        </td>
+        <td>
+          2362
+        </td>
+        <td>
+          4581
+          -
+          4588
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Plugin.version
+        </td>
+        <td style="background: #AEF1AE">
+          Plugin.this.version
+        </td>
+      </tr><tr>
+        <td>
+          118
+        </td>
+        <td>
+          2363
+        </td>
+        <td>
+          4563
+          -
+          4589
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Plugin.setVersion
+        </td>
+        <td style="background: #AEF1AE">
+          plugin.setVersion(Plugin.this.version)
+        </td>
+      </tr><tr>
+        <td>
+          119
+        </td>
+        <td>
+          2365
+        </td>
+        <td>
+          4594
+          -
+          4626
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Plugin.setExtensions
+        </td>
+        <td style="background: #AEF1AE">
+          plugin.setExtensions(Plugin.this.extensions)
+        </td>
+      </tr><tr>
+        <td>
+          119
+        </td>
+        <td>
+          2364
+        </td>
+        <td>
+          4615
+          -
+          4625
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Plugin.extensions
+        </td>
+        <td style="background: #AEF1AE">
+          Plugin.this.extensions
+        </td>
+      </tr><tr>
+        <td>
+          120
+        </td>
+        <td>
+          2368
+        </td>
+        <td>
+          4631
+          -
+          4701
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          Plugin.this.executions.foreach[Unit](((ex: org.apache.maven.unbound.Execution) =&gt; plugin.addExecution(ex.makeModelObject())))
+        </td>
+      </tr><tr>
+        <td>
+          120
+        </td>
+        <td>
+          2367
+        </td>
+        <td>
+          4658
+          -
+          4699
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Plugin.addExecution
+        </td>
+        <td style="background: #AEF1AE">
+          plugin.addExecution(ex.makeModelObject())
+        </td>
+      </tr><tr>
+        <td>
+          120
+        </td>
+        <td>
+          2366
+        </td>
+        <td>
+          4678
+          -
+          4698
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Execution.makeModelObject
+        </td>
+        <td style="background: #AEF1AE">
+          ex.makeModelObject()
+        </td>
+      </tr><tr>
+        <td>
+          121
+        </td>
+        <td>
+          2371
+        </td>
+        <td>
+          4706
+          -
+          4777
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          Plugin.this.dependencies.foreach[Unit](((d: org.apache.maven.unbound.Dependency) =&gt; plugin.addDependency(d.makeModelObject())))
+        </td>
+      </tr><tr>
+        <td>
+          121
+        </td>
+        <td>
+          2370
+        </td>
+        <td>
+          4734
+          -
+          4775
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Plugin.addDependency
+        </td>
+        <td style="background: #F0ADAD">
+          plugin.addDependency(d.makeModelObject())
+        </td>
+      </tr><tr>
+        <td>
+          121
+        </td>
+        <td>
+          2369
+        </td>
+        <td>
+          4755
+          -
+          4774
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Dependency.makeModelObject
+        </td>
+        <td style="background: #F0ADAD">
+          d.makeModelObject()
+        </td>
+      </tr><tr>
+        <td>
+          122
+        </td>
+        <td>
+          2373
+        </td>
+        <td>
+          4782
+          -
+          4812
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.ConfigurationContainer.setInherited
+        </td>
+        <td style="background: #AEF1AE">
+          plugin.setInherited(Plugin.this.inherited)
+        </td>
+      </tr><tr>
+        <td>
+          122
+        </td>
+        <td>
+          2372
+        </td>
+        <td>
+          4802
+          -
+          4811
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Plugin.inherited
+        </td>
+        <td style="background: #AEF1AE">
+          Plugin.this.inherited
+        </td>
+      </tr><tr>
+        <td>
+          123
+        </td>
+        <td>
+          2383
+        </td>
+        <td>
+          4817
+          -
+          4817
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          123
+        </td>
+        <td>
+          2374
+        </td>
+        <td>
+          4821
+          -
+          4842
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Plugin.this.configuration.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          123
+        </td>
+        <td>
+          2382
+        </td>
+        <td>
+          4844
+          -
+          5078
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          {
+  val xmlStr: String = {
+  final class $anon extends AnyRef with org.apache.maven.unbound.Writeable {
+    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writeable&gt; = {
+      $anon.super.&lt;init&gt;();
+      ()
+    };
+    private[this] val xml: scala.xml.Elem = unbound.this.`package`.configToElem(Plugin.this.configuration);
+    &lt;stable&gt; &lt;accessor&gt; def xml: scala.xml.Elem = $anon.this.xml
+  };
+  new $anon()
+}.toXmlString;
+  val sReader: java.io.StringReader = new java.io.StringReader(xmlStr);
+  plugin.setConfiguration(org.apache.maven.shared.utils.xml.Xpp3DomBuilder.build(sReader))
+}
+        </td>
+      </tr><tr>
+        <td>
+          123
+        </td>
+        <td>
+          2384
+        </td>
+        <td>
+          4817
+          -
+          4817
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          125
+        </td>
+        <td>
+          2377
+        </td>
+        <td>
+          4874
+          -
+          4877
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Plugin.$anon.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new $anon()
+        </td>
+      </tr><tr>
+        <td>
+          126
+        </td>
+        <td>
+          2376
+        </td>
+        <td>
+          4916
+          -
+          4943
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.configToElem
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.configToElem(Plugin.this.configuration)
+        </td>
+      </tr><tr>
+        <td>
+          126
+        </td>
+        <td>
+          2375
+        </td>
+        <td>
+          4929
+          -
+          4942
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Plugin.configuration
+        </td>
+        <td style="background: #AEF1AE">
+          Plugin.this.configuration
+        </td>
+      </tr><tr>
+        <td>
+          127
+        </td>
+        <td>
+          2378
+        </td>
+        <td>
+          4874
+          -
+          4966
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Writeable.toXmlString
+        </td>
+        <td style="background: #AEF1AE">
+          {
+  final class $anon extends AnyRef with org.apache.maven.unbound.Writeable {
+    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writeable&gt; = {
+      $anon.super.&lt;init&gt;();
+      ()
+    };
+    private[this] val xml: scala.xml.Elem = unbound.this.`package`.configToElem(Plugin.this.configuration);
+    &lt;stable&gt; &lt;accessor&gt; def xml: scala.xml.Elem = $anon.this.xml
+  };
+  new $anon()
+}.toXmlString
+        </td>
+      </tr><tr>
+        <td>
+          128
+        </td>
+        <td>
+          2379
+        </td>
+        <td>
+          4987
+          -
+          5011
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.StringReader.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new java.io.StringReader(xmlStr)
+        </td>
+      </tr><tr>
+        <td>
+          129
+        </td>
+        <td>
+          2380
+        </td>
+        <td>
+          5042
+          -
+          5071
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.shared.utils.xml.Xpp3DomBuilder.build
+        </td>
+        <td style="background: #AEF1AE">
+          org.apache.maven.shared.utils.xml.Xpp3DomBuilder.build(sReader)
+        </td>
+      </tr><tr>
+        <td>
+          129
+        </td>
+        <td>
+          2381
+        </td>
+        <td>
+          5018
+          -
+          5072
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.ConfigurationContainer.setConfiguration
+        </td>
+        <td style="background: #AEF1AE">
+          plugin.setConfiguration(org.apache.maven.shared.utils.xml.Xpp3DomBuilder.build(sReader))
+        </td>
+      </tr><tr>
+        <td>
+          137
+        </td>
+        <td>
+          2385
+        </td>
+        <td>
+          5172
+          -
+          5190
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #AEF1AE">
+          JsonReader.formats
+        </td>
+      </tr><tr>
+        <td>
+          140
+        </td>
+        <td>
+          2386
+        </td>
+        <td>
+          5258
+          -
+          5285
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectOutputStream.defaultWriteObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultWriteObject()
+        </td>
+      </tr><tr>
+        <td>
+          143
+        </td>
+        <td>
+          2387
+        </td>
+        <td>
+          5351
+          -
+          5377
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectInputStream.defaultReadObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultReadObject()
+        </td>
+      </tr><tr>
+        <td>
+          177
+        </td>
+        <td>
+          2415
+        </td>
+        <td>
+          6419
+          -
+          6419
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          177
+        </td>
+        <td>
+          2414
+        </td>
+        <td>
+          6419
+          -
+          6797
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Execution.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          Execution.this.&lt;init&gt;(unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Id)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.DefaultStr)), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Phase)).text), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Goals)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.GoalStr)).map[String, Seq[String]](((x$3: scala.xml.Node) =&gt; x$3.text))(immutable.this.Seq.canBuildFrom[String]), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Inherited)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString()), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Configuration)).headOption.map[com.typesafe.config.Config](((x0$1: scala.xml.Node) =&gt; x0$1 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; unbound.this.`package`.elemToConfig(e)
+})).getOrElse[com.typesafe.config.Config](null))
+        </td>
+      </tr><tr>
+        <td>
+          178
+        </td>
+        <td>
+          2389
+        </td>
+        <td>
+          6452
+          -
+          6457
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Id)
+        </td>
+      </tr><tr>
+        <td>
+          178
+        </td>
+        <td>
+          2392
+        </td>
+        <td>
+          6465
+          -
+          6478
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.DefaultStr)
+        </td>
+      </tr><tr>
+        <td>
+          178
+        </td>
+        <td>
+          2391
+        </td>
+        <td>
+          6465
+          -
+          6478
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.DefaultStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.DefaultStr
+        </td>
+      </tr><tr>
+        <td>
+          178
+        </td>
+        <td>
+          2388
+        </td>
+        <td>
+          6452
+          -
+          6457
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Id
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Id
+        </td>
+      </tr><tr>
+        <td>
+          178
+        </td>
+        <td>
+          2390
+        </td>
+        <td>
+          6445
+          -
+          6463
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Id)).text
+        </td>
+      </tr><tr>
+        <td>
+          178
+        </td>
+        <td>
+          2393
+        </td>
+        <td>
+          6429
+          -
+          6479
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToDefault
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Id)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.DefaultStr))
+        </td>
+      </tr><tr>
+        <td>
+          179
+        </td>
+        <td>
+          2394
+        </td>
+        <td>
+          6505
+          -
+          6513
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Phase
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Phase
+        </td>
+      </tr><tr>
+        <td>
+          179
+        </td>
+        <td>
+          2397
+        </td>
+        <td>
+          6485
+          -
+          6520
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Phase)).text)
+        </td>
+      </tr><tr>
+        <td>
+          179
+        </td>
+        <td>
+          2396
+        </td>
+        <td>
+          6498
+          -
+          6519
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Phase)).text
+        </td>
+      </tr><tr>
+        <td>
+          179
+        </td>
+        <td>
+          2395
+        </td>
+        <td>
+          6505
+          -
+          6513
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Phase)
+        </td>
+      </tr><tr>
+        <td>
+          180
+        </td>
+        <td>
+          2398
+        </td>
+        <td>
+          6534
+          -
+          6542
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Goals
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Goals
+        </td>
+      </tr><tr>
+        <td>
+          180
+        </td>
+        <td>
+          2401
+        </td>
+        <td>
+          6545
+          -
+          6555
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.GoalStr)
+        </td>
+      </tr><tr>
+        <td>
+          180
+        </td>
+        <td>
+          2400
+        </td>
+        <td>
+          6545
+          -
+          6555
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.GoalStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.GoalStr
+        </td>
+      </tr><tr>
+        <td>
+          180
+        </td>
+        <td>
+          2403
+        </td>
+        <td>
+          6561
+          -
+          6561
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Seq.canBuildFrom[String]
+        </td>
+      </tr><tr>
+        <td>
+          180
+        </td>
+        <td>
+          2399
+        </td>
+        <td>
+          6534
+          -
+          6542
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Goals)
+        </td>
+      </tr><tr>
+        <td>
+          180
+        </td>
+        <td>
+          2402
+        </td>
+        <td>
+          6563
+          -
+          6569
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Node.text
+        </td>
+        <td style="background: #AEF1AE">
+          x$3.text
+        </td>
+      </tr><tr>
+        <td>
+          180
+        </td>
+        <td>
+          2404
+        </td>
+        <td>
+          6527
+          -
+          6571
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Goals)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.GoalStr)).map[String, Seq[String]](((x$3: scala.xml.Node) =&gt; x$3.text))(immutable.this.Seq.canBuildFrom[String])
+        </td>
+      </tr><tr>
+        <td>
+          182
+        </td>
+        <td>
+          2407
+        </td>
+        <td>
+          6638
+          -
+          6649
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          java.util.Locale.ROOT
+        </td>
+        <td style="background: #AEF1AE">
+          java.util.Locale.ROOT
+        </td>
+      </tr><tr>
+        <td>
+          182
+        </td>
+        <td>
+          2410
+        </td>
+        <td>
+          6652
+          -
+          6662
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)
+        </td>
+      </tr><tr>
+        <td>
+          182
+        </td>
+        <td>
+          2409
+        </td>
+        <td>
+          6652
+          -
+          6662
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr
+        </td>
+      </tr><tr>
+        <td>
+          182
+        </td>
+        <td>
+          2412
+        </td>
+        <td>
+          6577
+          -
+          6692
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Inherited)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString())
+        </td>
+      </tr><tr>
+        <td>
+          182
+        </td>
+        <td>
+          2406
+        </td>
+        <td>
+          6607
+          -
+          6619
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Inherited)
+        </td>
+      </tr><tr>
+        <td>
+          182
+        </td>
+        <td>
+          2408
+        </td>
+        <td>
+          6600
+          -
+          6650
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.toLowerCase
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Inherited)).text.toLowerCase(java.util.Locale.ROOT)
+        </td>
+      </tr><tr>
+        <td>
+          182
+        </td>
+        <td>
+          2405
+        </td>
+        <td>
+          6607
+          -
+          6619
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Inherited
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Inherited
+        </td>
+      </tr><tr>
+        <td>
+          183
+        </td>
+        <td>
+          2411
+        </td>
+        <td>
+          6673
+          -
+          6692
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TrueStr.toString
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TrueStr.toString()
+        </td>
+      </tr><tr>
+        <td>
+          185
+        </td>
+        <td>
+          2413
+        </td>
+        <td>
+          6699
+          -
+          6796
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Option.getOrElse
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Configuration)).headOption.map[com.typesafe.config.Config](((x0$1: scala.xml.Node) =&gt; x0$1 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; unbound.this.`package`.elemToConfig(e)
+})).getOrElse[com.typesafe.config.Config](null)
+        </td>
+      </tr><tr>
+        <td>
+          199
+        </td>
+        <td>
+          2416
+        </td>
+        <td>
+          7389
+          -
+          7433
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.PluginExecution.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new org.apache.maven.model.PluginExecution()
+        </td>
+      </tr><tr>
+        <td>
+          200
+        </td>
+        <td>
+          2418
+        </td>
+        <td>
+          7438
+          -
+          7452
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.PluginExecution.setId
+        </td>
+        <td style="background: #AEF1AE">
+          exec.setId(Execution.this.id)
+        </td>
+      </tr><tr>
+        <td>
+          200
+        </td>
+        <td>
+          2417
+        </td>
+        <td>
+          7449
+          -
+          7451
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Execution.id
+        </td>
+        <td style="background: #AEF1AE">
+          Execution.this.id
+        </td>
+      </tr><tr>
+        <td>
+          201
+        </td>
+        <td>
+          2419
+        </td>
+        <td>
+          7461
+          -
+          7474
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Execution.this.phase.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          201
+        </td>
+        <td>
+          2421
+        </td>
+        <td>
+          7476
+          -
+          7496
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.PluginExecution.setPhase
+        </td>
+        <td style="background: #AEF1AE">
+          exec.setPhase(Execution.this.phase)
+        </td>
+      </tr><tr>
+        <td>
+          201
+        </td>
+        <td>
+          2424
+        </td>
+        <td>
+          7457
+          -
+          7457
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          201
+        </td>
+        <td>
+          2423
+        </td>
+        <td>
+          7457
+          -
+          7457
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          201
+        </td>
+        <td>
+          2420
+        </td>
+        <td>
+          7490
+          -
+          7495
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Execution.phase
+        </td>
+        <td style="background: #AEF1AE">
+          Execution.this.phase
+        </td>
+      </tr><tr>
+        <td>
+          201
+        </td>
+        <td>
+          2422
+        </td>
+        <td>
+          7476
+          -
+          7496
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.PluginExecution.setPhase
+        </td>
+        <td style="background: #AEF1AE">
+          exec.setPhase(Execution.this.phase)
+        </td>
+      </tr><tr>
+        <td>
+          202
+        </td>
+        <td>
+          2425
+        </td>
+        <td>
+          7525
+          -
+          7543
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.PluginExecution.addGoal
+        </td>
+        <td style="background: #AEF1AE">
+          exec.addGoal(goal)
+        </td>
+      </tr><tr>
+        <td>
+          202
+        </td>
+        <td>
+          2426
+        </td>
+        <td>
+          7501
+          -
+          7545
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          Execution.this.goals.foreach[Unit](((goal: String) =&gt; exec.addGoal(goal)))
+        </td>
+      </tr><tr>
+        <td>
+          203
+        </td>
+        <td>
+          2428
+        </td>
+        <td>
+          7550
+          -
+          7578
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.ConfigurationContainer.setInherited
+        </td>
+        <td style="background: #AEF1AE">
+          exec.setInherited(Execution.this.inherited)
+        </td>
+      </tr><tr>
+        <td>
+          203
+        </td>
+        <td>
+          2427
+        </td>
+        <td>
+          7568
+          -
+          7577
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Execution.inherited
+        </td>
+        <td style="background: #AEF1AE">
+          Execution.this.inherited
+        </td>
+      </tr><tr>
+        <td>
+          204
+        </td>
+        <td>
+          2439
+        </td>
+        <td>
+          7583
+          -
+          7583
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          204
+        </td>
+        <td>
+          2429
+        </td>
+        <td>
+          7587
+          -
+          7608
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Execution.this.configuration.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          204
+        </td>
+        <td>
+          2438
+        </td>
+        <td>
+          7583
+          -
+          7583
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          204
+        </td>
+        <td>
+          2437
+        </td>
+        <td>
+          7610
+          -
+          7842
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          {
+  val xmlStr: String = {
+  final class $anon extends AnyRef with org.apache.maven.unbound.Writeable {
+    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writeable&gt; = {
+      $anon.super.&lt;init&gt;();
+      ()
+    };
+    private[this] val xml: scala.xml.Elem = unbound.this.`package`.configToElem(Execution.this.configuration);
+    &lt;stable&gt; &lt;accessor&gt; def xml: scala.xml.Elem = $anon.this.xml
+  };
+  new $anon()
+}.toXmlString;
+  val sReader: java.io.StringReader = new java.io.StringReader(xmlStr);
+  exec.setConfiguration(org.apache.maven.shared.utils.xml.Xpp3DomBuilder.build(sReader))
+}
+        </td>
+      </tr><tr>
+        <td>
+          206
+        </td>
+        <td>
+          2432
+        </td>
+        <td>
+          7640
+          -
+          7643
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Execution.$anon.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new $anon()
+        </td>
+      </tr><tr>
+        <td>
+          207
+        </td>
+        <td>
+          2430
+        </td>
+        <td>
+          7695
+          -
+          7708
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Execution.configuration
+        </td>
+        <td style="background: #AEF1AE">
+          Execution.this.configuration
+        </td>
+      </tr><tr>
+        <td>
+          207
+        </td>
+        <td>
+          2431
+        </td>
+        <td>
+          7682
+          -
+          7709
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.configToElem
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.configToElem(Execution.this.configuration)
+        </td>
+      </tr><tr>
+        <td>
+          208
+        </td>
+        <td>
+          2433
+        </td>
+        <td>
+          7640
+          -
+          7732
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Writeable.toXmlString
+        </td>
+        <td style="background: #AEF1AE">
+          {
+  final class $anon extends AnyRef with org.apache.maven.unbound.Writeable {
+    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writeable&gt; = {
+      $anon.super.&lt;init&gt;();
+      ()
+    };
+    private[this] val xml: scala.xml.Elem = unbound.this.`package`.configToElem(Execution.this.configuration);
+    &lt;stable&gt; &lt;accessor&gt; def xml: scala.xml.Elem = $anon.this.xml
+  };
+  new $anon()
+}.toXmlString
+        </td>
+      </tr><tr>
+        <td>
+          209
+        </td>
+        <td>
+          2434
+        </td>
+        <td>
+          7753
+          -
+          7777
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.StringReader.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new java.io.StringReader(xmlStr)
+        </td>
+      </tr><tr>
+        <td>
+          210
+        </td>
+        <td>
+          2436
+        </td>
+        <td>
+          7784
+          -
+          7836
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.ConfigurationContainer.setConfiguration
+        </td>
+        <td style="background: #AEF1AE">
+          exec.setConfiguration(org.apache.maven.shared.utils.xml.Xpp3DomBuilder.build(sReader))
+        </td>
+      </tr><tr>
+        <td>
+          210
+        </td>
+        <td>
+          2435
+        </td>
+        <td>
+          7806
+          -
+          7835
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.shared.utils.xml.Xpp3DomBuilder.build
+        </td>
+        <td style="background: #AEF1AE">
+          org.apache.maven.shared.utils.xml.Xpp3DomBuilder.build(sReader)
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

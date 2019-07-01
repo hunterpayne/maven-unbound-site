@@ -1,0 +1,3630 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          org/apache/maven/unbound/JsonProjectAPI.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier, monospace;'>1 <span style=''>/*
+</span>2 <span style=''> * Licensed to the Apache Software Foundation (ASF) under one or more
+</span>3 <span style=''> * contributor license agreements.  See the NOTICE file distributed with
+</span>4 <span style=''> * this work for additional information regarding copyright ownership.
+</span>5 <span style=''> * The ASF licenses this file to You under the Apache License, Version 2.0
+</span>6 <span style=''> * (the &quot;License&quot;); you may not use this file except in compliance with
+</span>7 <span style=''> * the License.  You may obtain a copy of the License at
+</span>8 <span style=''> *
+</span>9 <span style=''> *    http://www.apache.org/licenses/LICENSE-2.0
+</span>10 <span style=''> *
+</span>11 <span style=''> * Unless required by applicable law or agreed to in writing, software
+</span>12 <span style=''> * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+</span>13 <span style=''> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+</span>14 <span style=''> * See the License for the specific language governing permissions and
+</span>15 <span style=''> * limitations under the License.
+</span>16 <span style=''> */
+</span>17 <span style=''>
+</span>18 <span style=''>package org.apache.maven.unbound
+</span>19 <span style=''>
+</span>20 <span style=''>import java.io.{
+</span>21 <span style=''>  InputStream, InputStreamReader, ObjectInputStream, ObjectOutputStream,
+</span>22 <span style=''>  OutputStream, OutputStreamWriter, Reader, Writer }
+</span>23 <span style=''>
+</span>24 <span style=''>import scala.reflect.Manifest
+</span>25 <span style=''>
+</span>26 <span style=''>import com.typesafe.config.{ Config, ConfigFactory, ConfigObject }
+</span>27 <span style=''>import org.json4s._
+</span>28 <span style=''>import org.json4s.native.JsonMethods
+</span>29 <span style=''>import org.json4s.native.Serialization
+</span>30 <span style=''>import org.json4s.native.Serialization.{ read, write, writePretty }
+</span>31 <span style=''>
+</span>32 <span style=''>/**
+</span>33 <span style=''>  * Conversion code that translates Json4s objects to and from Project case
+</span>34 <span style=''>  * class instances.  Unfortunately because Json4s serialization doesn't handle
+</span>35 <span style=''>  * case classes with default values well, often there are case objects
+</span>36 <span style=''>  * littered throughout the code to provide explicit serialization to/from
+</span>37 <span style=''>  * Json4s objects.  Those case objects extend this trait to get all the
+</span>38 <span style=''>  * utility code needed to read/write Json4s objects
+</span>39 <span style=''>  */
+</span>40 <span style=''>trait CommonJsonReader extends Labels {
+</span>41 <span style=''>
+</span>42 <span style=''>  implicit val formats: Formats
+</span>43 <span style=''>  implicit val boolReader = </span><span style='background: #AEF1AE'>DefaultReaders.BooleanReader</span><span style=''>
+</span>44 <span style=''>  implicit val strReader = </span><span style='background: #AEF1AE'>DefaultReaders.StringReader</span><span style=''>
+</span>45 <span style=''>
+</span>46 <span style=''>  // utility methods for reading various types of data from Json4s objects
+</span>47 <span style=''>  // and into Option[T]s
+</span>48 <span style=''>  protected def readBool(fields: List[JField], key: String): Option[Boolean] =
+</span>49 <span style=''>    </span><span style='background: #AEF1AE'>fields.filter { _._1 == key }.headOption.map { case(_, v) =&gt; v.as[Boolean] }</span><span style=''>
+</span>50 <span style=''>
+</span>51 <span style=''>  // for strings
+</span>52 <span style=''>  protected def readStr(fields: List[JField], key: String): Option[String] =
+</span>53 <span style=''>    </span><span style='background: #AEF1AE'>fields.filter { _._1 == key }.headOption.map { case(_, v) =&gt; v match {
+</span>54 <span style=''></span><span style='background: #AEF1AE'>      case JString(s) =&gt; s.replaceAllLiterally(&quot;\n&quot;, scala.compat.Platform.EOL)
+</span>55 <span style=''></span><span style='background: #AEF1AE'>      case v =&gt;
+</span>56 <span style=''></span><span style='background: #AEF1AE'>        </span><span style='background: #F0ADAD'>v.as[String].replaceAllLiterally(&quot;\n&quot;, scala.compat.Platform.EOL)</span><span style='background: #AEF1AE'>
+</span>57 <span style=''></span><span style='background: #AEF1AE'>    }}</span><span style=''>
+</span>58 <span style=''>
+</span>59 <span style=''>  // for objects
+</span>60 <span style=''>  protected[unbound] def readObject[T](
+</span>61 <span style=''>    obj: JObject, key: String, defVa: T = null)(implicit m: Manifest[T]): T =
+</span>62 <span style=''>    (</span><span style='background: #AEF1AE'>obj \ key</span><span style=''>) match {
+</span>63 <span style=''>      case obj2: JObject =&gt; </span><span style='background: #AEF1AE'>Extraction.extract[T](obj2)</span><span style=''>
+</span>64 <span style=''>      case _ =&gt; defVa
+</span>65 <span style=''>    }
+</span>66 <span style=''>
+</span>67 <span style=''>  // for reading Properties objects
+</span>68 <span style=''>  protected def readProperties(
+</span>69 <span style=''>    obj: JObject, key: String = SL.PropertiesStr): Map[String, String] =
+</span>70 <span style=''>    (</span><span style='background: #AEF1AE'>obj \ key</span><span style=''>) match {
+</span>71 <span style=''>      case JObject(fields) =&gt;
+</span>72 <span style=''>        </span><span style='background: #AEF1AE'>fields.map { case((key, v)) =&gt; (key, v.as[String]) }.toMap</span><span style=''>
+</span>73 <span style=''>      case _ =&gt; </span><span style='background: #AEF1AE'>Map[String, String]()</span><span style=''>
+</span>74 <span style=''>    }
+</span>75 <span style=''>
+</span>76 <span style=''>  // for reading lists of objects
+</span>77 <span style=''>  protected def readObjectSequence[T](
+</span>78 <span style=''>    fields: List[JField], key: String,
+</span>79 <span style=''>    defVal: Seq[T] = Seq[T]())(implicit m: Manifest[T]): Seq[T] =
+</span>80 <span style=''>    </span><span style='background: #AEF1AE'>fields.filter { _._1 == key }.headOption.map { e =&gt;
+</span>81 <span style=''></span><span style='background: #AEF1AE'>      e._2.children.map { Extraction.extract[T](_) }}.getOrElse(defVal)</span><span style=''>
+</span>82 <span style=''>
+</span>83 <span style=''>  // for reading lists of strings
+</span>84 <span style=''>  protected def readStringSequence(
+</span>85 <span style=''>    fields: List[JField], key: String): Seq[String] =
+</span>86 <span style=''>    </span><span style='background: #AEF1AE'>fields.filter { _._1 == key }.headOption.map { goals =&gt;
+</span>87 <span style=''></span><span style='background: #AEF1AE'>      goals._2.children.map { goal =&gt; Extraction.extract[String](goal) }
+</span>88 <span style=''></span><span style='background: #AEF1AE'>    }.getOrElse(Seq[String]())</span><span style=''>
+</span>89 <span style=''>
+</span>90 <span style=''>  // utility methods for converting a specific data type to a Json4s field
+</span>91 <span style=''>  protected def writeBool(
+</span>92 <span style=''>    name: String, b: Boolean, defVal: Boolean): Option[JField] =
+</span>93 <span style=''>    if (</span><span style='background: #AEF1AE'>b != defVal</span><span style=''>) </span><span style='background: #AEF1AE'>Some((name, JBool(b)))</span><span style=''>
+</span>94 <span style=''>    else </span><span style='background: #AEF1AE'>None</span><span style=''>
+</span>95 <span style=''>
+</span>96 <span style=''>  // for writing a string
+</span>97 <span style=''>  protected def writeStr(
+</span>98 <span style=''>    name: String, s: String, defVal: String = null): Option[JField] = {
+</span>99 <span style=''>    if (</span><span style='background: #AEF1AE'>s != null &amp;&amp; s != defVal</span><span style=''>) </span><span style='background: #AEF1AE'>Some((name, JString(s)))</span><span style=''>
+</span>100 <span style=''>    else </span><span style='background: #AEF1AE'>None</span><span style=''>
+</span>101 <span style=''>  }
+</span>102 <span style=''>
+</span>103 <span style=''>  // for writing a generic object of type T
+</span>104 <span style=''>  protected def writeObject[T](
+</span>105 <span style=''>    name: String, t: T, defVal: T = null): Option[JField] =
+</span>106 <span style=''>    if (</span><span style='background: #AEF1AE'>t != null &amp;&amp; t != defVal</span><span style=''>) </span><span style='background: #AEF1AE'>Some((name, Extraction.decompose(t)))</span><span style=''>
+</span>107 <span style=''>    else </span><span style='background: #AEF1AE'>None</span><span style=''>
+</span>108 <span style=''>
+</span>109 <span style=''>  // for writing a Properties object
+</span>110 <span style=''>  protected def writeProperties(
+</span>111 <span style=''>    name: String, p: Map[String, String]): Option[JField] =
+</span>112 <span style=''>    if (</span><span style='background: #AEF1AE'>!p.isEmpty</span><span style=''>)
+</span>113 <span style=''>      </span><span style='background: #AEF1AE'>Some((name, JObject(p.map { case(k, v) =&gt; (k, JString(v)) }.toList)))</span><span style=''>
+</span>114 <span style=''>    else </span><span style='background: #AEF1AE'>None</span><span style=''>
+</span>115 <span style=''>
+</span>116 <span style=''>  // for writing a list of objects of type T
+</span>117 <span style=''>  protected def writeObjectSequence[T](
+</span>118 <span style=''>    name: String, arr: Seq[T], defVal: Seq[T] = Seq[T]()): Option[JField] =
+</span>119 <span style=''>    if (</span><span style='background: #AEF1AE'>arr != null &amp;&amp; arr != defVal</span><span style=''>)
+</span>120 <span style=''>      </span><span style='background: #AEF1AE'>Some((name, JArray(arr.map { Extraction.decompose(_) }.toList)))</span><span style=''>
+</span>121 <span style=''>    else </span><span style='background: #AEF1AE'>None</span><span style=''>
+</span>122 <span style=''>
+</span>123 <span style=''>  // for writing a list of strings
+</span>124 <span style=''>  protected def writeStringSequence(
+</span>125 <span style=''>    name: String, v: Seq[String]): Option[JField] =
+</span>126 <span style=''>    if (</span><span style='background: #AEF1AE'>v != null &amp;&amp; !v.isEmpty</span><span style=''>)
+</span>127 <span style=''>      </span><span style='background: #AEF1AE'>Some((name, JArray(v.map { JString(_) }.toList)))</span><span style=''>
+</span>128 <span style=''>    else </span><span style='background: #AEF1AE'>None</span><span style=''>
+</span>129 <span style=''>}
+</span>130 <span style=''>
+</span>131 <span style=''>/**
+</span>132 <span style=''>  * A trait which gathers all the case object serializers together so they can
+</span>133 <span style=''>  * be used to read/write Project case class objects.
+</span>134 <span style=''>  */
+</span>135 <span style=''>trait JsonProjectAPI extends JsonMethods with CommonJsonReader {
+</span>136 <span style=''>
+</span>137 <span style=''>  implicit val formats =
+</span>138 <span style=''>    </span><span style='background: #AEF1AE'>Serialization.formats(NoTypeHints) +
+</span>139 <span style=''></span><span style='background: #AEF1AE'>    new Project.ProjectSerializer +
+</span>140 <span style=''></span><span style='background: #AEF1AE'>    new Build.BuildSerializer +
+</span>141 <span style=''></span><span style='background: #AEF1AE'>    new Parent.ParentSerializer +
+</span>142 <span style=''></span><span style='background: #AEF1AE'>    new Organization.OrganizationSerializer +
+</span>143 <span style=''></span><span style='background: #AEF1AE'>    new Extension.ExtensionSerializer +
+</span>144 <span style=''></span><span style='background: #AEF1AE'>    new Plugin.PluginSerializer +
+</span>145 <span style=''></span><span style='background: #AEF1AE'>    new Dependency.DependencySerializer +
+</span>146 <span style=''></span><span style='background: #AEF1AE'>    new Execution.ExecutionSerializer +
+</span>147 <span style=''></span><span style='background: #AEF1AE'>    new Reporting.ReportingSerializer +
+</span>148 <span style=''></span><span style='background: #AEF1AE'>    new ReportPlugin.ReportPluginSerializer +
+</span>149 <span style=''></span><span style='background: #AEF1AE'>    new Resource.ResourceSerializer +
+</span>150 <span style=''></span><span style='background: #AEF1AE'>    new CIManagement.CIManagementSerializer +
+</span>151 <span style=''></span><span style='background: #AEF1AE'>    new Notifier.NotifierSerializer +
+</span>152 <span style=''></span><span style='background: #AEF1AE'>    new Contributor.ContributorSerializer +
+</span>153 <span style=''></span><span style='background: #AEF1AE'>    new Developer.DeveloperSerializer +
+</span>154 <span style=''></span><span style='background: #AEF1AE'>    new MailingList.MailingListSerializer +
+</span>155 <span style=''></span><span style='background: #AEF1AE'>    new Parent.ParentSerializer +
+</span>156 <span style=''></span><span style='background: #AEF1AE'>    new License.LicenseSerializer +
+</span>157 <span style=''></span><span style='background: #AEF1AE'>    new Scm.ScmSerializer +
+</span>158 <span style=''></span><span style='background: #AEF1AE'>    new IssueManagement.IssueManagementSerializer +
+</span>159 <span style=''></span><span style='background: #AEF1AE'>    new Site.SiteSerializer +
+</span>160 <span style=''></span><span style='background: #AEF1AE'>    new DistributionManagement.DistributionManagementSerializer +
+</span>161 <span style=''></span><span style='background: #AEF1AE'>    new Relocation.RelocationSerializer +
+</span>162 <span style=''></span><span style='background: #AEF1AE'>    new DeploymentRepository.DeploymentRepositorySerializer +
+</span>163 <span style=''></span><span style='background: #AEF1AE'>    new Repository.RepositorySerializer +
+</span>164 <span style=''></span><span style='background: #AEF1AE'>    new RepositoryPolicy.RepositoryPolicySerializer +
+</span>165 <span style=''></span><span style='background: #AEF1AE'>    new ReportSet.ReportSetSerializer +
+</span>166 <span style=''></span><span style='background: #AEF1AE'>    new BuildBase.BuildBaseSerializer +
+</span>167 <span style=''></span><span style='background: #AEF1AE'>    new Activation.ActivationSerializer +
+</span>168 <span style=''></span><span style='background: #AEF1AE'>    new ActivationOS.ActivationOSSerializer +
+</span>169 <span style=''></span><span style='background: #AEF1AE'>    new ActivationProperty.ActivationPropertySerializer +
+</span>170 <span style=''></span><span style='background: #AEF1AE'>    new ActivationFile.ActivationFileSerializer +
+</span>171 <span style=''></span><span style='background: #AEF1AE'>    new Profile.ProfileSerializer +
+</span>172 <span style=''></span><span style='background: #AEF1AE'>    new Archiver.ArchiverSerializer +
+</span>173 <span style=''></span><span style='background: #AEF1AE'>    new ManifestObj.ManifestSerializer +
+</span>174 <span style=''></span><span style='background: #AEF1AE'>    new ManifestSection.ManifestSectionSerializer</span><span style=''>
+</span>175 <span style=''>}
+</span>176 <span style=''>
+</span>177 <span style=''>/**
+</span>178 <span style=''>  * Static Json reader for Project objects.  Reads from Strings, Readers or
+</span>179 <span style=''>  * InputStreams and returns Project case classes
+</span>180 <span style=''>  */
+</span>181 <span style=''>object JsonReader extends JsonProjectAPI {
+</span>182 <span style=''>
+</span>183 <span style=''>  /** Reads a string into a Project case class */
+</span>184 <span style=''>  def readPOM(jsonSrc: String): Project = </span><span style='background: #AEF1AE'>read[Project](jsonSrc)</span><span style=''>
+</span>185 <span style=''>
+</span>186 <span style=''>  /** Reads the contents of a Reader into a Project case class */
+</span>187 <span style=''>  def readPOM(reader: Reader): Project = </span><span style='background: #AEF1AE'>read[Project](reader)</span><span style=''>
+</span>188 <span style=''>
+</span>189 <span style=''>  /**
+</span>190 <span style=''>    * Reads the contents of an InputStream in a specific character encoding
+</span>191 <span style=''>    * into a Project case class
+</span>192 <span style=''>    */
+</span>193 <span style=''>  def readPOM(in: InputStream, enc: String = &quot;UTF-8&quot;): Project =
+</span>194 <span style=''>    </span><span style='background: #AEF1AE'>read[Project](new InputStreamReader(in, enc))</span><span style=''>
+</span>195 <span style=''>}
+</span>196 <span style=''>
+</span>197 <span style=''>/**
+</span>198 <span style=''>  * Static Json writer for Project objects.  Writes Project case classes into
+</span>199 <span style=''>  * Strings, Writers or OutputStreams
+</span>200 <span style=''>  */
+</span>201 <span style=''>object JsonWriter extends JsonProjectAPI {
+</span>202 <span style=''>
+</span>203 <span style=''>  /** Writes a condensed Json representing project and returns it as a String */
+</span>204 <span style=''>  def writeConcisePOM(project: Project): String = </span><span style='background: #AEF1AE'>write[Project](project)</span><span style=''>
+</span>205 <span style=''>
+</span>206 <span style=''>  /**
+</span>207 <span style=''>    * Writes a human readable Json representing project and returns it as a
+</span>208 <span style=''>    * String
+</span>209 <span style=''>    */
+</span>210 <span style=''>  def writePOM(project: Project): String = </span><span style='background: #AEF1AE'>writePretty(project)</span><span style=''>
+</span>211 <span style=''>
+</span>212 <span style=''>  /**
+</span>213 <span style=''>    * Writes a human readable Json representing project into the provided
+</span>214 <span style=''>    * Writer
+</span>215 <span style=''>    */
+</span>216 <span style=''>  def writePOM[W &lt;: Writer](project: Project, writer: W): Unit =
+</span>217 <span style=''>    </span><span style='background: #F0ADAD'>writePretty[Project, W](project, writer)</span><span style=''>
+</span>218 <span style=''>
+</span>219 <span style=''>  /**
+</span>220 <span style=''>    * Writes a human readable Json representing project into the provided
+</span>221 <span style=''>    * OutputStream using encoding enc
+</span>222 <span style=''>    */
+</span>223 <span style=''>  def writePOM(
+</span>224 <span style=''>    project: Project, os: OutputStream, enc: String = &quot;UTF-8&quot;): Unit =
+</span>225 <span style=''>    </span><span style='background: #F0ADAD'>writePretty[Project, OutputStreamWriter](
+</span>226 <span style=''></span><span style='background: #F0ADAD'>      project, new OutputStreamWriter(os, enc))</span><span style=''>
+</span>227 <span style=''>
+</span>228 <span style=''>  // used to write an Archiver as Json
+</span>229 <span style=''>  protected[unbound] def writeArchiver(archiver: Archiver): String =
+</span>230 <span style=''>    </span><span style='background: #AEF1AE'>writePretty(archiver)</span><span style=''>
+</span>231 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          43
+        </td>
+        <td>
+          1424
+        </td>
+        <td>
+          1782
+          -
+          1810
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.json4s.DefaultReaders.BooleanReader
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.DefaultReaders.BooleanReader
+        </td>
+      </tr><tr>
+        <td>
+          44
+        </td>
+        <td>
+          1425
+        </td>
+        <td>
+          1838
+          -
+          1865
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.json4s.DefaultReaders.StringReader
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.DefaultReaders.StringReader
+        </td>
+      </tr><tr>
+        <td>
+          49
+        </td>
+        <td>
+          1429
+        </td>
+        <td>
+          2050
+          -
+          2126
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Option.map
+        </td>
+        <td style="background: #AEF1AE">
+          fields.filter(((x$1: org.json4s.JField) =&gt; x$1._1.==(key))).headOption.map[Boolean](((x0$1: org.json4s.JField) =&gt; x0$1 match {
+  case (_1: String, _2: org.json4s.JsonAST.JValue)(String, org.json4s.JsonAST.JValue)(_, (v @ _)) =&gt; org.json4s.`package`.jvalue2extractable(v).as[Boolean](CommonJsonReader.this.boolReader)
+}))
+        </td>
+      </tr><tr>
+        <td>
+          49
+        </td>
+        <td>
+          1428
+        </td>
+        <td>
+          2111
+          -
+          2124
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.ExtractableJsonAstNode.as
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.`package`.jvalue2extractable(v).as[Boolean](CommonJsonReader.this.boolReader)
+        </td>
+      </tr><tr>
+        <td>
+          49
+        </td>
+        <td>
+          1427
+        </td>
+        <td>
+          2115
+          -
+          2115
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.CommonJsonReader.boolReader
+        </td>
+        <td style="background: #AEF1AE">
+          CommonJsonReader.this.boolReader
+        </td>
+      </tr><tr>
+        <td>
+          49
+        </td>
+        <td>
+          1426
+        </td>
+        <td>
+          2066
+          -
+          2077
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          x$1._1.==(key)
+        </td>
+      </tr><tr>
+        <td>
+          53
+        </td>
+        <td>
+          1430
+        </td>
+        <td>
+          2242
+          -
+          2253
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          x$2._1.==(key)
+        </td>
+      </tr><tr>
+        <td>
+          53
+        </td>
+        <td>
+          1439
+        </td>
+        <td>
+          2226
+          -
+          2473
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Option.map
+        </td>
+        <td style="background: #AEF1AE">
+          fields.filter(((x$2: org.json4s.JField) =&gt; x$2._1.==(key))).headOption.map[String](((x0$1: org.json4s.JField) =&gt; x0$1 match {
+  case (_1: String, _2: org.json4s.JsonAST.JValue)(String, org.json4s.JsonAST.JValue)(_, (v @ _)) =&gt; v match {
+    case (s: String)org.json4s.JsonAST.JString((s @ _)) =&gt; scala.Predef.augmentString(s).replaceAllLiterally(&quot;\n&quot;, scala.compat.Platform.EOL)
+    case (v @ _) =&gt; scala.Predef.augmentString(org.json4s.`package`.jvalue2extractable(v).as[String](CommonJsonReader.this.strReader)).replaceAllLiterally(&quot;\n&quot;, scala.compat.Platform.EOL)
+  }
+}))
+        </td>
+      </tr><tr>
+        <td>
+          54
+        </td>
+        <td>
+          1432
+        </td>
+        <td>
+          2350
+          -
+          2375
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.compat.Platform.EOL
+        </td>
+        <td style="background: #AEF1AE">
+          scala.compat.Platform.EOL
+        </td>
+      </tr><tr>
+        <td>
+          54
+        </td>
+        <td>
+          1431
+        </td>
+        <td>
+          2344
+          -
+          2348
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          &quot;\n&quot;
+        </td>
+      </tr><tr>
+        <td>
+          54
+        </td>
+        <td>
+          1433
+        </td>
+        <td>
+          2322
+          -
+          2376
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.immutable.StringLike.replaceAllLiterally
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Predef.augmentString(s).replaceAllLiterally(&quot;\n&quot;, scala.compat.Platform.EOL)
+        </td>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          1438
+        </td>
+        <td>
+          2401
+          -
+          2466
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.immutable.StringLike.replaceAllLiterally
+        </td>
+        <td style="background: #F0ADAD">
+          scala.Predef.augmentString(org.json4s.`package`.jvalue2extractable(v).as[String](CommonJsonReader.this.strReader)).replaceAllLiterally(&quot;\n&quot;, scala.compat.Platform.EOL)
+        </td>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          1434
+        </td>
+        <td>
+          2405
+          -
+          2405
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.CommonJsonReader.strReader
+        </td>
+        <td style="background: #F0ADAD">
+          CommonJsonReader.this.strReader
+        </td>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          1437
+        </td>
+        <td>
+          2440
+          -
+          2465
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.compat.Platform.EOL
+        </td>
+        <td style="background: #F0ADAD">
+          scala.compat.Platform.EOL
+        </td>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          1436
+        </td>
+        <td>
+          2434
+          -
+          2438
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;\n&quot;
+        </td>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          1435
+        </td>
+        <td>
+          2401
+          -
+          2413
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.ExtractableJsonAstNode.as
+        </td>
+        <td style="background: #F0ADAD">
+          org.json4s.`package`.jvalue2extractable(v).as[String](CommonJsonReader.this.strReader)
+        </td>
+      </tr><tr>
+        <td>
+          62
+        </td>
+        <td>
+          1440
+        </td>
+        <td>
+          2615
+          -
+          2624
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.json4s.MonadicJValue.\
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.`package`.jvalue2monadic(obj).\(key)
+        </td>
+      </tr><tr>
+        <td>
+          63
+        </td>
+        <td>
+          1441
+        </td>
+        <td>
+          2683
+          -
+          2683
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.CommonJsonReader.formats
+        </td>
+        <td style="background: #AEF1AE">
+          CommonJsonReader.this.formats
+        </td>
+      </tr><tr>
+        <td>
+          63
+        </td>
+        <td>
+          1442
+        </td>
+        <td>
+          2662
+          -
+          2689
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.Extraction.extract
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.Extraction.extract[T](obj2)(CommonJsonReader.this.formats, m)
+        </td>
+      </tr><tr>
+        <td>
+          70
+        </td>
+        <td>
+          1443
+        </td>
+        <td>
+          2865
+          -
+          2874
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.json4s.MonadicJValue.\
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.`package`.jvalue2monadic(obj).\(key)
+        </td>
+      </tr><tr>
+        <td>
+          72
+        </td>
+        <td>
+          1447
+        </td>
+        <td>
+          2933
+          -
+          2933
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.List.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.List.canBuildFrom[(String, String)]
+        </td>
+      </tr><tr>
+        <td>
+          72
+        </td>
+        <td>
+          1449
+        </td>
+        <td>
+          2922
+          -
+          2980
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableOnce.toMap
+        </td>
+        <td style="background: #AEF1AE">
+          fields.map[(String, String), List[(String, String)]](((x0$1: org.json4s.JsonAST.JField) =&gt; x0$1 match {
+  case (_1: String, _2: org.json4s.JsonAST.JValue)(String, org.json4s.JsonAST.JValue)((key @ _), (v @ _)) =&gt; scala.Tuple2.apply[String, String](key, org.json4s.`package`.jvalue2extractable(v).as[String](CommonJsonReader.this.strReader))
+}))(immutable.this.List.canBuildFrom[(String, String)]).toMap[String, String](scala.Predef.$conforms[(String, String)])
+        </td>
+      </tr><tr>
+        <td>
+          72
+        </td>
+        <td>
+          1446
+        </td>
+        <td>
+          2953
+          -
+          2972
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Tuple2.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Tuple2.apply[String, String](key, org.json4s.`package`.jvalue2extractable(v).as[String](CommonJsonReader.this.strReader))
+        </td>
+      </tr><tr>
+        <td>
+          72
+        </td>
+        <td>
+          1448
+        </td>
+        <td>
+          2975
+          -
+          2975
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.Predef.$conforms
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Predef.$conforms[(String, String)]
+        </td>
+      </tr><tr>
+        <td>
+          72
+        </td>
+        <td>
+          1445
+        </td>
+        <td>
+          2959
+          -
+          2971
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.ExtractableJsonAstNode.as
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.`package`.jvalue2extractable(v).as[String](CommonJsonReader.this.strReader)
+        </td>
+      </tr><tr>
+        <td>
+          72
+        </td>
+        <td>
+          1444
+        </td>
+        <td>
+          2963
+          -
+          2963
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.CommonJsonReader.strReader
+        </td>
+        <td style="background: #AEF1AE">
+          CommonJsonReader.this.strReader
+        </td>
+      </tr><tr>
+        <td>
+          73
+        </td>
+        <td>
+          1450
+        </td>
+        <td>
+          2997
+          -
+          3018
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.generic.GenMapFactory.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Predef.Map.apply[String, String]()
+        </td>
+      </tr><tr>
+        <td>
+          81
+        </td>
+        <td>
+          1451
+        </td>
+        <td>
+          3208
+          -
+          3331
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Option.getOrElse
+        </td>
+        <td style="background: #AEF1AE">
+          fields.filter(((x$3: org.json4s.JField) =&gt; x$3._1.==(key))).headOption.map[List[T]](((e: org.json4s.JField) =&gt; e._2.children.map[T, List[T]](((x$4: org.json4s.JsonAST.JValue) =&gt; org.json4s.Extraction.extract[T](x$4)(CommonJsonReader.this.formats, m)))(immutable.this.List.canBuildFrom[T]))).getOrElse[Seq[T]](defVal)
+        </td>
+      </tr><tr>
+        <td>
+          86
+        </td>
+        <td>
+          1452
+        </td>
+        <td>
+          3477
+          -
+          3488
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          x$5._1.==(key)
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          1456
+        </td>
+        <td>
+          3545
+          -
+          3545
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.List.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.List.canBuildFrom[String]
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          1455
+        </td>
+        <td>
+          3555
+          -
+          3587
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.Extraction.extract
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.Extraction.extract[String](goal)(CommonJsonReader.this.formats, scala.reflect.ManifestFactory.classType[String](classOf[java.lang.String]))
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          1454
+        </td>
+        <td>
+          3581
+          -
+          3581
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.reflect.ManifestFactory.classType
+        </td>
+        <td style="background: #AEF1AE">
+          scala.reflect.ManifestFactory.classType[String](classOf[java.lang.String])
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          1457
+        </td>
+        <td>
+          3523
+          -
+          3589
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.immutable.List.map
+        </td>
+        <td style="background: #AEF1AE">
+          goals._2.children.map[String, List[String]](((goal: org.json4s.JsonAST.JValue) =&gt; org.json4s.Extraction.extract[String](goal)(CommonJsonReader.this.formats, scala.reflect.ManifestFactory.classType[String](classOf[java.lang.String]))))(immutable.this.List.canBuildFrom[String])
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          1453
+        </td>
+        <td>
+          3581
+          -
+          3581
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.CommonJsonReader.formats
+        </td>
+        <td style="background: #AEF1AE">
+          CommonJsonReader.this.formats
+        </td>
+      </tr><tr>
+        <td>
+          88
+        </td>
+        <td>
+          1459
+        </td>
+        <td>
+          3461
+          -
+          3620
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Option.getOrElse
+        </td>
+        <td style="background: #AEF1AE">
+          fields.filter(((x$5: org.json4s.JField) =&gt; x$5._1.==(key))).headOption.map[List[String]](((goals: org.json4s.JField) =&gt; goals._2.children.map[String, List[String]](((goal: org.json4s.JsonAST.JValue) =&gt; org.json4s.Extraction.extract[String](goal)(CommonJsonReader.this.formats, scala.reflect.ManifestFactory.classType[String](classOf[java.lang.String]))))(immutable.this.List.canBuildFrom[String]))).getOrElse[Seq[String]](scala.collection.Seq.apply[String]())
+        </td>
+      </tr><tr>
+        <td>
+          88
+        </td>
+        <td>
+          1458
+        </td>
+        <td>
+          3606
+          -
+          3619
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.generic.GenericCompanion.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.collection.Seq.apply[String]()
+        </td>
+      </tr><tr>
+        <td>
+          93
+        </td>
+        <td>
+          1461
+        </td>
+        <td>
+          3822
+          -
+          3830
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.json4s.JsonAST.JBool.apply
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.`package`.JBool.apply(b)
+        </td>
+      </tr><tr>
+        <td>
+          93
+        </td>
+        <td>
+          1464
+        </td>
+        <td>
+          3810
+          -
+          3832
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.Some.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Some.apply[(String, org.json4s.JsonAST.JBool)](scala.Tuple2.apply[String, org.json4s.JsonAST.JBool](name, org.json4s.`package`.JBool.apply(b)))
+        </td>
+      </tr><tr>
+        <td>
+          93
+        </td>
+        <td>
+          1463
+        </td>
+        <td>
+          3810
+          -
+          3832
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Some.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Some.apply[(String, org.json4s.JsonAST.JBool)](scala.Tuple2.apply[String, org.json4s.JsonAST.JBool](name, org.json4s.`package`.JBool.apply(b)))
+        </td>
+      </tr><tr>
+        <td>
+          93
+        </td>
+        <td>
+          1460
+        </td>
+        <td>
+          3797
+          -
+          3808
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Boolean.!=
+        </td>
+        <td style="background: #AEF1AE">
+          b.!=(defVal)
+        </td>
+      </tr><tr>
+        <td>
+          93
+        </td>
+        <td>
+          1462
+        </td>
+        <td>
+          3815
+          -
+          3831
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Tuple2.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Tuple2.apply[String, org.json4s.JsonAST.JBool](name, org.json4s.`package`.JBool.apply(b))
+        </td>
+      </tr><tr>
+        <td>
+          94
+        </td>
+        <td>
+          1465
+        </td>
+        <td>
+          3842
+          -
+          3846
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.None
+        </td>
+        <td style="background: #AEF1AE">
+          scala.None
+        </td>
+      </tr><tr>
+        <td>
+          94
+        </td>
+        <td>
+          1466
+        </td>
+        <td>
+          3842
+          -
+          3846
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.None
+        </td>
+        <td style="background: #AEF1AE">
+          scala.None
+        </td>
+      </tr><tr>
+        <td>
+          99
+        </td>
+        <td>
+          1468
+        </td>
+        <td>
+          3993
+          -
+          4004
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          s.!=(defVal)
+        </td>
+      </tr><tr>
+        <td>
+          99
+        </td>
+        <td>
+          1467
+        </td>
+        <td>
+          3985
+          -
+          3989
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          null
+        </td>
+      </tr><tr>
+        <td>
+          99
+        </td>
+        <td>
+          1470
+        </td>
+        <td>
+          4018
+          -
+          4028
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.json4s.JsonAST.JString.apply
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.`package`.JString.apply(s)
+        </td>
+      </tr><tr>
+        <td>
+          99
+        </td>
+        <td>
+          1473
+        </td>
+        <td>
+          4006
+          -
+          4030
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.Some.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Some.apply[(String, org.json4s.JsonAST.JString)](scala.Tuple2.apply[String, org.json4s.JsonAST.JString](name, org.json4s.`package`.JString.apply(s)))
+        </td>
+      </tr><tr>
+        <td>
+          99
+        </td>
+        <td>
+          1472
+        </td>
+        <td>
+          4006
+          -
+          4030
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Some.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Some.apply[(String, org.json4s.JsonAST.JString)](scala.Tuple2.apply[String, org.json4s.JsonAST.JString](name, org.json4s.`package`.JString.apply(s)))
+        </td>
+      </tr><tr>
+        <td>
+          99
+        </td>
+        <td>
+          1469
+        </td>
+        <td>
+          3980
+          -
+          4004
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Boolean.&amp;&amp;
+        </td>
+        <td style="background: #AEF1AE">
+          s.!=(null).&amp;&amp;(s.!=(defVal))
+        </td>
+      </tr><tr>
+        <td>
+          99
+        </td>
+        <td>
+          1471
+        </td>
+        <td>
+          4011
+          -
+          4029
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Tuple2.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Tuple2.apply[String, org.json4s.JsonAST.JString](name, org.json4s.`package`.JString.apply(s))
+        </td>
+      </tr><tr>
+        <td>
+          100
+        </td>
+        <td>
+          1474
+        </td>
+        <td>
+          4040
+          -
+          4044
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.None
+        </td>
+        <td style="background: #AEF1AE">
+          scala.None
+        </td>
+      </tr><tr>
+        <td>
+          100
+        </td>
+        <td>
+          1475
+        </td>
+        <td>
+          4040
+          -
+          4044
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.None
+        </td>
+        <td style="background: #AEF1AE">
+          scala.None
+        </td>
+      </tr><tr>
+        <td>
+          106
+        </td>
+        <td>
+          1483
+        </td>
+        <td>
+          4220
+          -
+          4257
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.Some.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Some.apply[(String, org.json4s.JValue)](scala.Tuple2.apply[String, org.json4s.JValue](name, org.json4s.Extraction.decompose(t)(CommonJsonReader.this.formats)))
+        </td>
+      </tr><tr>
+        <td>
+          106
+        </td>
+        <td>
+          1476
+        </td>
+        <td>
+          4199
+          -
+          4203
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          null
+        </td>
+      </tr><tr>
+        <td>
+          106
+        </td>
+        <td>
+          1479
+        </td>
+        <td>
+          4252
+          -
+          4252
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.CommonJsonReader.formats
+        </td>
+        <td style="background: #AEF1AE">
+          CommonJsonReader.this.formats
+        </td>
+      </tr><tr>
+        <td>
+          106
+        </td>
+        <td>
+          1482
+        </td>
+        <td>
+          4220
+          -
+          4257
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Some.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Some.apply[(String, org.json4s.JValue)](scala.Tuple2.apply[String, org.json4s.JValue](name, org.json4s.Extraction.decompose(t)(CommonJsonReader.this.formats)))
+        </td>
+      </tr><tr>
+        <td>
+          106
+        </td>
+        <td>
+          1481
+        </td>
+        <td>
+          4225
+          -
+          4256
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Tuple2.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Tuple2.apply[String, org.json4s.JValue](name, org.json4s.Extraction.decompose(t)(CommonJsonReader.this.formats))
+        </td>
+      </tr><tr>
+        <td>
+          106
+        </td>
+        <td>
+          1478
+        </td>
+        <td>
+          4194
+          -
+          4218
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Boolean.&amp;&amp;
+        </td>
+        <td style="background: #AEF1AE">
+          t.!=(null).&amp;&amp;(t.!=(defVal))
+        </td>
+      </tr><tr>
+        <td>
+          106
+        </td>
+        <td>
+          1477
+        </td>
+        <td>
+          4207
+          -
+          4218
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Any.!=
+        </td>
+        <td style="background: #AEF1AE">
+          t.!=(defVal)
+        </td>
+      </tr><tr>
+        <td>
+          106
+        </td>
+        <td>
+          1480
+        </td>
+        <td>
+          4232
+          -
+          4255
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.Extraction.decompose
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.Extraction.decompose(t)(CommonJsonReader.this.formats)
+        </td>
+      </tr><tr>
+        <td>
+          107
+        </td>
+        <td>
+          1485
+        </td>
+        <td>
+          4267
+          -
+          4271
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.None
+        </td>
+        <td style="background: #AEF1AE">
+          scala.None
+        </td>
+      </tr><tr>
+        <td>
+          107
+        </td>
+        <td>
+          1484
+        </td>
+        <td>
+          4267
+          -
+          4271
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.None
+        </td>
+        <td style="background: #AEF1AE">
+          scala.None
+        </td>
+      </tr><tr>
+        <td>
+          112
+        </td>
+        <td>
+          1486
+        </td>
+        <td>
+          4411
+          -
+          4421
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.Boolean.unary_!
+        </td>
+        <td style="background: #AEF1AE">
+          p.isEmpty.unary_!
+        </td>
+      </tr><tr>
+        <td>
+          113
+        </td>
+        <td>
+          1492
+        </td>
+        <td>
+          4434
+          -
+          4497
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Tuple2.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Tuple2.apply[String, org.json4s.JsonAST.JObject](name, org.json4s.`package`.JObject.apply(p.map[(String, org.json4s.JsonAST.JString), scala.collection.immutable.Map[String,org.json4s.JsonAST.JString]](((x0$1: (String, String)) =&gt; x0$1 match {
+  case (_1: String, _2: String)(String, String)((k @ _), (v @ _)) =&gt; scala.Tuple2.apply[String, org.json4s.JsonAST.JString](k, org.json4s.`package`.JString.apply(v))
+}))(immutable.this.Map.canBuildFrom[String, org.json4s.JsonAST.JString]).toList))
+        </td>
+      </tr><tr>
+        <td>
+          113
+        </td>
+        <td>
+          1494
+        </td>
+        <td>
+          4429
+          -
+          4498
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.Some.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Some.apply[(String, org.json4s.JsonAST.JObject)](scala.Tuple2.apply[String, org.json4s.JsonAST.JObject](name, org.json4s.`package`.JObject.apply(p.map[(String, org.json4s.JsonAST.JString), scala.collection.immutable.Map[String,org.json4s.JsonAST.JString]](((x0$1: (String, String)) =&gt; x0$1 match {
+  case (_1: String, _2: String)(String, String)((k @ _), (v @ _)) =&gt; scala.Tuple2.apply[String, org.json4s.JsonAST.JString](k, org.json4s.`package`.JString.apply(v))
+}))(immutable.this.Map.canBuildFrom[String, org.json4s.JsonAST.JString]).toList)))
+        </td>
+      </tr><tr>
+        <td>
+          113
+        </td>
+        <td>
+          1488
+        </td>
+        <td>
+          4471
+          -
+          4486
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Tuple2.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Tuple2.apply[String, org.json4s.JsonAST.JString](k, org.json4s.`package`.JString.apply(v))
+        </td>
+      </tr><tr>
+        <td>
+          113
+        </td>
+        <td>
+          1491
+        </td>
+        <td>
+          4441
+          -
+          4496
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.json4s.JsonAST.JObject.apply
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.`package`.JObject.apply(p.map[(String, org.json4s.JsonAST.JString), scala.collection.immutable.Map[String,org.json4s.JsonAST.JString]](((x0$1: (String, String)) =&gt; x0$1 match {
+  case (_1: String, _2: String)(String, String)((k @ _), (v @ _)) =&gt; scala.Tuple2.apply[String, org.json4s.JsonAST.JString](k, org.json4s.`package`.JString.apply(v))
+}))(immutable.this.Map.canBuildFrom[String, org.json4s.JsonAST.JString]).toList)
+        </td>
+      </tr><tr>
+        <td>
+          113
+        </td>
+        <td>
+          1490
+        </td>
+        <td>
+          4449
+          -
+          4495
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.collection.TraversableOnce.toList
+        </td>
+        <td style="background: #AEF1AE">
+          p.map[(String, org.json4s.JsonAST.JString), scala.collection.immutable.Map[String,org.json4s.JsonAST.JString]](((x0$1: (String, String)) =&gt; x0$1 match {
+  case (_1: String, _2: String)(String, String)((k @ _), (v @ _)) =&gt; scala.Tuple2.apply[String, org.json4s.JsonAST.JString](k, org.json4s.`package`.JString.apply(v))
+}))(immutable.this.Map.canBuildFrom[String, org.json4s.JsonAST.JString]).toList
+        </td>
+      </tr><tr>
+        <td>
+          113
+        </td>
+        <td>
+          1493
+        </td>
+        <td>
+          4429
+          -
+          4498
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Some.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Some.apply[(String, org.json4s.JsonAST.JObject)](scala.Tuple2.apply[String, org.json4s.JsonAST.JObject](name, org.json4s.`package`.JObject.apply(p.map[(String, org.json4s.JsonAST.JString), scala.collection.immutable.Map[String,org.json4s.JsonAST.JString]](((x0$1: (String, String)) =&gt; x0$1 match {
+  case (_1: String, _2: String)(String, String)((k @ _), (v @ _)) =&gt; scala.Tuple2.apply[String, org.json4s.JsonAST.JString](k, org.json4s.`package`.JString.apply(v))
+}))(immutable.this.Map.canBuildFrom[String, org.json4s.JsonAST.JString]).toList)))
+        </td>
+      </tr><tr>
+        <td>
+          113
+        </td>
+        <td>
+          1487
+        </td>
+        <td>
+          4475
+          -
+          4485
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.json4s.JsonAST.JString.apply
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.`package`.JString.apply(v)
+        </td>
+      </tr><tr>
+        <td>
+          113
+        </td>
+        <td>
+          1489
+        </td>
+        <td>
+          4455
+          -
+          4455
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Map.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Map.canBuildFrom[String, org.json4s.JsonAST.JString]
+        </td>
+      </tr><tr>
+        <td>
+          114
+        </td>
+        <td>
+          1496
+        </td>
+        <td>
+          4508
+          -
+          4512
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.None
+        </td>
+        <td style="background: #AEF1AE">
+          scala.None
+        </td>
+      </tr><tr>
+        <td>
+          114
+        </td>
+        <td>
+          1495
+        </td>
+        <td>
+          4508
+          -
+          4512
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.None
+        </td>
+        <td style="background: #AEF1AE">
+          scala.None
+        </td>
+      </tr><tr>
+        <td>
+          119
+        </td>
+        <td>
+          1497
+        </td>
+        <td>
+          4690
+          -
+          4694
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          null
+        </td>
+      </tr><tr>
+        <td>
+          119
+        </td>
+        <td>
+          1499
+        </td>
+        <td>
+          4683
+          -
+          4711
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Boolean.&amp;&amp;
+        </td>
+        <td style="background: #AEF1AE">
+          arr.!=(null).&amp;&amp;(arr.!=(defVal))
+        </td>
+      </tr><tr>
+        <td>
+          119
+        </td>
+        <td>
+          1498
+        </td>
+        <td>
+          4698
+          -
+          4711
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          arr.!=(defVal)
+        </td>
+      </tr><tr>
+        <td>
+          120
+        </td>
+        <td>
+          1501
+        </td>
+        <td>
+          4748
+          -
+          4771
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.Extraction.decompose
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.Extraction.decompose(x$6)(CommonJsonReader.this.formats)
+        </td>
+      </tr><tr>
+        <td>
+          120
+        </td>
+        <td>
+          1500
+        </td>
+        <td>
+          4768
+          -
+          4768
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.CommonJsonReader.formats
+        </td>
+        <td style="background: #AEF1AE">
+          CommonJsonReader.this.formats
+        </td>
+      </tr><tr>
+        <td>
+          120
+        </td>
+        <td>
+          1503
+        </td>
+        <td>
+          4738
+          -
+          4780
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.collection.TraversableOnce.toList
+        </td>
+        <td style="background: #AEF1AE">
+          arr.map[org.json4s.JValue, Seq[org.json4s.JValue]](((x$6: T) =&gt; org.json4s.Extraction.decompose(x$6)(CommonJsonReader.this.formats)))(collection.this.Seq.canBuildFrom[org.json4s.JValue]).toList
+        </td>
+      </tr><tr>
+        <td>
+          120
+        </td>
+        <td>
+          1506
+        </td>
+        <td>
+          4719
+          -
+          4783
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Some.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Some.apply[(String, org.json4s.JsonAST.JArray)](scala.Tuple2.apply[String, org.json4s.JsonAST.JArray](name, org.json4s.`package`.JArray.apply(arr.map[org.json4s.JValue, Seq[org.json4s.JValue]](((x$6: T) =&gt; org.json4s.Extraction.decompose(x$6)(CommonJsonReader.this.formats)))(collection.this.Seq.canBuildFrom[org.json4s.JValue]).toList)))
+        </td>
+      </tr><tr>
+        <td>
+          120
+        </td>
+        <td>
+          1502
+        </td>
+        <td>
+          4746
+          -
+          4746
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          collection.this.Seq.canBuildFrom[org.json4s.JValue]
+        </td>
+      </tr><tr>
+        <td>
+          120
+        </td>
+        <td>
+          1505
+        </td>
+        <td>
+          4724
+          -
+          4782
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Tuple2.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Tuple2.apply[String, org.json4s.JsonAST.JArray](name, org.json4s.`package`.JArray.apply(arr.map[org.json4s.JValue, Seq[org.json4s.JValue]](((x$6: T) =&gt; org.json4s.Extraction.decompose(x$6)(CommonJsonReader.this.formats)))(collection.this.Seq.canBuildFrom[org.json4s.JValue]).toList))
+        </td>
+      </tr><tr>
+        <td>
+          120
+        </td>
+        <td>
+          1504
+        </td>
+        <td>
+          4731
+          -
+          4781
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.json4s.JsonAST.JArray.apply
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.`package`.JArray.apply(arr.map[org.json4s.JValue, Seq[org.json4s.JValue]](((x$6: T) =&gt; org.json4s.Extraction.decompose(x$6)(CommonJsonReader.this.formats)))(collection.this.Seq.canBuildFrom[org.json4s.JValue]).toList)
+        </td>
+      </tr><tr>
+        <td>
+          120
+        </td>
+        <td>
+          1507
+        </td>
+        <td>
+          4719
+          -
+          4783
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.Some.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Some.apply[(String, org.json4s.JsonAST.JArray)](scala.Tuple2.apply[String, org.json4s.JsonAST.JArray](name, org.json4s.`package`.JArray.apply(arr.map[org.json4s.JValue, Seq[org.json4s.JValue]](((x$6: T) =&gt; org.json4s.Extraction.decompose(x$6)(CommonJsonReader.this.formats)))(collection.this.Seq.canBuildFrom[org.json4s.JValue]).toList)))
+        </td>
+      </tr><tr>
+        <td>
+          121
+        </td>
+        <td>
+          1509
+        </td>
+        <td>
+          4793
+          -
+          4797
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.None
+        </td>
+        <td style="background: #AEF1AE">
+          scala.None
+        </td>
+      </tr><tr>
+        <td>
+          121
+        </td>
+        <td>
+          1508
+        </td>
+        <td>
+          4793
+          -
+          4797
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.None
+        </td>
+        <td style="background: #AEF1AE">
+          scala.None
+        </td>
+      </tr><tr>
+        <td>
+          126
+        </td>
+        <td>
+          1510
+        </td>
+        <td>
+          4936
+          -
+          4940
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          null
+        </td>
+      </tr><tr>
+        <td>
+          126
+        </td>
+        <td>
+          1512
+        </td>
+        <td>
+          4931
+          -
+          4954
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Boolean.&amp;&amp;
+        </td>
+        <td style="background: #AEF1AE">
+          v.!=(null).&amp;&amp;(v.isEmpty.unary_!)
+        </td>
+      </tr><tr>
+        <td>
+          126
+        </td>
+        <td>
+          1511
+        </td>
+        <td>
+          4944
+          -
+          4954
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.Boolean.unary_!
+        </td>
+        <td style="background: #AEF1AE">
+          v.isEmpty.unary_!
+        </td>
+      </tr><tr>
+        <td>
+          127
+        </td>
+        <td>
+          1519
+        </td>
+        <td>
+          4962
+          -
+          5011
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.Some.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Some.apply[(String, org.json4s.JsonAST.JArray)](scala.Tuple2.apply[String, org.json4s.JsonAST.JArray](name, org.json4s.`package`.JArray.apply(v.map[org.json4s.JsonAST.JString, Seq[org.json4s.JsonAST.JString]](((x$7: String) =&gt; org.json4s.`package`.JString.apply(x$7)))(collection.this.Seq.canBuildFrom[org.json4s.JsonAST.JString]).toList)))
+        </td>
+      </tr><tr>
+        <td>
+          127
+        </td>
+        <td>
+          1518
+        </td>
+        <td>
+          4962
+          -
+          5011
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Some.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Some.apply[(String, org.json4s.JsonAST.JArray)](scala.Tuple2.apply[String, org.json4s.JsonAST.JArray](name, org.json4s.`package`.JArray.apply(v.map[org.json4s.JsonAST.JString, Seq[org.json4s.JsonAST.JString]](((x$7: String) =&gt; org.json4s.`package`.JString.apply(x$7)))(collection.this.Seq.canBuildFrom[org.json4s.JsonAST.JString]).toList)))
+        </td>
+      </tr><tr>
+        <td>
+          127
+        </td>
+        <td>
+          1515
+        </td>
+        <td>
+          4981
+          -
+          5008
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.collection.TraversableOnce.toList
+        </td>
+        <td style="background: #AEF1AE">
+          v.map[org.json4s.JsonAST.JString, Seq[org.json4s.JsonAST.JString]](((x$7: String) =&gt; org.json4s.`package`.JString.apply(x$7)))(collection.this.Seq.canBuildFrom[org.json4s.JsonAST.JString]).toList
+        </td>
+      </tr><tr>
+        <td>
+          127
+        </td>
+        <td>
+          1514
+        </td>
+        <td>
+          4987
+          -
+          4987
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          collection.this.Seq.canBuildFrom[org.json4s.JsonAST.JString]
+        </td>
+      </tr><tr>
+        <td>
+          127
+        </td>
+        <td>
+          1517
+        </td>
+        <td>
+          4967
+          -
+          5010
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Tuple2.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Tuple2.apply[String, org.json4s.JsonAST.JArray](name, org.json4s.`package`.JArray.apply(v.map[org.json4s.JsonAST.JString, Seq[org.json4s.JsonAST.JString]](((x$7: String) =&gt; org.json4s.`package`.JString.apply(x$7)))(collection.this.Seq.canBuildFrom[org.json4s.JsonAST.JString]).toList))
+        </td>
+      </tr><tr>
+        <td>
+          127
+        </td>
+        <td>
+          1513
+        </td>
+        <td>
+          4989
+          -
+          4999
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.json4s.JsonAST.JString.apply
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.`package`.JString.apply(x$7)
+        </td>
+      </tr><tr>
+        <td>
+          127
+        </td>
+        <td>
+          1516
+        </td>
+        <td>
+          4974
+          -
+          5009
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.json4s.JsonAST.JArray.apply
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.`package`.JArray.apply(v.map[org.json4s.JsonAST.JString, Seq[org.json4s.JsonAST.JString]](((x$7: String) =&gt; org.json4s.`package`.JString.apply(x$7)))(collection.this.Seq.canBuildFrom[org.json4s.JsonAST.JString]).toList)
+        </td>
+      </tr><tr>
+        <td>
+          128
+        </td>
+        <td>
+          1521
+        </td>
+        <td>
+          5021
+          -
+          5025
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.None
+        </td>
+        <td style="background: #AEF1AE">
+          scala.None
+        </td>
+      </tr><tr>
+        <td>
+          128
+        </td>
+        <td>
+          1520
+        </td>
+        <td>
+          5021
+          -
+          5025
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.None
+        </td>
+        <td style="background: #AEF1AE">
+          scala.None
+        </td>
+      </tr><tr>
+        <td>
+          138
+        </td>
+        <td>
+          1522
+        </td>
+        <td>
+          5288
+          -
+          5299
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.json4s.NoTypeHints
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.NoTypeHints
+        </td>
+      </tr><tr>
+        <td>
+          139
+        </td>
+        <td>
+          1523
+        </td>
+        <td>
+          5307
+          -
+          5336
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Project.ProjectSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Project.ProjectSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          140
+        </td>
+        <td>
+          1524
+        </td>
+        <td>
+          5343
+          -
+          5368
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Build.BuildSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Build.BuildSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          141
+        </td>
+        <td>
+          1525
+        </td>
+        <td>
+          5375
+          -
+          5402
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Parent.ParentSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Parent.ParentSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          142
+        </td>
+        <td>
+          1526
+        </td>
+        <td>
+          5409
+          -
+          5448
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Organization.OrganizationSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Organization.OrganizationSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          143
+        </td>
+        <td>
+          1527
+        </td>
+        <td>
+          5455
+          -
+          5488
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Extension.ExtensionSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Extension.ExtensionSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          144
+        </td>
+        <td>
+          1528
+        </td>
+        <td>
+          5495
+          -
+          5522
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Plugin.PluginSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Plugin.PluginSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          145
+        </td>
+        <td>
+          1529
+        </td>
+        <td>
+          5529
+          -
+          5564
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Dependency.DependencySerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Dependency.DependencySerializer()
+        </td>
+      </tr><tr>
+        <td>
+          146
+        </td>
+        <td>
+          1530
+        </td>
+        <td>
+          5571
+          -
+          5604
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Execution.ExecutionSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Execution.ExecutionSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          147
+        </td>
+        <td>
+          1531
+        </td>
+        <td>
+          5611
+          -
+          5644
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Reporting.ReportingSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Reporting.ReportingSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          148
+        </td>
+        <td>
+          1532
+        </td>
+        <td>
+          5651
+          -
+          5690
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ReportPlugin.ReportPluginSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new ReportPlugin.ReportPluginSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          149
+        </td>
+        <td>
+          1533
+        </td>
+        <td>
+          5697
+          -
+          5728
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Resource.ResourceSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Resource.ResourceSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          150
+        </td>
+        <td>
+          1534
+        </td>
+        <td>
+          5735
+          -
+          5774
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.CIManagement.CIManagementSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new CIManagement.CIManagementSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          151
+        </td>
+        <td>
+          1535
+        </td>
+        <td>
+          5781
+          -
+          5812
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Notifier.NotifierSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Notifier.NotifierSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          152
+        </td>
+        <td>
+          1536
+        </td>
+        <td>
+          5819
+          -
+          5856
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Contributor.ContributorSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Contributor.ContributorSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          153
+        </td>
+        <td>
+          1537
+        </td>
+        <td>
+          5863
+          -
+          5896
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Developer.DeveloperSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Developer.DeveloperSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          154
+        </td>
+        <td>
+          1538
+        </td>
+        <td>
+          5903
+          -
+          5940
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.MailingList.MailingListSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new MailingList.MailingListSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          155
+        </td>
+        <td>
+          1539
+        </td>
+        <td>
+          5947
+          -
+          5974
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Parent.ParentSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Parent.ParentSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          156
+        </td>
+        <td>
+          1540
+        </td>
+        <td>
+          5981
+          -
+          6010
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.License.LicenseSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new License.LicenseSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          157
+        </td>
+        <td>
+          1541
+        </td>
+        <td>
+          6017
+          -
+          6038
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Scm.ScmSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Scm.ScmSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          158
+        </td>
+        <td>
+          1542
+        </td>
+        <td>
+          6045
+          -
+          6090
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.IssueManagement.IssueManagementSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new IssueManagement.IssueManagementSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          159
+        </td>
+        <td>
+          1543
+        </td>
+        <td>
+          6097
+          -
+          6120
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Site.SiteSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Site.SiteSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          160
+        </td>
+        <td>
+          1544
+        </td>
+        <td>
+          6127
+          -
+          6186
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.DistributionManagement.DistributionManagementSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new DistributionManagement.DistributionManagementSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          161
+        </td>
+        <td>
+          1545
+        </td>
+        <td>
+          6193
+          -
+          6228
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Relocation.RelocationSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Relocation.RelocationSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          162
+        </td>
+        <td>
+          1546
+        </td>
+        <td>
+          6235
+          -
+          6290
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.DeploymentRepository.DeploymentRepositorySerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new DeploymentRepository.DeploymentRepositorySerializer()
+        </td>
+      </tr><tr>
+        <td>
+          163
+        </td>
+        <td>
+          1547
+        </td>
+        <td>
+          6297
+          -
+          6332
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Repository.RepositorySerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Repository.RepositorySerializer()
+        </td>
+      </tr><tr>
+        <td>
+          164
+        </td>
+        <td>
+          1548
+        </td>
+        <td>
+          6339
+          -
+          6386
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.RepositoryPolicy.RepositoryPolicySerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new RepositoryPolicy.RepositoryPolicySerializer()
+        </td>
+      </tr><tr>
+        <td>
+          165
+        </td>
+        <td>
+          1549
+        </td>
+        <td>
+          6393
+          -
+          6426
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ReportSet.ReportSetSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new ReportSet.ReportSetSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          166
+        </td>
+        <td>
+          1550
+        </td>
+        <td>
+          6433
+          -
+          6466
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.BuildBase.BuildBaseSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new BuildBase.BuildBaseSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          167
+        </td>
+        <td>
+          1551
+        </td>
+        <td>
+          6473
+          -
+          6508
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Activation.ActivationSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Activation.ActivationSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          168
+        </td>
+        <td>
+          1552
+        </td>
+        <td>
+          6515
+          -
+          6554
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ActivationOS.ActivationOSSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new ActivationOS.ActivationOSSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          169
+        </td>
+        <td>
+          1553
+        </td>
+        <td>
+          6561
+          -
+          6612
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ActivationProperty.ActivationPropertySerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new ActivationProperty.ActivationPropertySerializer()
+        </td>
+      </tr><tr>
+        <td>
+          170
+        </td>
+        <td>
+          1554
+        </td>
+        <td>
+          6619
+          -
+          6662
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ActivationFile.ActivationFileSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new ActivationFile.ActivationFileSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          171
+        </td>
+        <td>
+          1555
+        </td>
+        <td>
+          6669
+          -
+          6698
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Profile.ProfileSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Profile.ProfileSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          172
+        </td>
+        <td>
+          1556
+        </td>
+        <td>
+          6705
+          -
+          6736
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Archiver.ArchiverSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new Archiver.ArchiverSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          173
+        </td>
+        <td>
+          1557
+        </td>
+        <td>
+          6743
+          -
+          6777
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ManifestObj.ManifestSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new ManifestObj.ManifestSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          173
+        </td>
+        <td>
+          1559
+        </td>
+        <td>
+          5266
+          -
+          6829
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.json4s.Formats.+
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.native.Serialization.formats(org.json4s.NoTypeHints).+(new Project.ProjectSerializer()).+(new Build.BuildSerializer()).+(new Parent.ParentSerializer()).+(new Organization.OrganizationSerializer()).+(new Extension.ExtensionSerializer()).+(new Plugin.PluginSerializer()).+(new Dependency.DependencySerializer()).+(new Execution.ExecutionSerializer()).+(new Reporting.ReportingSerializer()).+(new ReportPlugin.ReportPluginSerializer()).+(new Resource.ResourceSerializer()).+(new CIManagement.CIManagementSerializer()).+(new Notifier.NotifierSerializer()).+(new Contributor.ContributorSerializer()).+(new Developer.DeveloperSerializer()).+(new MailingList.MailingListSerializer()).+(new Parent.ParentSerializer()).+(new License.LicenseSerializer()).+(new Scm.ScmSerializer()).+(new IssueManagement.IssueManagementSerializer()).+(new Site.SiteSerializer()).+(new DistributionManagement.DistributionManagementSerializer()).+(new Relocation.RelocationSerializer()).+(new DeploymentRepository.DeploymentRepositorySerializer()).+(new Repository.RepositorySerializer()).+(new RepositoryPolicy.RepositoryPolicySerializer()).+(new ReportSet.ReportSetSerializer()).+(new BuildBase.BuildBaseSerializer()).+(new Activation.ActivationSerializer()).+(new ActivationOS.ActivationOSSerializer()).+(new ActivationProperty.ActivationPropertySerializer()).+(new ActivationFile.ActivationFileSerializer()).+(new Profile.ProfileSerializer()).+(new Archiver.ArchiverSerializer()).+(new ManifestObj.ManifestSerializer()).+(new ManifestSection.ManifestSectionSerializer())
+        </td>
+      </tr><tr>
+        <td>
+          174
+        </td>
+        <td>
+          1558
+        </td>
+        <td>
+          6784
+          -
+          6829
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ManifestSection.ManifestSectionSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new ManifestSection.ManifestSectionSerializer()
+        </td>
+      </tr><tr>
+        <td>
+          184
+        </td>
+        <td>
+          1560
+        </td>
+        <td>
+          7117
+          -
+          7117
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #AEF1AE">
+          JsonReader.this.formats
+        </td>
+      </tr><tr>
+        <td>
+          184
+        </td>
+        <td>
+          1562
+        </td>
+        <td>
+          7104
+          -
+          7126
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.Serialization.read
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.native.Serialization.read[org.apache.maven.unbound.Project](jsonSrc)(JsonReader.this.formats, scala.reflect.ManifestFactory.classType[org.apache.maven.unbound.Project](classOf[org.apache.maven.unbound.Project]))
+        </td>
+      </tr><tr>
+        <td>
+          184
+        </td>
+        <td>
+          1561
+        </td>
+        <td>
+          7117
+          -
+          7117
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.reflect.ManifestFactory.classType
+        </td>
+        <td style="background: #AEF1AE">
+          scala.reflect.ManifestFactory.classType[org.apache.maven.unbound.Project](classOf[org.apache.maven.unbound.Project])
+        </td>
+      </tr><tr>
+        <td>
+          187
+        </td>
+        <td>
+          1563
+        </td>
+        <td>
+          7248
+          -
+          7248
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #AEF1AE">
+          JsonReader.this.formats
+        </td>
+      </tr><tr>
+        <td>
+          187
+        </td>
+        <td>
+          1565
+        </td>
+        <td>
+          7235
+          -
+          7256
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.native.Serialization.read
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.native.Serialization.read[org.apache.maven.unbound.Project](reader)(JsonReader.this.formats, scala.reflect.ManifestFactory.classType[org.apache.maven.unbound.Project](classOf[org.apache.maven.unbound.Project]))
+        </td>
+      </tr><tr>
+        <td>
+          187
+        </td>
+        <td>
+          1564
+        </td>
+        <td>
+          7248
+          -
+          7248
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.reflect.ManifestFactory.classType
+        </td>
+        <td style="background: #AEF1AE">
+          scala.reflect.ManifestFactory.classType[org.apache.maven.unbound.Project](classOf[org.apache.maven.unbound.Project])
+        </td>
+      </tr><tr>
+        <td>
+          194
+        </td>
+        <td>
+          1569
+        </td>
+        <td>
+          7448
+          -
+          7493
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.native.Serialization.read
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.native.Serialization.read[org.apache.maven.unbound.Project](new java.io.InputStreamReader(in, enc))(JsonReader.this.formats, scala.reflect.ManifestFactory.classType[org.apache.maven.unbound.Project](classOf[org.apache.maven.unbound.Project]))
+        </td>
+      </tr><tr>
+        <td>
+          194
+        </td>
+        <td>
+          1566
+        </td>
+        <td>
+          7462
+          -
+          7492
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.InputStreamReader.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new java.io.InputStreamReader(in, enc)
+        </td>
+      </tr><tr>
+        <td>
+          194
+        </td>
+        <td>
+          1568
+        </td>
+        <td>
+          7461
+          -
+          7461
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.reflect.ManifestFactory.classType
+        </td>
+        <td style="background: #AEF1AE">
+          scala.reflect.ManifestFactory.classType[org.apache.maven.unbound.Project](classOf[org.apache.maven.unbound.Project])
+        </td>
+      </tr><tr>
+        <td>
+          194
+        </td>
+        <td>
+          1567
+        </td>
+        <td>
+          7461
+          -
+          7461
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #AEF1AE">
+          JsonReader.this.formats
+        </td>
+      </tr><tr>
+        <td>
+          204
+        </td>
+        <td>
+          1571
+        </td>
+        <td>
+          7797
+          -
+          7820
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.native.Serialization.write
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.native.Serialization.write[org.apache.maven.unbound.Project](project)(JsonWriter.this.formats)
+        </td>
+      </tr><tr>
+        <td>
+          204
+        </td>
+        <td>
+          1570
+        </td>
+        <td>
+          7811
+          -
+          7811
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #AEF1AE">
+          JsonWriter.this.formats
+        </td>
+      </tr><tr>
+        <td>
+          210
+        </td>
+        <td>
+          1572
+        </td>
+        <td>
+          7978
+          -
+          7978
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #AEF1AE">
+          JsonWriter.this.formats
+        </td>
+      </tr><tr>
+        <td>
+          210
+        </td>
+        <td>
+          1573
+        </td>
+        <td>
+          7967
+          -
+          7987
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.native.Serialization.writePretty
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.native.Serialization.writePretty[org.apache.maven.unbound.Project](project)(JsonWriter.this.formats)
+        </td>
+      </tr><tr>
+        <td>
+          217
+        </td>
+        <td>
+          1575
+        </td>
+        <td>
+          8158
+          -
+          8198
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.native.Serialization.writePretty
+        </td>
+        <td style="background: #F0ADAD">
+          org.json4s.native.Serialization.writePretty[org.apache.maven.unbound.Project, W](project, writer)(JsonWriter.this.formats)
+        </td>
+      </tr><tr>
+        <td>
+          217
+        </td>
+        <td>
+          1574
+        </td>
+        <td>
+          8181
+          -
+          8181
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #F0ADAD">
+          JsonWriter.this.formats
+        </td>
+      </tr><tr>
+        <td>
+          217
+        </td>
+        <td>
+          1576
+        </td>
+        <td>
+          8181
+          -
+          8181
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          225
+        </td>
+        <td>
+          1578
+        </td>
+        <td>
+          8456
+          -
+          8456
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #F0ADAD">
+          JsonWriter.this.formats
+        </td>
+      </tr><tr>
+        <td>
+          225
+        </td>
+        <td>
+          1580
+        </td>
+        <td>
+          8456
+          -
+          8456
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          225
+        </td>
+        <td>
+          1579
+        </td>
+        <td>
+          8416
+          -
+          8505
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.native.Serialization.writePretty
+        </td>
+        <td style="background: #F0ADAD">
+          org.json4s.native.Serialization.writePretty[org.apache.maven.unbound.Project, java.io.OutputStreamWriter](project, new java.io.OutputStreamWriter(os, enc))(JsonWriter.this.formats)
+        </td>
+      </tr><tr>
+        <td>
+          226
+        </td>
+        <td>
+          1577
+        </td>
+        <td>
+          8473
+          -
+          8504
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.OutputStreamWriter.&lt;init&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          new java.io.OutputStreamWriter(os, enc)
+        </td>
+      </tr><tr>
+        <td>
+          230
+        </td>
+        <td>
+          1581
+        </td>
+        <td>
+          8630
+          -
+          8630
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #AEF1AE">
+          JsonWriter.this.formats
+        </td>
+      </tr><tr>
+        <td>
+          230
+        </td>
+        <td>
+          1582
+        </td>
+        <td>
+          8619
+          -
+          8640
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.native.Serialization.writePretty
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.native.Serialization.writePretty[org.apache.maven.unbound.Archiver](archiver)(JsonWriter.this.formats)
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

@@ -1,0 +1,4293 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          org/apache/maven/unbound/Contributor.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier, monospace;'>1 <span style=''>/*
+</span>2 <span style=''> * Licensed to the Apache Software Foundation (ASF) under one or more
+</span>3 <span style=''> * contributor license agreements.  See the NOTICE file distributed with
+</span>4 <span style=''> * this work for additional information regarding copyright ownership.
+</span>5 <span style=''> * The ASF licenses this file to You under the Apache License, Version 2.0
+</span>6 <span style=''> * (the &quot;License&quot;); you may not use this file except in compliance with
+</span>7 <span style=''> * the License.  You may obtain a copy of the License at
+</span>8 <span style=''> *
+</span>9 <span style=''> *    http://www.apache.org/licenses/LICENSE-2.0
+</span>10 <span style=''> *
+</span>11 <span style=''> * Unless required by applicable law or agreed to in writing, software
+</span>12 <span style=''> * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+</span>13 <span style=''> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+</span>14 <span style=''> * See the License for the specific language governing permissions and
+</span>15 <span style=''> * limitations under the License.
+</span>16 <span style=''> */
+</span>17 <span style=''>
+</span>18 <span style=''>package org.apache.maven.unbound
+</span>19 <span style=''>
+</span>20 <span style=''>import java.io.{ ObjectInputStream, ObjectOutputStream }
+</span>21 <span style=''>
+</span>22 <span style=''>import scala.xml.Elem
+</span>23 <span style=''>
+</span>24 <span style=''>import com.typesafe.config.ConfigFactory
+</span>25 <span style=''>import org.json4s._
+</span>26 <span style=''>
+</span>27 <span style=''>case object Contributor extends CommonJsonReader {
+</span>28 <span style=''>
+</span>29 <span style=''>  implicit val formats = </span><span style='background: #AEF1AE'>JsonReader.formats</span><span style=''>
+</span>30 <span style=''>
+</span>31 <span style=''>  private def writeObject(stream: ObjectOutputStream): Unit =
+</span>32 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultWriteObject()</span><span style=''>
+</span>33 <span style=''>
+</span>34 <span style=''>  private def readObject(stream: ObjectInputStream): Unit =
+</span>35 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultReadObject()</span><span style=''>
+</span>36 <span style=''>
+</span>37 <span style=''>  class ContributorSerializer
+</span>38 <span style=''>      extends CustomSerializer[Contributor](format =&gt; (
+</span>39 <span style=''>    {
+</span>40 <span style=''>      case obj @ JObject(fields) =&gt;
+</span>41 <span style=''>        new Contributor(
+</span>42 <span style=''>          readStr(fields, Name).getOrElse(null),
+</span>43 <span style=''>          readStr(fields, Email).getOrElse(null),
+</span>44 <span style=''>          readStr(fields, UrlStr).getOrElse(null),
+</span>45 <span style=''>          readStr(fields, OrganizationStr).getOrElse(null),
+</span>46 <span style=''>          readStr(fields, OrganizationUrl).getOrElse(null),
+</span>47 <span style=''>          readStringSequence(fields, Roles),
+</span>48 <span style=''>          readStr(fields, TimezoneStr).getOrElse(null),
+</span>49 <span style=''>          readProperties(obj)
+</span>50 <span style=''>        )
+</span>51 <span style=''>    },
+</span>52 <span style=''>    {
+</span>53 <span style=''>      case c: Contributor =&gt;
+</span>54 <span style=''>        JObject(Seq[Option[JField]](
+</span>55 <span style=''>          writeStr(Name, c.name),
+</span>56 <span style=''>          writeStr(Email, c.email),
+</span>57 <span style=''>          writeStr(UrlStr, c.url),
+</span>58 <span style=''>          writeStr(OrganizationStr, c.organization),
+</span>59 <span style=''>          writeStr(OrganizationUrl, c.organizationUrl),
+</span>60 <span style=''>          writeStringSequence(Roles, c.roles),
+</span>61 <span style=''>          writeStr(TimezoneStr, c.timezone),
+</span>62 <span style=''>          writeProperties(PropertiesStr, c.properties)
+</span>63 <span style=''>        ).flatten.toList)
+</span>64 <span style=''>    }
+</span>65 <span style=''>  ))
+</span>66 <span style=''>}
+</span>67 <span style=''>
+</span>68 <span style=''>case class Contributor(
+</span>69 <span style=''>  name: String = null, email: String = null, url: String = null,
+</span>70 <span style=''>  organization: String = null, organizationUrl: String = null,
+</span>71 <span style=''>  roles: Seq[String] = Seq[String](), timezone: String = null,
+</span>72 <span style=''>  properties: Map[String, String] = Map[String, String]()) {
+</span>73 <span style=''>
+</span>74 <span style=''>  def this(elem: Elem) = </span><span style='background: #AEF1AE'>this(
+</span>75 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.Name).text),
+</span>76 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.Email).text),
+</span>77 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.UrlStr).text),
+</span>78 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.OrganizationStr).text),
+</span>79 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.OrganizationUrl).text),
+</span>80 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Roles \ SL.RoleStr).map { _.text },
+</span>81 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.TimezoneStr).text),
+</span>82 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.PropertiesStr).flatMap(</span><span style='background: #F0ADAD'>_.map { e =&gt; (e.label, e.text) }</span><span style='background: #AEF1AE'>).toMap)</span><span style=''>
+</span>83 <span style=''>
+</span>84 <span style=''>  lazy val xml =
+</span>85 <span style=''>    &lt;contributor&gt;
+</span>86 <span style=''>      { if (name != null) &lt;name&gt;{name}&lt;/name&gt; }
+</span>87 <span style=''>      { if (email != null) &lt;email&gt;{email}&lt;/email&gt; }
+</span>88 <span style=''>      { if (url != null) &lt;url&gt;{url}&lt;/url&gt; }
+</span>89 <span style=''>      { if (organization != null) &lt;organization&gt;{organization}&lt;/organization&gt; }
+</span>90 <span style=''>      { if (organizationUrl != null)
+</span>91 <span style=''>        &lt;organizationUrl&gt;{organizationUrl}&lt;/organizationUrl&gt; }
+</span>92 <span style=''>      { if (!roles.isEmpty) &lt;roles&gt; { roles.map { Role(_).xml } } &lt;/roles&gt; }
+</span>93 <span style=''>      { if (timezone != null) &lt;timezone&gt;{timezone}&lt;/timezone&gt; }
+</span>94 <span style=''>      { if (properties != null &amp;&amp; !properties.isEmpty) &lt;properties&gt;
+</span>95 <span style=''>        { properties.map { case(k, v) =&gt; PropertyValue(k, v).xml } }
+</span>96 <span style=''>        &lt;/properties&gt; }
+</span>97 <span style=''>    &lt;/contributor&gt;
+</span>98 <span style=''>
+</span>99 <span style=''>  def makeModelObject(): org.apache.maven.model.Contributor = {
+</span>100 <span style=''>    val contributor = </span><span style='background: #AEF1AE'>new org.apache.maven.model.Contributor()</span><span style=''>
+</span>101 <span style=''>    if (</span><span style='background: #AEF1AE'>name != null</span><span style=''>) </span><span style='background: #AEF1AE'>contributor.setName(name)</span><span style=''>
+</span>102 <span style=''>    if (</span><span style='background: #AEF1AE'>email != null</span><span style=''>) </span><span style='background: #AEF1AE'>contributor.setEmail(email)</span><span style=''>
+</span>103 <span style=''>    if (</span><span style='background: #AEF1AE'>url != null</span><span style=''>) </span><span style='background: #F0ADAD'>contributor.setUrl(url)</span><span style=''>
+</span>104 <span style=''>    if (</span><span style='background: #AEF1AE'>organization != null</span><span style=''>) </span><span style='background: #AEF1AE'>contributor.setOrganization(organization)</span><span style=''>
+</span>105 <span style=''>    if (</span><span style='background: #AEF1AE'>organizationUrl != null</span><span style=''>) </span><span style='background: #AEF1AE'>contributor.setOrganizationUrl(organizationUrl)</span><span style=''>
+</span>106 <span style=''>    </span><span style='background: #AEF1AE'>roles.foreach { role =&gt; contributor.addRole(role) }</span><span style=''>
+</span>107 <span style=''>    if (</span><span style='background: #AEF1AE'>timezone != null</span><span style=''>) </span><span style='background: #AEF1AE'>contributor.setTimezone(timezone)</span><span style=''>
+</span>108 <span style=''>    if (</span><span style='background: #AEF1AE'>properties != null</span><span style=''>)
+</span>109 <span style=''>      </span><span style='background: #AEF1AE'>properties.foreach { case(k, v) =&gt; </span><span style='background: #F0ADAD'>contributor.addProperty(k, v)</span><span style='background: #AEF1AE'> }</span><span style=''>
+</span>110 <span style=''>    contributor
+</span>111 <span style=''>  }
+</span>112 <span style=''>}
+</span>113 <span style=''>
+</span>114 <span style=''>case object Developer extends CommonJsonReader {
+</span>115 <span style=''>
+</span>116 <span style=''>  implicit val formats = </span><span style='background: #AEF1AE'>JsonReader.formats</span><span style=''>
+</span>117 <span style=''>
+</span>118 <span style=''>  private def writeObject(stream: ObjectOutputStream): Unit =
+</span>119 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultWriteObject()</span><span style=''>
+</span>120 <span style=''>
+</span>121 <span style=''>  private def readObject(stream: ObjectInputStream): Unit =
+</span>122 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultReadObject()</span><span style=''>
+</span>123 <span style=''>
+</span>124 <span style=''>  class DeveloperSerializer
+</span>125 <span style=''>      extends CustomSerializer[Developer](format =&gt; (
+</span>126 <span style=''>    {
+</span>127 <span style=''>      case obj @ JObject(fields) =&gt;
+</span>128 <span style=''>        new Developer(
+</span>129 <span style=''>          readStr(fields, Id).getOrElse(null),
+</span>130 <span style=''>          readStr(fields, Name).getOrElse(null),
+</span>131 <span style=''>          readStr(fields, Email).getOrElse(null),
+</span>132 <span style=''>          readStr(fields, UrlStr).getOrElse(null),
+</span>133 <span style=''>          readStr(fields, OrganizationStr).getOrElse(null),
+</span>134 <span style=''>          readStr(fields, OrganizationUrl).getOrElse(null),
+</span>135 <span style=''>          readStringSequence(fields, Roles),
+</span>136 <span style=''>          readStr(fields, TimezoneStr).getOrElse(null),
+</span>137 <span style=''>          readProperties(obj)
+</span>138 <span style=''>        )
+</span>139 <span style=''>    },
+</span>140 <span style=''>    {
+</span>141 <span style=''>      case d: Developer =&gt;
+</span>142 <span style=''>        JObject(Seq[Option[JField]](
+</span>143 <span style=''>          writeStr(Id, d.id),
+</span>144 <span style=''>          writeStr(Name, d.name),
+</span>145 <span style=''>          writeStr(Email, d.email),
+</span>146 <span style=''>          writeStr(UrlStr, d.url),
+</span>147 <span style=''>          writeStr(OrganizationStr, d.organization),
+</span>148 <span style=''>          writeStr(OrganizationUrl, d.organizationUrl),
+</span>149 <span style=''>          writeStringSequence(Roles, d.roles),
+</span>150 <span style=''>          writeStr(TimezoneStr, d.timezone),
+</span>151 <span style=''>          writeProperties(PropertiesStr, d.properties)
+</span>152 <span style=''>        ).flatten.toList)
+</span>153 <span style=''>    }
+</span>154 <span style=''>  ))
+</span>155 <span style=''>}
+</span>156 <span style=''>
+</span>157 <span style=''>case class Developer(
+</span>158 <span style=''>  id: String = null, name: String = null, email: String = null,
+</span>159 <span style=''>  url: String = null,
+</span>160 <span style=''>  organization: String = null, organizationUrl: String = null,
+</span>161 <span style=''>  roles: Seq[String] = Seq[String](), timezone: String = null,
+</span>162 <span style=''>  properties: Map[String, String] = Map[String, String]()) {
+</span>163 <span style=''>
+</span>164 <span style=''>  def this(elem: Elem) = </span><span style='background: #AEF1AE'>this(
+</span>165 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.Id).text),
+</span>166 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.Name).text),
+</span>167 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.Email).text),
+</span>168 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.UrlStr).text),
+</span>169 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.OrganizationStr).text),
+</span>170 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.OrganizationUrl).text),
+</span>171 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Roles \ SL.RoleStr).map { _.text },
+</span>172 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.TimezoneStr).text),
+</span>173 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.PropertiesStr).flatMap(</span><span style='background: #F0ADAD'>_.map { e =&gt; (e.label, e.text) }</span><span style='background: #AEF1AE'>).toMap)</span><span style=''>
+</span>174 <span style=''>
+</span>175 <span style=''>  lazy val xml =
+</span>176 <span style=''>    &lt;developer&gt;
+</span>177 <span style=''>      { if (id != null) &lt;id&gt;{id}&lt;/id&gt; }
+</span>178 <span style=''>      { if (name != null) &lt;name&gt;{name}&lt;/name&gt; }
+</span>179 <span style=''>      { if (email != null) &lt;email&gt;{email}&lt;/email&gt; }
+</span>180 <span style=''>      { if (url != null) &lt;url&gt;{url}&lt;/url&gt; }
+</span>181 <span style=''>      { if (organization != null)
+</span>182 <span style=''>        &lt;organization&gt;{organization}&lt;/organization&gt; }
+</span>183 <span style=''>      { if (organizationUrl != null)
+</span>184 <span style=''>        &lt;organizationUrl&gt;{organizationUrl}&lt;/organizationUrl&gt; }
+</span>185 <span style=''>      &lt;roles&gt;
+</span>186 <span style=''>        { roles.map { Role(_).xml } }
+</span>187 <span style=''>      &lt;/roles&gt;
+</span>188 <span style=''>      { if (timezone != null) &lt;timezone&gt;{timezone}&lt;/timezone&gt; }
+</span>189 <span style=''>      { if (properties != null &amp;&amp; !properties.isEmpty) &lt;properties&gt;
+</span>190 <span style=''>        { properties.map { case(k, v) =&gt; PropertyValue(k, v).xml } }
+</span>191 <span style=''>        &lt;/properties&gt; }
+</span>192 <span style=''>    &lt;/developer&gt;
+</span>193 <span style=''>
+</span>194 <span style=''>  def makeModelObject(): org.apache.maven.model.Developer = {
+</span>195 <span style=''>    val developer = </span><span style='background: #AEF1AE'>new org.apache.maven.model.Developer()</span><span style=''>
+</span>196 <span style=''>    if (</span><span style='background: #AEF1AE'>id != null</span><span style=''>) </span><span style='background: #AEF1AE'>developer.setId(id)</span><span style=''>
+</span>197 <span style=''>    if (</span><span style='background: #AEF1AE'>name != null</span><span style=''>) </span><span style='background: #AEF1AE'>developer.setName(name)</span><span style=''>
+</span>198 <span style=''>    if (</span><span style='background: #AEF1AE'>email != null</span><span style=''>) </span><span style='background: #AEF1AE'>developer.setEmail(email)</span><span style=''>
+</span>199 <span style=''>    if (</span><span style='background: #AEF1AE'>url != null</span><span style=''>) </span><span style='background: #F0ADAD'>developer.setUrl(url)</span><span style=''>
+</span>200 <span style=''>    if (</span><span style='background: #AEF1AE'>organization != null</span><span style=''>) </span><span style='background: #AEF1AE'>developer.setOrganization(organization)</span><span style=''>
+</span>201 <span style=''>    if (</span><span style='background: #AEF1AE'>organizationUrl != null</span><span style=''>) </span><span style='background: #AEF1AE'>developer.setOrganizationUrl(organizationUrl)</span><span style=''>
+</span>202 <span style=''>    </span><span style='background: #AEF1AE'>roles.foreach { role =&gt; developer.addRole(role) }</span><span style=''>
+</span>203 <span style=''>    if (</span><span style='background: #AEF1AE'>timezone != null</span><span style=''>) </span><span style='background: #AEF1AE'>developer.setTimezone(timezone)</span><span style=''>
+</span>204 <span style=''>    if (</span><span style='background: #AEF1AE'>properties != null</span><span style=''>)
+</span>205 <span style=''>      </span><span style='background: #AEF1AE'>properties.foreach { case(k, v) =&gt; </span><span style='background: #F0ADAD'>developer.addProperty(k, v)</span><span style='background: #AEF1AE'> }</span><span style=''>
+</span>206 <span style=''>    developer
+</span>207 <span style=''>  }
+</span>208 <span style=''>}
+</span>209 <span style=''>
+</span>210 <span style=''>case class Role(role: String) {
+</span>211 <span style=''>  lazy val xml = &lt;role&gt;{role}&lt;/role&gt;
+</span>212 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          653
+        </td>
+        <td>
+          1056
+          -
+          1074
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #AEF1AE">
+          JsonReader.formats
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          654
+        </td>
+        <td>
+          1142
+          -
+          1169
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectOutputStream.defaultWriteObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultWriteObject()
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          655
+        </td>
+        <td>
+          1235
+          -
+          1261
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectInputStream.defaultReadObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultReadObject()
+        </td>
+      </tr><tr>
+        <td>
+          74
+        </td>
+        <td>
+          698
+        </td>
+        <td>
+          2609
+          -
+          2609
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          74
+        </td>
+        <td>
+          697
+        </td>
+        <td>
+          2609
+          -
+          3016
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Contributor.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          Contributor.this.&lt;init&gt;(unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Name)).text), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Email)).text), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.UrlStr)).text), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.OrganizationStr)).text), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.OrganizationUrl)).text), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Roles)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.RoleStr)).map[String, Seq[String]](((x$1: scala.xml.Node) =&gt; x$1.text))(immutable.this.Seq.canBuildFrom[String]), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TimezoneStr)).text), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.PropertiesStr)).flatMap[(String, String), scala.collection.immutable.Seq[(String, String)]](((x$2: scala.xml.Node) =&gt; x$2.map[(String, String), scala.collection.immutable.Seq[(String, String)]](((e: scala.xml.Node) =&gt; scala.Tuple2.apply[String, String](e.label, e.text)))(immutable.this.Seq.canBuildFrom[(String, String)])))(immutable.this.Seq.canBuildFrom[(String, String)]).toMap[String, String](scala.Predef.$conforms[(String, String)]))
+        </td>
+      </tr><tr>
+        <td>
+          75
+        </td>
+        <td>
+          657
+        </td>
+        <td>
+          2639
+          -
+          2646
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Name)
+        </td>
+      </tr><tr>
+        <td>
+          75
+        </td>
+        <td>
+          659
+        </td>
+        <td>
+          2619
+          -
+          2653
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Name)).text)
+        </td>
+      </tr><tr>
+        <td>
+          75
+        </td>
+        <td>
+          656
+        </td>
+        <td>
+          2639
+          -
+          2646
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Name
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Name
+        </td>
+      </tr><tr>
+        <td>
+          75
+        </td>
+        <td>
+          658
+        </td>
+        <td>
+          2632
+          -
+          2652
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Name)).text
+        </td>
+      </tr><tr>
+        <td>
+          76
+        </td>
+        <td>
+          660
+        </td>
+        <td>
+          2679
+          -
+          2687
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Email
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Email
+        </td>
+      </tr><tr>
+        <td>
+          76
+        </td>
+        <td>
+          663
+        </td>
+        <td>
+          2659
+          -
+          2694
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Email)).text)
+        </td>
+      </tr><tr>
+        <td>
+          76
+        </td>
+        <td>
+          662
+        </td>
+        <td>
+          2672
+          -
+          2693
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Email)).text
+        </td>
+      </tr><tr>
+        <td>
+          76
+        </td>
+        <td>
+          661
+        </td>
+        <td>
+          2679
+          -
+          2687
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Email)
+        </td>
+      </tr><tr>
+        <td>
+          77
+        </td>
+        <td>
+          666
+        </td>
+        <td>
+          2713
+          -
+          2735
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.UrlStr)).text
+        </td>
+      </tr><tr>
+        <td>
+          77
+        </td>
+        <td>
+          665
+        </td>
+        <td>
+          2720
+          -
+          2729
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.UrlStr)
+        </td>
+      </tr><tr>
+        <td>
+          77
+        </td>
+        <td>
+          664
+        </td>
+        <td>
+          2720
+          -
+          2729
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.UrlStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.UrlStr
+        </td>
+      </tr><tr>
+        <td>
+          77
+        </td>
+        <td>
+          667
+        </td>
+        <td>
+          2700
+          -
+          2736
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.UrlStr)).text)
+        </td>
+      </tr><tr>
+        <td>
+          78
+        </td>
+        <td>
+          669
+        </td>
+        <td>
+          2762
+          -
+          2780
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.OrganizationStr)
+        </td>
+      </tr><tr>
+        <td>
+          78
+        </td>
+        <td>
+          668
+        </td>
+        <td>
+          2762
+          -
+          2780
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.OrganizationStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.OrganizationStr
+        </td>
+      </tr><tr>
+        <td>
+          78
+        </td>
+        <td>
+          671
+        </td>
+        <td>
+          2742
+          -
+          2787
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.OrganizationStr)).text)
+        </td>
+      </tr><tr>
+        <td>
+          78
+        </td>
+        <td>
+          670
+        </td>
+        <td>
+          2755
+          -
+          2786
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.OrganizationStr)).text
+        </td>
+      </tr><tr>
+        <td>
+          79
+        </td>
+        <td>
+          672
+        </td>
+        <td>
+          2813
+          -
+          2831
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.OrganizationUrl
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.OrganizationUrl
+        </td>
+      </tr><tr>
+        <td>
+          79
+        </td>
+        <td>
+          675
+        </td>
+        <td>
+          2793
+          -
+          2838
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.OrganizationUrl)).text)
+        </td>
+      </tr><tr>
+        <td>
+          79
+        </td>
+        <td>
+          674
+        </td>
+        <td>
+          2806
+          -
+          2837
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.OrganizationUrl)).text
+        </td>
+      </tr><tr>
+        <td>
+          79
+        </td>
+        <td>
+          673
+        </td>
+        <td>
+          2813
+          -
+          2831
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.OrganizationUrl)
+        </td>
+      </tr><tr>
+        <td>
+          80
+        </td>
+        <td>
+          678
+        </td>
+        <td>
+          2863
+          -
+          2873
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.RoleStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.RoleStr
+        </td>
+      </tr><tr>
+        <td>
+          80
+        </td>
+        <td>
+          681
+        </td>
+        <td>
+          2879
+          -
+          2879
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Seq.canBuildFrom[String]
+        </td>
+      </tr><tr>
+        <td>
+          80
+        </td>
+        <td>
+          677
+        </td>
+        <td>
+          2852
+          -
+          2860
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Roles)
+        </td>
+      </tr><tr>
+        <td>
+          80
+        </td>
+        <td>
+          680
+        </td>
+        <td>
+          2881
+          -
+          2887
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Node.text
+        </td>
+        <td style="background: #AEF1AE">
+          x$1.text
+        </td>
+      </tr><tr>
+        <td>
+          80
+        </td>
+        <td>
+          682
+        </td>
+        <td>
+          2845
+          -
+          2889
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Roles)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.RoleStr)).map[String, Seq[String]](((x$1: scala.xml.Node) =&gt; x$1.text))(immutable.this.Seq.canBuildFrom[String])
+        </td>
+      </tr><tr>
+        <td>
+          80
+        </td>
+        <td>
+          676
+        </td>
+        <td>
+          2852
+          -
+          2860
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Roles
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Roles
+        </td>
+      </tr><tr>
+        <td>
+          80
+        </td>
+        <td>
+          679
+        </td>
+        <td>
+          2863
+          -
+          2873
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.RoleStr)
+        </td>
+      </tr><tr>
+        <td>
+          81
+        </td>
+        <td>
+          684
+        </td>
+        <td>
+          2915
+          -
+          2929
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.TimezoneStr)
+        </td>
+      </tr><tr>
+        <td>
+          81
+        </td>
+        <td>
+          683
+        </td>
+        <td>
+          2915
+          -
+          2929
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TimezoneStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TimezoneStr
+        </td>
+      </tr><tr>
+        <td>
+          81
+        </td>
+        <td>
+          686
+        </td>
+        <td>
+          2895
+          -
+          2936
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TimezoneStr)).text)
+        </td>
+      </tr><tr>
+        <td>
+          81
+        </td>
+        <td>
+          685
+        </td>
+        <td>
+          2908
+          -
+          2935
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TimezoneStr)).text
+        </td>
+      </tr><tr>
+        <td>
+          82
+        </td>
+        <td>
+          687
+        </td>
+        <td>
+          2950
+          -
+          2966
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.PropertiesStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.PropertiesStr
+        </td>
+      </tr><tr>
+        <td>
+          82
+        </td>
+        <td>
+          696
+        </td>
+        <td>
+          2943
+          -
+          3015
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableOnce.toMap
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.PropertiesStr)).flatMap[(String, String), scala.collection.immutable.Seq[(String, String)]](((x$2: scala.xml.Node) =&gt; x$2.map[(String, String), scala.collection.immutable.Seq[(String, String)]](((e: scala.xml.Node) =&gt; scala.Tuple2.apply[String, String](e.label, e.text)))(immutable.this.Seq.canBuildFrom[(String, String)])))(immutable.this.Seq.canBuildFrom[(String, String)]).toMap[String, String](scala.Predef.$conforms[(String, String)])
+        </td>
+      </tr><tr>
+        <td>
+          82
+        </td>
+        <td>
+          690
+        </td>
+        <td>
+          2999
+          -
+          3005
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Node.text
+        </td>
+        <td style="background: #F0ADAD">
+          e.text
+        </td>
+      </tr><tr>
+        <td>
+          82
+        </td>
+        <td>
+          693
+        </td>
+        <td>
+          2976
+          -
+          3008
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #F0ADAD">
+          x$2.map[(String, String), scala.collection.immutable.Seq[(String, String)]](((e: scala.xml.Node) =&gt; scala.Tuple2.apply[String, String](e.label, e.text)))(immutable.this.Seq.canBuildFrom[(String, String)])
+        </td>
+      </tr><tr>
+        <td>
+          82
+        </td>
+        <td>
+          692
+        </td>
+        <td>
+          2982
+          -
+          2982
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #F0ADAD">
+          immutable.this.Seq.canBuildFrom[(String, String)]
+        </td>
+      </tr><tr>
+        <td>
+          82
+        </td>
+        <td>
+          695
+        </td>
+        <td>
+          3010
+          -
+          3010
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.Predef.$conforms
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Predef.$conforms[(String, String)]
+        </td>
+      </tr><tr>
+        <td>
+          82
+        </td>
+        <td>
+          689
+        </td>
+        <td>
+          2990
+          -
+          2997
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Node.label
+        </td>
+        <td style="background: #F0ADAD">
+          e.label
+        </td>
+      </tr><tr>
+        <td>
+          82
+        </td>
+        <td>
+          691
+        </td>
+        <td>
+          2989
+          -
+          3006
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Tuple2.apply
+        </td>
+        <td style="background: #F0ADAD">
+          scala.Tuple2.apply[String, String](e.label, e.text)
+        </td>
+      </tr><tr>
+        <td>
+          82
+        </td>
+        <td>
+          694
+        </td>
+        <td>
+          2975
+          -
+          2975
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Seq.canBuildFrom[(String, String)]
+        </td>
+      </tr><tr>
+        <td>
+          82
+        </td>
+        <td>
+          688
+        </td>
+        <td>
+          2950
+          -
+          2966
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.PropertiesStr)
+        </td>
+      </tr><tr>
+        <td>
+          100
+        </td>
+        <td>
+          699
+        </td>
+        <td>
+          3785
+          -
+          3825
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new org.apache.maven.model.Contributor()
+        </td>
+      </tr><tr>
+        <td>
+          101
+        </td>
+        <td>
+          705
+        </td>
+        <td>
+          3830
+          -
+          3830
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          101
+        </td>
+        <td>
+          702
+        </td>
+        <td>
+          3848
+          -
+          3873
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setName
+        </td>
+        <td style="background: #AEF1AE">
+          contributor.setName(Contributor.this.name)
+        </td>
+      </tr><tr>
+        <td>
+          101
+        </td>
+        <td>
+          701
+        </td>
+        <td>
+          3868
+          -
+          3872
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Contributor.name
+        </td>
+        <td style="background: #AEF1AE">
+          Contributor.this.name
+        </td>
+      </tr><tr>
+        <td>
+          101
+        </td>
+        <td>
+          704
+        </td>
+        <td>
+          3830
+          -
+          3830
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          101
+        </td>
+        <td>
+          700
+        </td>
+        <td>
+          3834
+          -
+          3846
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Contributor.this.name.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          101
+        </td>
+        <td>
+          703
+        </td>
+        <td>
+          3848
+          -
+          3873
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setName
+        </td>
+        <td style="background: #AEF1AE">
+          contributor.setName(Contributor.this.name)
+        </td>
+      </tr><tr>
+        <td>
+          102
+        </td>
+        <td>
+          708
+        </td>
+        <td>
+          3897
+          -
+          3924
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setEmail
+        </td>
+        <td style="background: #AEF1AE">
+          contributor.setEmail(Contributor.this.email)
+        </td>
+      </tr><tr>
+        <td>
+          102
+        </td>
+        <td>
+          711
+        </td>
+        <td>
+          3878
+          -
+          3878
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          102
+        </td>
+        <td>
+          710
+        </td>
+        <td>
+          3878
+          -
+          3878
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          102
+        </td>
+        <td>
+          707
+        </td>
+        <td>
+          3918
+          -
+          3923
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Contributor.email
+        </td>
+        <td style="background: #AEF1AE">
+          Contributor.this.email
+        </td>
+      </tr><tr>
+        <td>
+          102
+        </td>
+        <td>
+          706
+        </td>
+        <td>
+          3882
+          -
+          3895
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Contributor.this.email.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          102
+        </td>
+        <td>
+          709
+        </td>
+        <td>
+          3897
+          -
+          3924
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setEmail
+        </td>
+        <td style="background: #AEF1AE">
+          contributor.setEmail(Contributor.this.email)
+        </td>
+      </tr><tr>
+        <td>
+          103
+        </td>
+        <td>
+          714
+        </td>
+        <td>
+          3946
+          -
+          3969
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setUrl
+        </td>
+        <td style="background: #F0ADAD">
+          contributor.setUrl(Contributor.this.url)
+        </td>
+      </tr><tr>
+        <td>
+          103
+        </td>
+        <td>
+          717
+        </td>
+        <td>
+          3929
+          -
+          3929
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          103
+        </td>
+        <td>
+          713
+        </td>
+        <td>
+          3965
+          -
+          3968
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Contributor.url
+        </td>
+        <td style="background: #F0ADAD">
+          Contributor.this.url
+        </td>
+      </tr><tr>
+        <td>
+          103
+        </td>
+        <td>
+          716
+        </td>
+        <td>
+          3929
+          -
+          3929
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          103
+        </td>
+        <td>
+          715
+        </td>
+        <td>
+          3946
+          -
+          3969
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setUrl
+        </td>
+        <td style="background: #F0ADAD">
+          contributor.setUrl(Contributor.this.url)
+        </td>
+      </tr><tr>
+        <td>
+          103
+        </td>
+        <td>
+          712
+        </td>
+        <td>
+          3933
+          -
+          3944
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Contributor.this.url.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          104
+        </td>
+        <td>
+          720
+        </td>
+        <td>
+          4000
+          -
+          4041
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setOrganization
+        </td>
+        <td style="background: #AEF1AE">
+          contributor.setOrganization(Contributor.this.organization)
+        </td>
+      </tr><tr>
+        <td>
+          104
+        </td>
+        <td>
+          723
+        </td>
+        <td>
+          3974
+          -
+          3974
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          104
+        </td>
+        <td>
+          719
+        </td>
+        <td>
+          4028
+          -
+          4040
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Contributor.organization
+        </td>
+        <td style="background: #AEF1AE">
+          Contributor.this.organization
+        </td>
+      </tr><tr>
+        <td>
+          104
+        </td>
+        <td>
+          722
+        </td>
+        <td>
+          3974
+          -
+          3974
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          104
+        </td>
+        <td>
+          718
+        </td>
+        <td>
+          3978
+          -
+          3998
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Contributor.this.organization.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          104
+        </td>
+        <td>
+          721
+        </td>
+        <td>
+          4000
+          -
+          4041
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setOrganization
+        </td>
+        <td style="background: #AEF1AE">
+          contributor.setOrganization(Contributor.this.organization)
+        </td>
+      </tr><tr>
+        <td>
+          105
+        </td>
+        <td>
+          729
+        </td>
+        <td>
+          4046
+          -
+          4046
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          105
+        </td>
+        <td>
+          726
+        </td>
+        <td>
+          4075
+          -
+          4122
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setOrganizationUrl
+        </td>
+        <td style="background: #AEF1AE">
+          contributor.setOrganizationUrl(Contributor.this.organizationUrl)
+        </td>
+      </tr><tr>
+        <td>
+          105
+        </td>
+        <td>
+          728
+        </td>
+        <td>
+          4046
+          -
+          4046
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          105
+        </td>
+        <td>
+          725
+        </td>
+        <td>
+          4106
+          -
+          4121
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Contributor.organizationUrl
+        </td>
+        <td style="background: #AEF1AE">
+          Contributor.this.organizationUrl
+        </td>
+      </tr><tr>
+        <td>
+          105
+        </td>
+        <td>
+          724
+        </td>
+        <td>
+          4050
+          -
+          4073
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Contributor.this.organizationUrl.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          105
+        </td>
+        <td>
+          727
+        </td>
+        <td>
+          4075
+          -
+          4122
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setOrganizationUrl
+        </td>
+        <td style="background: #AEF1AE">
+          contributor.setOrganizationUrl(Contributor.this.organizationUrl)
+        </td>
+      </tr><tr>
+        <td>
+          106
+        </td>
+        <td>
+          731
+        </td>
+        <td>
+          4127
+          -
+          4178
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          Contributor.this.roles.foreach[Unit](((role: String) =&gt; contributor.addRole(role)))
+        </td>
+      </tr><tr>
+        <td>
+          106
+        </td>
+        <td>
+          730
+        </td>
+        <td>
+          4151
+          -
+          4176
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.addRole
+        </td>
+        <td style="background: #AEF1AE">
+          contributor.addRole(role)
+        </td>
+      </tr><tr>
+        <td>
+          107
+        </td>
+        <td>
+          732
+        </td>
+        <td>
+          4187
+          -
+          4203
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Contributor.this.timezone.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          107
+        </td>
+        <td>
+          735
+        </td>
+        <td>
+          4205
+          -
+          4238
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setTimezone
+        </td>
+        <td style="background: #AEF1AE">
+          contributor.setTimezone(Contributor.this.timezone)
+        </td>
+      </tr><tr>
+        <td>
+          107
+        </td>
+        <td>
+          737
+        </td>
+        <td>
+          4183
+          -
+          4183
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          107
+        </td>
+        <td>
+          734
+        </td>
+        <td>
+          4205
+          -
+          4238
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setTimezone
+        </td>
+        <td style="background: #AEF1AE">
+          contributor.setTimezone(Contributor.this.timezone)
+        </td>
+      </tr><tr>
+        <td>
+          107
+        </td>
+        <td>
+          733
+        </td>
+        <td>
+          4229
+          -
+          4237
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Contributor.timezone
+        </td>
+        <td style="background: #AEF1AE">
+          Contributor.this.timezone
+        </td>
+      </tr><tr>
+        <td>
+          107
+        </td>
+        <td>
+          736
+        </td>
+        <td>
+          4183
+          -
+          4183
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          108
+        </td>
+        <td>
+          738
+        </td>
+        <td>
+          4247
+          -
+          4265
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Contributor.this.properties.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          108
+        </td>
+        <td>
+          743
+        </td>
+        <td>
+          4243
+          -
+          4243
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          108
+        </td>
+        <td>
+          742
+        </td>
+        <td>
+          4243
+          -
+          4243
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          109
+        </td>
+        <td>
+          741
+        </td>
+        <td>
+          4273
+          -
+          4339
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          Contributor.this.properties.foreach[Unit](((x0$1: (String, String)) =&gt; x0$1 match {
+  case (_1: String, _2: String)(String, String)((k @ _), (v @ _)) =&gt; contributor.addProperty(k, v)
+}))
+        </td>
+      </tr><tr>
+        <td>
+          109
+        </td>
+        <td>
+          740
+        </td>
+        <td>
+          4273
+          -
+          4339
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          Contributor.this.properties.foreach[Unit](((x0$1: (String, String)) =&gt; x0$1 match {
+  case (_1: String, _2: String)(String, String)((k @ _), (v @ _)) =&gt; contributor.addProperty(k, v)
+}))
+        </td>
+      </tr><tr>
+        <td>
+          109
+        </td>
+        <td>
+          739
+        </td>
+        <td>
+          4308
+          -
+          4337
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.addProperty
+        </td>
+        <td style="background: #F0ADAD">
+          contributor.addProperty(k, v)
+        </td>
+      </tr><tr>
+        <td>
+          116
+        </td>
+        <td>
+          744
+        </td>
+        <td>
+          4438
+          -
+          4456
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #AEF1AE">
+          JsonReader.formats
+        </td>
+      </tr><tr>
+        <td>
+          119
+        </td>
+        <td>
+          745
+        </td>
+        <td>
+          4524
+          -
+          4551
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectOutputStream.defaultWriteObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultWriteObject()
+        </td>
+      </tr><tr>
+        <td>
+          122
+        </td>
+        <td>
+          746
+        </td>
+        <td>
+          4617
+          -
+          4643
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectInputStream.defaultReadObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultReadObject()
+        </td>
+      </tr><tr>
+        <td>
+          164
+        </td>
+        <td>
+          792
+        </td>
+        <td>
+          6079
+          -
+          6524
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Developer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          Developer.this.&lt;init&gt;(unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Id)).text), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Name)).text), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Email)).text), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.UrlStr)).text), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.OrganizationStr)).text), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.OrganizationUrl)).text), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Roles)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.RoleStr)).map[String, Seq[String]](((x$4: scala.xml.Node) =&gt; x$4.text))(immutable.this.Seq.canBuildFrom[String]), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TimezoneStr)).text), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.PropertiesStr)).flatMap[(String, String), scala.collection.immutable.Seq[(String, String)]](((x$5: scala.xml.Node) =&gt; x$5.map[(String, String), scala.collection.immutable.Seq[(String, String)]](((e: scala.xml.Node) =&gt; scala.Tuple2.apply[String, String](e.label, e.text)))(immutable.this.Seq.canBuildFrom[(String, String)])))(immutable.this.Seq.canBuildFrom[(String, String)]).toMap[String, String](scala.Predef.$conforms[(String, String)]))
+        </td>
+      </tr><tr>
+        <td>
+          164
+        </td>
+        <td>
+          793
+        </td>
+        <td>
+          6079
+          -
+          6079
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          165
+        </td>
+        <td>
+          747
+        </td>
+        <td>
+          6109
+          -
+          6114
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Id
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Id
+        </td>
+      </tr><tr>
+        <td>
+          165
+        </td>
+        <td>
+          750
+        </td>
+        <td>
+          6089
+          -
+          6121
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Id)).text)
+        </td>
+      </tr><tr>
+        <td>
+          165
+        </td>
+        <td>
+          749
+        </td>
+        <td>
+          6102
+          -
+          6120
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Id)).text
+        </td>
+      </tr><tr>
+        <td>
+          165
+        </td>
+        <td>
+          748
+        </td>
+        <td>
+          6109
+          -
+          6114
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Id)
+        </td>
+      </tr><tr>
+        <td>
+          166
+        </td>
+        <td>
+          753
+        </td>
+        <td>
+          6140
+          -
+          6160
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Name)).text
+        </td>
+      </tr><tr>
+        <td>
+          166
+        </td>
+        <td>
+          752
+        </td>
+        <td>
+          6147
+          -
+          6154
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Name)
+        </td>
+      </tr><tr>
+        <td>
+          166
+        </td>
+        <td>
+          751
+        </td>
+        <td>
+          6147
+          -
+          6154
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Name
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Name
+        </td>
+      </tr><tr>
+        <td>
+          166
+        </td>
+        <td>
+          754
+        </td>
+        <td>
+          6127
+          -
+          6161
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Name)).text)
+        </td>
+      </tr><tr>
+        <td>
+          167
+        </td>
+        <td>
+          756
+        </td>
+        <td>
+          6187
+          -
+          6195
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Email)
+        </td>
+      </tr><tr>
+        <td>
+          167
+        </td>
+        <td>
+          755
+        </td>
+        <td>
+          6187
+          -
+          6195
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Email
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Email
+        </td>
+      </tr><tr>
+        <td>
+          167
+        </td>
+        <td>
+          758
+        </td>
+        <td>
+          6167
+          -
+          6202
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Email)).text)
+        </td>
+      </tr><tr>
+        <td>
+          167
+        </td>
+        <td>
+          757
+        </td>
+        <td>
+          6180
+          -
+          6201
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Email)).text
+        </td>
+      </tr><tr>
+        <td>
+          168
+        </td>
+        <td>
+          759
+        </td>
+        <td>
+          6228
+          -
+          6237
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.UrlStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.UrlStr
+        </td>
+      </tr><tr>
+        <td>
+          168
+        </td>
+        <td>
+          762
+        </td>
+        <td>
+          6208
+          -
+          6244
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.UrlStr)).text)
+        </td>
+      </tr><tr>
+        <td>
+          168
+        </td>
+        <td>
+          761
+        </td>
+        <td>
+          6221
+          -
+          6243
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.UrlStr)).text
+        </td>
+      </tr><tr>
+        <td>
+          168
+        </td>
+        <td>
+          760
+        </td>
+        <td>
+          6228
+          -
+          6237
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.UrlStr)
+        </td>
+      </tr><tr>
+        <td>
+          169
+        </td>
+        <td>
+          765
+        </td>
+        <td>
+          6263
+          -
+          6294
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.OrganizationStr)).text
+        </td>
+      </tr><tr>
+        <td>
+          169
+        </td>
+        <td>
+          764
+        </td>
+        <td>
+          6270
+          -
+          6288
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.OrganizationStr)
+        </td>
+      </tr><tr>
+        <td>
+          169
+        </td>
+        <td>
+          766
+        </td>
+        <td>
+          6250
+          -
+          6295
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.OrganizationStr)).text)
+        </td>
+      </tr><tr>
+        <td>
+          169
+        </td>
+        <td>
+          763
+        </td>
+        <td>
+          6270
+          -
+          6288
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.OrganizationStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.OrganizationStr
+        </td>
+      </tr><tr>
+        <td>
+          170
+        </td>
+        <td>
+          768
+        </td>
+        <td>
+          6321
+          -
+          6339
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.OrganizationUrl)
+        </td>
+      </tr><tr>
+        <td>
+          170
+        </td>
+        <td>
+          770
+        </td>
+        <td>
+          6301
+          -
+          6346
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.OrganizationUrl)).text)
+        </td>
+      </tr><tr>
+        <td>
+          170
+        </td>
+        <td>
+          767
+        </td>
+        <td>
+          6321
+          -
+          6339
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.OrganizationUrl
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.OrganizationUrl
+        </td>
+      </tr><tr>
+        <td>
+          170
+        </td>
+        <td>
+          769
+        </td>
+        <td>
+          6314
+          -
+          6345
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.OrganizationUrl)).text
+        </td>
+      </tr><tr>
+        <td>
+          171
+        </td>
+        <td>
+          774
+        </td>
+        <td>
+          6371
+          -
+          6381
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.RoleStr)
+        </td>
+      </tr><tr>
+        <td>
+          171
+        </td>
+        <td>
+          777
+        </td>
+        <td>
+          6353
+          -
+          6397
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Roles)).\(`package`.this.SL.strToString(unbound.this.`package`.SL.RoleStr)).map[String, Seq[String]](((x$4: scala.xml.Node) =&gt; x$4.text))(immutable.this.Seq.canBuildFrom[String])
+        </td>
+      </tr><tr>
+        <td>
+          171
+        </td>
+        <td>
+          771
+        </td>
+        <td>
+          6360
+          -
+          6368
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Roles
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Roles
+        </td>
+      </tr><tr>
+        <td>
+          171
+        </td>
+        <td>
+          773
+        </td>
+        <td>
+          6371
+          -
+          6381
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.RoleStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.RoleStr
+        </td>
+      </tr><tr>
+        <td>
+          171
+        </td>
+        <td>
+          776
+        </td>
+        <td>
+          6387
+          -
+          6387
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Seq.canBuildFrom[String]
+        </td>
+      </tr><tr>
+        <td>
+          171
+        </td>
+        <td>
+          775
+        </td>
+        <td>
+          6389
+          -
+          6395
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Node.text
+        </td>
+        <td style="background: #AEF1AE">
+          x$4.text
+        </td>
+      </tr><tr>
+        <td>
+          171
+        </td>
+        <td>
+          772
+        </td>
+        <td>
+          6360
+          -
+          6368
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Roles)
+        </td>
+      </tr><tr>
+        <td>
+          172
+        </td>
+        <td>
+          779
+        </td>
+        <td>
+          6423
+          -
+          6437
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.TimezoneStr)
+        </td>
+      </tr><tr>
+        <td>
+          172
+        </td>
+        <td>
+          778
+        </td>
+        <td>
+          6423
+          -
+          6437
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TimezoneStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.TimezoneStr
+        </td>
+      </tr><tr>
+        <td>
+          172
+        </td>
+        <td>
+          781
+        </td>
+        <td>
+          6403
+          -
+          6444
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TimezoneStr)).text)
+        </td>
+      </tr><tr>
+        <td>
+          172
+        </td>
+        <td>
+          780
+        </td>
+        <td>
+          6416
+          -
+          6443
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TimezoneStr)).text
+        </td>
+      </tr><tr>
+        <td>
+          173
+        </td>
+        <td>
+          783
+        </td>
+        <td>
+          6458
+          -
+          6474
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.PropertiesStr)
+        </td>
+      </tr><tr>
+        <td>
+          173
+        </td>
+        <td>
+          786
+        </td>
+        <td>
+          6497
+          -
+          6514
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Tuple2.apply
+        </td>
+        <td style="background: #F0ADAD">
+          scala.Tuple2.apply[String, String](e.label, e.text)
+        </td>
+      </tr><tr>
+        <td>
+          173
+        </td>
+        <td>
+          788
+        </td>
+        <td>
+          6484
+          -
+          6516
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #F0ADAD">
+          x$5.map[(String, String), scala.collection.immutable.Seq[(String, String)]](((e: scala.xml.Node) =&gt; scala.Tuple2.apply[String, String](e.label, e.text)))(immutable.this.Seq.canBuildFrom[(String, String)])
+        </td>
+      </tr><tr>
+        <td>
+          173
+        </td>
+        <td>
+          782
+        </td>
+        <td>
+          6458
+          -
+          6474
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.PropertiesStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.PropertiesStr
+        </td>
+      </tr><tr>
+        <td>
+          173
+        </td>
+        <td>
+          791
+        </td>
+        <td>
+          6451
+          -
+          6523
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableOnce.toMap
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.PropertiesStr)).flatMap[(String, String), scala.collection.immutable.Seq[(String, String)]](((x$5: scala.xml.Node) =&gt; x$5.map[(String, String), scala.collection.immutable.Seq[(String, String)]](((e: scala.xml.Node) =&gt; scala.Tuple2.apply[String, String](e.label, e.text)))(immutable.this.Seq.canBuildFrom[(String, String)])))(immutable.this.Seq.canBuildFrom[(String, String)]).toMap[String, String](scala.Predef.$conforms[(String, String)])
+        </td>
+      </tr><tr>
+        <td>
+          173
+        </td>
+        <td>
+          785
+        </td>
+        <td>
+          6507
+          -
+          6513
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Node.text
+        </td>
+        <td style="background: #F0ADAD">
+          e.text
+        </td>
+      </tr><tr>
+        <td>
+          173
+        </td>
+        <td>
+          784
+        </td>
+        <td>
+          6498
+          -
+          6505
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Node.label
+        </td>
+        <td style="background: #F0ADAD">
+          e.label
+        </td>
+      </tr><tr>
+        <td>
+          173
+        </td>
+        <td>
+          787
+        </td>
+        <td>
+          6490
+          -
+          6490
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #F0ADAD">
+          immutable.this.Seq.canBuildFrom[(String, String)]
+        </td>
+      </tr><tr>
+        <td>
+          173
+        </td>
+        <td>
+          790
+        </td>
+        <td>
+          6518
+          -
+          6518
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.Predef.$conforms
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Predef.$conforms[(String, String)]
+        </td>
+      </tr><tr>
+        <td>
+          173
+        </td>
+        <td>
+          789
+        </td>
+        <td>
+          6483
+          -
+          6483
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Seq.canBuildFrom[(String, String)]
+        </td>
+      </tr><tr>
+        <td>
+          195
+        </td>
+        <td>
+          794
+        </td>
+        <td>
+          7323
+          -
+          7361
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Developer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new org.apache.maven.model.Developer()
+        </td>
+      </tr><tr>
+        <td>
+          196
+        </td>
+        <td>
+          795
+        </td>
+        <td>
+          7370
+          -
+          7380
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Developer.this.id.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          196
+        </td>
+        <td>
+          797
+        </td>
+        <td>
+          7382
+          -
+          7401
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Developer.setId
+        </td>
+        <td style="background: #AEF1AE">
+          developer.setId(Developer.this.id)
+        </td>
+      </tr><tr>
+        <td>
+          196
+        </td>
+        <td>
+          800
+        </td>
+        <td>
+          7366
+          -
+          7366
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          196
+        </td>
+        <td>
+          796
+        </td>
+        <td>
+          7398
+          -
+          7400
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Developer.id
+        </td>
+        <td style="background: #AEF1AE">
+          Developer.this.id
+        </td>
+      </tr><tr>
+        <td>
+          196
+        </td>
+        <td>
+          799
+        </td>
+        <td>
+          7366
+          -
+          7366
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          196
+        </td>
+        <td>
+          798
+        </td>
+        <td>
+          7382
+          -
+          7401
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.Developer.setId
+        </td>
+        <td style="background: #AEF1AE">
+          developer.setId(Developer.this.id)
+        </td>
+      </tr><tr>
+        <td>
+          197
+        </td>
+        <td>
+          801
+        </td>
+        <td>
+          7410
+          -
+          7422
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Developer.this.name.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          197
+        </td>
+        <td>
+          804
+        </td>
+        <td>
+          7424
+          -
+          7447
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setName
+        </td>
+        <td style="background: #AEF1AE">
+          developer.setName(Developer.this.name)
+        </td>
+      </tr><tr>
+        <td>
+          197
+        </td>
+        <td>
+          803
+        </td>
+        <td>
+          7424
+          -
+          7447
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setName
+        </td>
+        <td style="background: #AEF1AE">
+          developer.setName(Developer.this.name)
+        </td>
+      </tr><tr>
+        <td>
+          197
+        </td>
+        <td>
+          806
+        </td>
+        <td>
+          7406
+          -
+          7406
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          197
+        </td>
+        <td>
+          802
+        </td>
+        <td>
+          7442
+          -
+          7446
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Developer.name
+        </td>
+        <td style="background: #AEF1AE">
+          Developer.this.name
+        </td>
+      </tr><tr>
+        <td>
+          197
+        </td>
+        <td>
+          805
+        </td>
+        <td>
+          7406
+          -
+          7406
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          198
+        </td>
+        <td>
+          810
+        </td>
+        <td>
+          7471
+          -
+          7496
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setEmail
+        </td>
+        <td style="background: #AEF1AE">
+          developer.setEmail(Developer.this.email)
+        </td>
+      </tr><tr>
+        <td>
+          198
+        </td>
+        <td>
+          812
+        </td>
+        <td>
+          7452
+          -
+          7452
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          198
+        </td>
+        <td>
+          809
+        </td>
+        <td>
+          7471
+          -
+          7496
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setEmail
+        </td>
+        <td style="background: #AEF1AE">
+          developer.setEmail(Developer.this.email)
+        </td>
+      </tr><tr>
+        <td>
+          198
+        </td>
+        <td>
+          811
+        </td>
+        <td>
+          7452
+          -
+          7452
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          198
+        </td>
+        <td>
+          808
+        </td>
+        <td>
+          7490
+          -
+          7495
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Developer.email
+        </td>
+        <td style="background: #AEF1AE">
+          Developer.this.email
+        </td>
+      </tr><tr>
+        <td>
+          198
+        </td>
+        <td>
+          807
+        </td>
+        <td>
+          7456
+          -
+          7469
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Developer.this.email.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          199
+        </td>
+        <td>
+          813
+        </td>
+        <td>
+          7505
+          -
+          7516
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Developer.this.url.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          199
+        </td>
+        <td>
+          815
+        </td>
+        <td>
+          7518
+          -
+          7539
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setUrl
+        </td>
+        <td style="background: #F0ADAD">
+          developer.setUrl(Developer.this.url)
+        </td>
+      </tr><tr>
+        <td>
+          199
+        </td>
+        <td>
+          818
+        </td>
+        <td>
+          7501
+          -
+          7501
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          199
+        </td>
+        <td>
+          817
+        </td>
+        <td>
+          7501
+          -
+          7501
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          199
+        </td>
+        <td>
+          814
+        </td>
+        <td>
+          7535
+          -
+          7538
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Developer.url
+        </td>
+        <td style="background: #F0ADAD">
+          Developer.this.url
+        </td>
+      </tr><tr>
+        <td>
+          199
+        </td>
+        <td>
+          816
+        </td>
+        <td>
+          7518
+          -
+          7539
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setUrl
+        </td>
+        <td style="background: #F0ADAD">
+          developer.setUrl(Developer.this.url)
+        </td>
+      </tr><tr>
+        <td>
+          200
+        </td>
+        <td>
+          819
+        </td>
+        <td>
+          7548
+          -
+          7568
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Developer.this.organization.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          200
+        </td>
+        <td>
+          822
+        </td>
+        <td>
+          7570
+          -
+          7609
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setOrganization
+        </td>
+        <td style="background: #AEF1AE">
+          developer.setOrganization(Developer.this.organization)
+        </td>
+      </tr><tr>
+        <td>
+          200
+        </td>
+        <td>
+          821
+        </td>
+        <td>
+          7570
+          -
+          7609
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setOrganization
+        </td>
+        <td style="background: #AEF1AE">
+          developer.setOrganization(Developer.this.organization)
+        </td>
+      </tr><tr>
+        <td>
+          200
+        </td>
+        <td>
+          824
+        </td>
+        <td>
+          7544
+          -
+          7544
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          200
+        </td>
+        <td>
+          820
+        </td>
+        <td>
+          7596
+          -
+          7608
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Developer.organization
+        </td>
+        <td style="background: #AEF1AE">
+          Developer.this.organization
+        </td>
+      </tr><tr>
+        <td>
+          200
+        </td>
+        <td>
+          823
+        </td>
+        <td>
+          7544
+          -
+          7544
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          201
+        </td>
+        <td>
+          828
+        </td>
+        <td>
+          7643
+          -
+          7688
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setOrganizationUrl
+        </td>
+        <td style="background: #AEF1AE">
+          developer.setOrganizationUrl(Developer.this.organizationUrl)
+        </td>
+      </tr><tr>
+        <td>
+          201
+        </td>
+        <td>
+          830
+        </td>
+        <td>
+          7614
+          -
+          7614
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          201
+        </td>
+        <td>
+          827
+        </td>
+        <td>
+          7643
+          -
+          7688
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setOrganizationUrl
+        </td>
+        <td style="background: #AEF1AE">
+          developer.setOrganizationUrl(Developer.this.organizationUrl)
+        </td>
+      </tr><tr>
+        <td>
+          201
+        </td>
+        <td>
+          826
+        </td>
+        <td>
+          7672
+          -
+          7687
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Developer.organizationUrl
+        </td>
+        <td style="background: #AEF1AE">
+          Developer.this.organizationUrl
+        </td>
+      </tr><tr>
+        <td>
+          201
+        </td>
+        <td>
+          829
+        </td>
+        <td>
+          7614
+          -
+          7614
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          201
+        </td>
+        <td>
+          825
+        </td>
+        <td>
+          7618
+          -
+          7641
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Developer.this.organizationUrl.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          202
+        </td>
+        <td>
+          831
+        </td>
+        <td>
+          7717
+          -
+          7740
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.addRole
+        </td>
+        <td style="background: #AEF1AE">
+          developer.addRole(role)
+        </td>
+      </tr><tr>
+        <td>
+          202
+        </td>
+        <td>
+          832
+        </td>
+        <td>
+          7693
+          -
+          7742
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          Developer.this.roles.foreach[Unit](((role: String) =&gt; developer.addRole(role)))
+        </td>
+      </tr><tr>
+        <td>
+          203
+        </td>
+        <td>
+          837
+        </td>
+        <td>
+          7747
+          -
+          7747
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          203
+        </td>
+        <td>
+          833
+        </td>
+        <td>
+          7751
+          -
+          7767
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Developer.this.timezone.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          203
+        </td>
+        <td>
+          836
+        </td>
+        <td>
+          7769
+          -
+          7800
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setTimezone
+        </td>
+        <td style="background: #AEF1AE">
+          developer.setTimezone(Developer.this.timezone)
+        </td>
+      </tr><tr>
+        <td>
+          203
+        </td>
+        <td>
+          835
+        </td>
+        <td>
+          7769
+          -
+          7800
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.setTimezone
+        </td>
+        <td style="background: #AEF1AE">
+          developer.setTimezone(Developer.this.timezone)
+        </td>
+      </tr><tr>
+        <td>
+          203
+        </td>
+        <td>
+          838
+        </td>
+        <td>
+          7747
+          -
+          7747
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          203
+        </td>
+        <td>
+          834
+        </td>
+        <td>
+          7791
+          -
+          7799
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Developer.timezone
+        </td>
+        <td style="background: #AEF1AE">
+          Developer.this.timezone
+        </td>
+      </tr><tr>
+        <td>
+          204
+        </td>
+        <td>
+          839
+        </td>
+        <td>
+          7809
+          -
+          7827
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Developer.this.properties.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          204
+        </td>
+        <td>
+          844
+        </td>
+        <td>
+          7805
+          -
+          7805
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          204
+        </td>
+        <td>
+          843
+        </td>
+        <td>
+          7805
+          -
+          7805
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          205
+        </td>
+        <td>
+          842
+        </td>
+        <td>
+          7835
+          -
+          7899
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          Developer.this.properties.foreach[Unit](((x0$1: (String, String)) =&gt; x0$1 match {
+  case (_1: String, _2: String)(String, String)((k @ _), (v @ _)) =&gt; developer.addProperty(k, v)
+}))
+        </td>
+      </tr><tr>
+        <td>
+          205
+        </td>
+        <td>
+          841
+        </td>
+        <td>
+          7835
+          -
+          7899
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          Developer.this.properties.foreach[Unit](((x0$1: (String, String)) =&gt; x0$1 match {
+  case (_1: String, _2: String)(String, String)((k @ _), (v @ _)) =&gt; developer.addProperty(k, v)
+}))
+        </td>
+      </tr><tr>
+        <td>
+          205
+        </td>
+        <td>
+          840
+        </td>
+        <td>
+          7870
+          -
+          7897
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Contributor.addProperty
+        </td>
+        <td style="background: #F0ADAD">
+          developer.addProperty(k, v)
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>
