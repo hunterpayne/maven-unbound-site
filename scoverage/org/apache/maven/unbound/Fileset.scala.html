@@ -1,0 +1,1401 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          org/apache/maven/unbound/Fileset.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier, monospace;'>1 <span style=''>/*
+</span>2 <span style=''> * Licensed to the Apache Software Foundation (ASF) under one or more
+</span>3 <span style=''> * contributor license agreements.  See the NOTICE file distributed with
+</span>4 <span style=''> * this work for additional information regarding copyright ownership.
+</span>5 <span style=''> * The ASF licenses this file to You under the Apache License, Version 2.0
+</span>6 <span style=''> * (the &quot;License&quot;); you may not use this file except in compliance with
+</span>7 <span style=''> * the License.  You may obtain a copy of the License at
+</span>8 <span style=''> *
+</span>9 <span style=''> *    http://www.apache.org/licenses/LICENSE-2.0
+</span>10 <span style=''> *
+</span>11 <span style=''> * Unless required by applicable law or agreed to in writing, software
+</span>12 <span style=''> * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+</span>13 <span style=''> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+</span>14 <span style=''> * See the License for the specific language governing permissions and
+</span>15 <span style=''> * limitations under the License.
+</span>16 <span style=''> */
+</span>17 <span style=''>
+</span>18 <span style=''>package org.apache.maven.unbound
+</span>19 <span style=''>
+</span>20 <span style=''>import java.io.{ ObjectInputStream, ObjectOutputStream }
+</span>21 <span style=''>
+</span>22 <span style=''>import scala.xml.Elem
+</span>23 <span style=''>
+</span>24 <span style=''>import com.typesafe.config.ConfigFactory
+</span>25 <span style=''>import org.json4s._
+</span>26 <span style=''>
+</span>27 <span style=''>protected[unbound] object Fileset extends CommonJsonReader {
+</span>28 <span style=''>
+</span>29 <span style=''>  implicit val formats = </span><span style='background: #F0ADAD'>JsonReader.formats</span><span style=''>
+</span>30 <span style=''>
+</span>31 <span style=''>  private def writeObject(stream: ObjectOutputStream): Unit =
+</span>32 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultWriteObject()</span><span style=''>
+</span>33 <span style=''>
+</span>34 <span style=''>  private def readObject(stream: ObjectInputStream): Unit =
+</span>35 <span style=''>    </span><span style='background: #F0ADAD'>stream.defaultReadObject()</span><span style=''>
+</span>36 <span style=''>
+</span>37 <span style=''>  class FilesetSerializer extends CustomSerializer[Fileset](format =&gt; (
+</span>38 <span style=''>    {
+</span>39 <span style=''>      case obj @ JObject(fields) =&gt;
+</span>40 <span style=''>        new Fileset(
+</span>41 <span style=''>          readStr(fields, DirectoryStr).getOrElse(null),
+</span>42 <span style=''>          readStr(fields, &quot;lineEnding&quot;).getOrElse(null),
+</span>43 <span style=''>          readBool(fields, &quot;followSymlinks&quot;).getOrElse(false),
+</span>44 <span style=''>          readStr(fields, &quot;outputDirectory&quot;).getOrElse(null),
+</span>45 <span style=''>          readBool(fields, &quot;useDefaultExcludes&quot;).getOrElse(true),
+</span>46 <span style=''>          readStringSequence(fields, &quot;includes&quot;),
+</span>47 <span style=''>          readStringSequence(fields, &quot;excludes&quot;),
+</span>48 <span style=''>          readStr(fields, &quot;modeFile&quot;).getOrElse(&quot;0644&quot;),
+</span>49 <span style=''>          readStr(fields, &quot;modeDirectory&quot;).getOrElse(&quot;0755&quot;),
+</span>50 <span style=''>          readObject[Mapper](obj, &quot;mapper&quot;)
+</span>51 <span style=''>        )
+</span>52 <span style=''>    },
+</span>53 <span style=''>    {
+</span>54 <span style=''>      case f: Fileset =&gt;
+</span>55 <span style=''>        JObject(Seq[Option[JField]](
+</span>56 <span style=''>          writeStr(DirectoryStr, f.directory),
+</span>57 <span style=''>          writeStr(&quot;lineEnding&quot;, f.lineEnding),
+</span>58 <span style=''>          writeBool(&quot;followSymlinks&quot;, f.followSymlinks, false),
+</span>59 <span style=''>          writeStr(&quot;outputDirectory&quot;, f.outputDirectory),
+</span>60 <span style=''>          writeBool(&quot;useDefaultExcludes&quot;, f.useDefaultExcludes, true),
+</span>61 <span style=''>          writeStringSequence(Includes, f.includes),
+</span>62 <span style=''>          writeStringSequence(Excludes, f.excludes),
+</span>63 <span style=''>          writeStr(&quot;fileMode&quot;, f.fileMode),
+</span>64 <span style=''>          writeStr(&quot;directoryMode&quot;, f.directoryMode),
+</span>65 <span style=''>          writeObject(&quot;mapper&quot;, f.mapper)
+</span>66 <span style=''>        ).flatten.toList)
+</span>67 <span style=''>    }
+</span>68 <span style=''>  ))
+</span>69 <span style=''>}
+</span>70 <span style=''>
+</span>71 <span style=''>/**
+</span>72 <span style=''>  * @author Hunter Payne
+</span>73 <span style=''>  */
+</span>74 <span style=''>case class Fileset(
+</span>75 <span style=''>  directory: String = null, lineEnding: String = null,
+</span>76 <span style=''>  followSymlinks: Boolean = false,
+</span>77 <span style=''>  outputDirectory: String = null, useDefaultExcludes: Boolean = true,
+</span>78 <span style=''>  includes: Seq[String] = Seq[String](), excludes: Seq[String] = Seq[String](),
+</span>79 <span style=''>  fileMode: String = &quot;0644&quot;, directoryMode: String = &quot;0755&quot;,
+</span>80 <span style=''>  mapper: Mapper = null
+</span>81 <span style=''>) {
+</span>82 <span style=''>
+</span>83 <span style=''>  def this(elem: Elem) = </span><span style='background: #F0ADAD'>this(
+</span>84 <span style=''></span><span style='background: #F0ADAD'>    emptyToNull((elem \ SL.DirectoryStr).text),
+</span>85 <span style=''></span><span style='background: #F0ADAD'>    emptyToNull((elem \ &quot;lineEnding&quot;).text),
+</span>86 <span style=''></span><span style='background: #F0ADAD'>    emptyToDefaultBool((elem \ &quot;followSymlinks&quot;).text, false),
+</span>87 <span style=''></span><span style='background: #F0ADAD'>    emptyToNull((elem \ &quot;outputDirectory&quot;).text),
+</span>88 <span style=''></span><span style='background: #F0ADAD'>    emptyToDefaultBool((elem \ &quot;useDefaultExcludes&quot;).text, true),
+</span>89 <span style=''></span><span style='background: #F0ADAD'>    (elem \ SL.Includes).map { _.text },
+</span>90 <span style=''></span><span style='background: #F0ADAD'>    (elem \ SL.Excludes).map { _.text },
+</span>91 <span style=''></span><span style='background: #F0ADAD'>    emptyToDefault((elem \ &quot;fileMode&quot;).text, &quot;0644&quot;),
+</span>92 <span style=''></span><span style='background: #F0ADAD'>    emptyToDefault((elem \ &quot;directoryMode&quot;).text, &quot;0755&quot;),
+</span>93 <span style=''></span><span style='background: #F0ADAD'>    (elem \ &quot;mapper&quot;).map { case e: Elem =&gt;
+</span>94 <span style=''></span><span style='background: #F0ADAD'>      new Mapper(e) }.headOption.getOrElse(null)
+</span>95 <span style=''></span><span style='background: #F0ADAD'>  )</span><span style=''>
+</span>96 <span style=''>
+</span>97 <span style=''>  lazy val xml =
+</span>98 <span style=''>    &lt;fileset&gt;
+</span>99 <span style=''>      { if (directory != null) &lt;directory&gt;{directory}&lt;/directory&gt; }
+</span>100 <span style=''>      { if (lineEnding != null) &lt;lineEnding&gt;{lineEnding}&lt;/lineEnding&gt; }
+</span>101 <span style=''>      { if (followSymlinks) &lt;followSymlinks&gt;true&lt;/followSymlinks&gt; }
+</span>102 <span style=''>      { if (outputDirectory != null)
+</span>103 <span style=''>        &lt;outputDirectory&gt;{outputDirectory}&lt;/outputDirectory&gt; }
+</span>104 <span style=''>      { if (!useDefaultExcludes)
+</span>105 <span style=''>        &lt;useDefaultExcludes&gt;false&lt;/useDefaultExcludes&gt; }
+</span>106 <span style=''>      { if (!includes.isEmpty) &lt;includes&gt;
+</span>107 <span style=''>        { includes.map { Include(_).xml } }
+</span>108 <span style=''>        &lt;/includes&gt; }
+</span>109 <span style=''>      { if (!excludes.isEmpty) &lt;excludes&gt;
+</span>110 <span style=''>        { excludes.map { Exclude(_).xml } }
+</span>111 <span style=''>        &lt;/excludes&gt; }
+</span>112 <span style=''>      { if (fileMode != null &amp;&amp; fileMode != &quot;0644&quot;)
+</span>113 <span style=''>        &lt;fileMode&gt;{fileMode}&lt;/fileMode&gt; }
+</span>114 <span style=''>      { if (directoryMode != null &amp;&amp; directoryMode != &quot;0755&quot;)
+</span>115 <span style=''>        &lt;directoryMode&gt;{directoryMode}&lt;/directoryMode&gt; }
+</span>116 <span style=''>      { if (mapper != null) mapper.xml }
+</span>117 <span style=''>    &lt;/fileset&gt;
+</span>118 <span style=''>}
+</span>119 <span style=''>
+</span>120 <span style=''>case class Mapper(
+</span>121 <span style=''>  `type`: String = &quot;identity&quot;, from: String = null,
+</span>122 <span style=''>  to: String = null, classname: String = null) {
+</span>123 <span style=''>
+</span>124 <span style=''>  def this(elem: Elem) = </span><span style='background: #F0ADAD'>this(
+</span>125 <span style=''></span><span style='background: #F0ADAD'>    emptyToDefault((elem \ SL.TypeStr).text, &quot;identity&quot;),
+</span>126 <span style=''></span><span style='background: #F0ADAD'>    emptyToNull((elem \ &quot;from&quot;).text),
+</span>127 <span style=''></span><span style='background: #F0ADAD'>    emptyToNull((elem \ &quot;to&quot;).text),
+</span>128 <span style=''></span><span style='background: #F0ADAD'>    emptyToNull((elem \ &quot;classname&quot;).text)
+</span>129 <span style=''></span><span style='background: #F0ADAD'>  )</span><span style=''>
+</span>130 <span style=''>
+</span>131 <span style=''>  lazy val xml =
+</span>132 <span style=''>    &lt;mapper&gt;
+</span>133 <span style=''>      { if (`type` != null) &lt;type&gt;{`type`}&lt;/type&gt; }
+</span>134 <span style=''>      { if (from != null) &lt;from&gt;{from}&lt;/from&gt; }
+</span>135 <span style=''>      { if (to != null) &lt;to&gt;{to}&lt;/to&gt; }
+</span>136 <span style=''>      { if (classname != null) &lt;classname&gt;{classname}&lt;/classname&gt; }
+</span>137 <span style=''>    &lt;/mapper&gt;
+</span>138 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          952
+        </td>
+        <td>
+          1066
+          -
+          1084
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #F0ADAD">
+          JsonReader.formats
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          953
+        </td>
+        <td>
+          1152
+          -
+          1179
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectOutputStream.defaultWriteObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultWriteObject()
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          954
+        </td>
+        <td>
+          1245
+          -
+          1271
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.ObjectInputStream.defaultReadObject
+        </td>
+        <td style="background: #F0ADAD">
+          stream.defaultReadObject()
+        </td>
+      </tr><tr>
+        <td>
+          83
+        </td>
+        <td>
+          992
+        </td>
+        <td>
+          3044
+          -
+          3613
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Fileset.&lt;init&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          Fileset.this.&lt;init&gt;(unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryStr)).text), unbound.this.`package`.emptyToNull(elem.\(&quot;lineEnding&quot;).text), unbound.this.`package`.emptyToDefaultBool(elem.\(&quot;followSymlinks&quot;).text, false), unbound.this.`package`.emptyToNull(elem.\(&quot;outputDirectory&quot;).text), unbound.this.`package`.emptyToDefaultBool(elem.\(&quot;useDefaultExcludes&quot;).text, true), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Includes)).map[String, Seq[String]](((x$1: scala.xml.Node) =&gt; x$1.text))(immutable.this.Seq.canBuildFrom[String]), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Excludes)).map[String, Seq[String]](((x$2: scala.xml.Node) =&gt; x$2.text))(immutable.this.Seq.canBuildFrom[String]), unbound.this.`package`.emptyToDefault(elem.\(&quot;fileMode&quot;).text, &quot;0644&quot;), unbound.this.`package`.emptyToDefault(elem.\(&quot;directoryMode&quot;).text, &quot;0755&quot;), elem.\(&quot;mapper&quot;).map[org.apache.maven.unbound.Mapper, scala.collection.immutable.Seq[org.apache.maven.unbound.Mapper]](((x0$1: scala.xml.Node) =&gt; x0$1 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new Mapper(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Mapper]).headOption.getOrElse[org.apache.maven.unbound.Mapper](null))
+        </td>
+      </tr><tr>
+        <td>
+          83
+        </td>
+        <td>
+          993
+        </td>
+        <td>
+          3044
+          -
+          3044
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          84
+        </td>
+        <td>
+          956
+        </td>
+        <td>
+          3074
+          -
+          3089
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #F0ADAD">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryStr)
+        </td>
+      </tr><tr>
+        <td>
+          84
+        </td>
+        <td>
+          955
+        </td>
+        <td>
+          3074
+          -
+          3089
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.DirectoryStr
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.SL.DirectoryStr
+        </td>
+      </tr><tr>
+        <td>
+          84
+        </td>
+        <td>
+          958
+        </td>
+        <td>
+          3054
+          -
+          3096
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryStr)).text)
+        </td>
+      </tr><tr>
+        <td>
+          84
+        </td>
+        <td>
+          957
+        </td>
+        <td>
+          3067
+          -
+          3095
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #F0ADAD">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryStr)).text
+        </td>
+      </tr><tr>
+        <td>
+          85
+        </td>
+        <td>
+          959
+        </td>
+        <td>
+          3122
+          -
+          3134
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;lineEnding&quot;
+        </td>
+      </tr><tr>
+        <td>
+          85
+        </td>
+        <td>
+          961
+        </td>
+        <td>
+          3102
+          -
+          3141
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.emptyToNull(elem.\(&quot;lineEnding&quot;).text)
+        </td>
+      </tr><tr>
+        <td>
+          85
+        </td>
+        <td>
+          960
+        </td>
+        <td>
+          3115
+          -
+          3140
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #F0ADAD">
+          elem.\(&quot;lineEnding&quot;).text
+        </td>
+      </tr><tr>
+        <td>
+          86
+        </td>
+        <td>
+          962
+        </td>
+        <td>
+          3174
+          -
+          3190
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;followSymlinks&quot;
+        </td>
+      </tr><tr>
+        <td>
+          86
+        </td>
+        <td>
+          965
+        </td>
+        <td>
+          3147
+          -
+          3204
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToDefaultBool
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.emptyToDefaultBool(elem.\(&quot;followSymlinks&quot;).text, false)
+        </td>
+      </tr><tr>
+        <td>
+          86
+        </td>
+        <td>
+          964
+        </td>
+        <td>
+          3198
+          -
+          3203
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          false
+        </td>
+      </tr><tr>
+        <td>
+          86
+        </td>
+        <td>
+          963
+        </td>
+        <td>
+          3167
+          -
+          3196
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #F0ADAD">
+          elem.\(&quot;followSymlinks&quot;).text
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          968
+        </td>
+        <td>
+          3210
+          -
+          3254
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.emptyToNull(elem.\(&quot;outputDirectory&quot;).text)
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          967
+        </td>
+        <td>
+          3223
+          -
+          3253
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #F0ADAD">
+          elem.\(&quot;outputDirectory&quot;).text
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          966
+        </td>
+        <td>
+          3230
+          -
+          3247
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;outputDirectory&quot;
+        </td>
+      </tr><tr>
+        <td>
+          88
+        </td>
+        <td>
+          971
+        </td>
+        <td>
+          3315
+          -
+          3319
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          true
+        </td>
+      </tr><tr>
+        <td>
+          88
+        </td>
+        <td>
+          970
+        </td>
+        <td>
+          3280
+          -
+          3313
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #F0ADAD">
+          elem.\(&quot;useDefaultExcludes&quot;).text
+        </td>
+      </tr><tr>
+        <td>
+          88
+        </td>
+        <td>
+          969
+        </td>
+        <td>
+          3287
+          -
+          3307
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;useDefaultExcludes&quot;
+        </td>
+      </tr><tr>
+        <td>
+          88
+        </td>
+        <td>
+          972
+        </td>
+        <td>
+          3260
+          -
+          3320
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToDefaultBool
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.emptyToDefaultBool(elem.\(&quot;useDefaultExcludes&quot;).text, true)
+        </td>
+      </tr><tr>
+        <td>
+          89
+        </td>
+        <td>
+          977
+        </td>
+        <td>
+          3327
+          -
+          3361
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #F0ADAD">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Includes)).map[String, Seq[String]](((x$1: scala.xml.Node) =&gt; x$1.text))(immutable.this.Seq.canBuildFrom[String])
+        </td>
+      </tr><tr>
+        <td>
+          89
+        </td>
+        <td>
+          974
+        </td>
+        <td>
+          3334
+          -
+          3345
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #F0ADAD">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Includes)
+        </td>
+      </tr><tr>
+        <td>
+          89
+        </td>
+        <td>
+          973
+        </td>
+        <td>
+          3334
+          -
+          3345
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Includes
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.SL.Includes
+        </td>
+      </tr><tr>
+        <td>
+          89
+        </td>
+        <td>
+          976
+        </td>
+        <td>
+          3351
+          -
+          3351
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #F0ADAD">
+          immutable.this.Seq.canBuildFrom[String]
+        </td>
+      </tr><tr>
+        <td>
+          89
+        </td>
+        <td>
+          975
+        </td>
+        <td>
+          3353
+          -
+          3359
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Node.text
+        </td>
+        <td style="background: #F0ADAD">
+          x$1.text
+        </td>
+      </tr><tr>
+        <td>
+          90
+        </td>
+        <td>
+          980
+        </td>
+        <td>
+          3394
+          -
+          3400
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Node.text
+        </td>
+        <td style="background: #F0ADAD">
+          x$2.text
+        </td>
+      </tr><tr>
+        <td>
+          90
+        </td>
+        <td>
+          982
+        </td>
+        <td>
+          3368
+          -
+          3402
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #F0ADAD">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Excludes)).map[String, Seq[String]](((x$2: scala.xml.Node) =&gt; x$2.text))(immutable.this.Seq.canBuildFrom[String])
+        </td>
+      </tr><tr>
+        <td>
+          90
+        </td>
+        <td>
+          979
+        </td>
+        <td>
+          3375
+          -
+          3386
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #F0ADAD">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Excludes)
+        </td>
+      </tr><tr>
+        <td>
+          90
+        </td>
+        <td>
+          978
+        </td>
+        <td>
+          3375
+          -
+          3386
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Excludes
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.SL.Excludes
+        </td>
+      </tr><tr>
+        <td>
+          90
+        </td>
+        <td>
+          981
+        </td>
+        <td>
+          3392
+          -
+          3392
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #F0ADAD">
+          immutable.this.Seq.canBuildFrom[String]
+        </td>
+      </tr><tr>
+        <td>
+          91
+        </td>
+        <td>
+          983
+        </td>
+        <td>
+          3431
+          -
+          3441
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;fileMode&quot;
+        </td>
+      </tr><tr>
+        <td>
+          91
+        </td>
+        <td>
+          986
+        </td>
+        <td>
+          3408
+          -
+          3456
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToDefault
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.emptyToDefault(elem.\(&quot;fileMode&quot;).text, &quot;0644&quot;)
+        </td>
+      </tr><tr>
+        <td>
+          91
+        </td>
+        <td>
+          985
+        </td>
+        <td>
+          3449
+          -
+          3455
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;0644&quot;
+        </td>
+      </tr><tr>
+        <td>
+          91
+        </td>
+        <td>
+          984
+        </td>
+        <td>
+          3424
+          -
+          3447
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #F0ADAD">
+          elem.\(&quot;fileMode&quot;).text
+        </td>
+      </tr><tr>
+        <td>
+          92
+        </td>
+        <td>
+          989
+        </td>
+        <td>
+          3508
+          -
+          3514
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;0755&quot;
+        </td>
+      </tr><tr>
+        <td>
+          92
+        </td>
+        <td>
+          988
+        </td>
+        <td>
+          3478
+          -
+          3506
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #F0ADAD">
+          elem.\(&quot;directoryMode&quot;).text
+        </td>
+      </tr><tr>
+        <td>
+          92
+        </td>
+        <td>
+          987
+        </td>
+        <td>
+          3485
+          -
+          3500
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;directoryMode&quot;
+        </td>
+      </tr><tr>
+        <td>
+          92
+        </td>
+        <td>
+          990
+        </td>
+        <td>
+          3462
+          -
+          3515
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToDefault
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.emptyToDefault(elem.\(&quot;directoryMode&quot;).text, &quot;0755&quot;)
+        </td>
+      </tr><tr>
+        <td>
+          94
+        </td>
+        <td>
+          991
+        </td>
+        <td>
+          3522
+          -
+          3609
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Option.getOrElse
+        </td>
+        <td style="background: #F0ADAD">
+          elem.\(&quot;mapper&quot;).map[org.apache.maven.unbound.Mapper, scala.collection.immutable.Seq[org.apache.maven.unbound.Mapper]](((x0$1: scala.xml.Node) =&gt; x0$1 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new Mapper(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Mapper]).headOption.getOrElse[org.apache.maven.unbound.Mapper](null)
+        </td>
+      </tr><tr>
+        <td>
+          124
+        </td>
+        <td>
+          1009
+        </td>
+        <td>
+          4678
+          -
+          4678
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          124
+        </td>
+        <td>
+          1008
+        </td>
+        <td>
+          4678
+          -
+          4864
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Mapper.&lt;init&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          Mapper.this.&lt;init&gt;(unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TypeStr)).text, &quot;identity&quot;), unbound.this.`package`.emptyToNull(elem.\(&quot;from&quot;).text), unbound.this.`package`.emptyToNull(elem.\(&quot;to&quot;).text), unbound.this.`package`.emptyToNull(elem.\(&quot;classname&quot;).text))
+        </td>
+      </tr><tr>
+        <td>
+          125
+        </td>
+        <td>
+          995
+        </td>
+        <td>
+          4711
+          -
+          4721
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #F0ADAD">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.TypeStr)
+        </td>
+      </tr><tr>
+        <td>
+          125
+        </td>
+        <td>
+          998
+        </td>
+        <td>
+          4688
+          -
+          4740
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToDefault
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TypeStr)).text, &quot;identity&quot;)
+        </td>
+      </tr><tr>
+        <td>
+          125
+        </td>
+        <td>
+          997
+        </td>
+        <td>
+          4729
+          -
+          4739
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;identity&quot;
+        </td>
+      </tr><tr>
+        <td>
+          125
+        </td>
+        <td>
+          994
+        </td>
+        <td>
+          4711
+          -
+          4721
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.TypeStr
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.SL.TypeStr
+        </td>
+      </tr><tr>
+        <td>
+          125
+        </td>
+        <td>
+          996
+        </td>
+        <td>
+          4704
+          -
+          4727
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #F0ADAD">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TypeStr)).text
+        </td>
+      </tr><tr>
+        <td>
+          126
+        </td>
+        <td>
+          1001
+        </td>
+        <td>
+          4746
+          -
+          4779
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.emptyToNull(elem.\(&quot;from&quot;).text)
+        </td>
+      </tr><tr>
+        <td>
+          126
+        </td>
+        <td>
+          1000
+        </td>
+        <td>
+          4759
+          -
+          4778
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #F0ADAD">
+          elem.\(&quot;from&quot;).text
+        </td>
+      </tr><tr>
+        <td>
+          126
+        </td>
+        <td>
+          999
+        </td>
+        <td>
+          4766
+          -
+          4772
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;from&quot;
+        </td>
+      </tr><tr>
+        <td>
+          127
+        </td>
+        <td>
+          1004
+        </td>
+        <td>
+          4785
+          -
+          4816
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.emptyToNull(elem.\(&quot;to&quot;).text)
+        </td>
+      </tr><tr>
+        <td>
+          127
+        </td>
+        <td>
+          1003
+        </td>
+        <td>
+          4798
+          -
+          4815
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #F0ADAD">
+          elem.\(&quot;to&quot;).text
+        </td>
+      </tr><tr>
+        <td>
+          127
+        </td>
+        <td>
+          1002
+        </td>
+        <td>
+          4805
+          -
+          4809
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;to&quot;
+        </td>
+      </tr><tr>
+        <td>
+          128
+        </td>
+        <td>
+          1007
+        </td>
+        <td>
+          4822
+          -
+          4860
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #F0ADAD">
+          unbound.this.`package`.emptyToNull(elem.\(&quot;classname&quot;).text)
+        </td>
+      </tr><tr>
+        <td>
+          128
+        </td>
+        <td>
+          1006
+        </td>
+        <td>
+          4835
+          -
+          4859
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #F0ADAD">
+          elem.\(&quot;classname&quot;).text
+        </td>
+      </tr><tr>
+        <td>
+          128
+        </td>
+        <td>
+          1005
+        </td>
+        <td>
+          4842
+          -
+          4853
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;classname&quot;
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

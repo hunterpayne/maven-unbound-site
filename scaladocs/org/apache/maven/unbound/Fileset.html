@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Unbound 1.0.0 API  - org.apache.maven.unbound.Execution</title>
-          <meta name="description" content="Unbound 1.0.0 API - org.apache.maven.unbound.Execution" />
-          <meta name="keywords" content="Unbound 1.0.0 API org.apache.maven.unbound.Execution" />
+          <title>Unbound 1.0.0 API  - org.apache.maven.unbound.Fileset</title>
+          <meta name="description" content="Unbound 1.0.0 API - org.apache.maven.unbound.Fileset" />
+          <meta name="keywords" content="Unbound 1.0.0 API org.apache.maven.unbound.Fileset" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -206,16 +206,16 @@ for translating POM files as XML to and from Json and Hocon formats.
                         <a href="Exclusion.html" title="">Exclusion</a>
                       </li><li class="current-entities indented4">
                         <a class="object" href="Execution$.html" title=""></a>
-                        <a class="class" href="" title=""></a>
-                        <a href="" title="">Execution</a>
+                        <a class="class" href="Execution.html" title=""></a>
+                        <a href="Execution.html" title="">Execution</a>
                       </li><li class="current-entities indented4">
                         <a class="object" href="Extension$.html" title=""></a>
                         <a class="class" href="Extension.html" title=""></a>
                         <a href="Extension.html" title="">Extension</a>
                       </li><li class="current-entities indented4">
                         <a class="object" href="Fileset$.html" title=""></a>
-                        <a class="class" href="Fileset.html" title=""></a>
-                        <a href="Fileset.html" title="">Fileset</a>
+                        <a class="class" href="" title=""></a>
+                        <a href="" title="">Fileset</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
                         <a class="class" href="Filter.html" title=""></a>
@@ -371,15 +371,15 @@ for translating POM files as XML to and from Json and Hocon formats.
           <div id="content">
             <body class="class type">
       <div id="definition">
-        <a href="Execution$.html" title="See companion object"><div class="big-circle class-companion-object">c</div></a>
+        <div class="big-circle class-companion-object">c</div>
         <p id="owner"><a href="../../../index.html" class="extype" name="org">org</a>.<a href="../../index.html" class="extype" name="org.apache">apache</a>.<a href="../index.html" class="extype" name="org.apache.maven">maven</a>.<a href="index.html" class="extype" name="org.apache.maven.unbound">unbound</a></p>
-        <h1><a href="Execution$.html" title="See companion object">Execution</a><span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html" title="Permalink">
+        <h1>Fileset<span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span></h1>
         <h3><span class="morelinks"><div>
-            Companion <a href="Execution$.html" title="See companion object">object Execution</a>
+            Companion <a href="Fileset$.html" title="See companion object">object Fileset</a>
           </div></span></h3>
       </div>
 
@@ -389,12 +389,12 @@ for translating POM files as XML to and from Json and Hocon formats.
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">Execution</span><span class="params">(<span name="id">id: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="package$$SL$.html">SL.DefaultStr</a></span></span></span>, <span name="phase">phase: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="goals">goals: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Seq[String]()</span></span>, <span name="inherited">inherited: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">true</span></span>, <span name="configuration">configuration: <span class="extype" name="com.typesafe.config.Config">Config</span> = <span class="symbol">null</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <span class="name">Fileset</span><span class="params">(<span name="directory">directory: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="lineEnding">lineEnding: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="followSymlinks">followSymlinks: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>, <span name="outputDirectory">outputDirectory: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="useDefaultExcludes">useDefaultExcludes: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">true</span></span>, <span name="includes">includes: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Seq[String]()</span></span>, <span name="excludes">excludes: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Seq[String]()</span></span>, <span name="fileMode">fileMode: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;0644&quot;</span></span>, <span name="directoryMode">directoryMode: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;0755&quot;</span></span>, <span name="mapper">mapper: <a href="Mapper.html" class="extype" name="org.apache.maven.unbound.Mapper">Mapper</a> = <span class="symbol">null</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"></div><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
@@ -424,7 +424,7 @@ for translating POM files as XML to and from Json and Hocon formats.
                   <span class="filtertype">Inherited<br />
                   </span>
                   <ol id="linearization">
-                    <li class="in" name="org.apache.maven.unbound.Execution"><span>Execution</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.Product"><span>Product</span></li><li class="in" name="scala.Equals"><span>Equals</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                    <li class="in" name="org.apache.maven.unbound.Fileset"><span>Fileset</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.Product"><span>Product</span></li><li class="in" name="scala.Equals"><span>Equals</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -444,10 +444,10 @@ for translating POM files as XML to and from Json and Hocon formats.
         <div id="allMembers">
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
-              <ol><li name="org.apache.maven.unbound.Execution#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(elem:scala.xml.Elem):org.apache.maven.unbound.Execution"></a><a id="&lt;init&gt;:Execution"></a>
+              <ol><li name="org.apache.maven.unbound.Fileset#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="&lt;init&gt;(elem:scala.xml.Elem):org.apache.maven.unbound.Fileset"></a><a id="&lt;init&gt;:Fileset"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#&lt;init&gt;(elem:scala.xml.Elem):org.apache.maven.unbound.Execution" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#&lt;init&gt;(elem:scala.xml.Elem):org.apache.maven.unbound.Fileset" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -456,14 +456,14 @@ for translating POM files as XML to and from Json and Hocon formats.
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">Execution</span><span class="params">(<span name="elem">elem: <span class="extype" name="scala.xml.Elem">Elem</span></span>)</span>
+        <span class="name">Fileset</span><span class="params">(<span name="elem">elem: <span class="extype" name="scala.xml.Elem">Elem</span></span>)</span>
       </span>
       
       
-    </li><li name="org.apache.maven.unbound.Execution#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(id:String,phase:String,goals:Seq[String],inherited:Boolean,configuration:com.typesafe.config.Config):org.apache.maven.unbound.Execution"></a><a id="&lt;init&gt;:Execution"></a>
+    </li><li name="org.apache.maven.unbound.Fileset#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="&lt;init&gt;(directory:String,lineEnding:String,followSymlinks:Boolean,outputDirectory:String,useDefaultExcludes:Boolean,includes:Seq[String],excludes:Seq[String],fileMode:String,directoryMode:String,mapper:org.apache.maven.unbound.Mapper):org.apache.maven.unbound.Fileset"></a><a id="&lt;init&gt;:Fileset"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#&lt;init&gt;(id:String,phase:String,goals:Seq[String],inherited:Boolean,configuration:com.typesafe.config.Config):org.apache.maven.unbound.Execution" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#&lt;init&gt;(directory:String,lineEnding:String,followSymlinks:Boolean,outputDirectory:String,useDefaultExcludes:Boolean,includes:Seq[String],excludes:Seq[String],fileMode:String,directoryMode:String,mapper:org.apache.maven.unbound.Mapper):org.apache.maven.unbound.Fileset" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -472,7 +472,7 @@ for translating POM files as XML to and from Json and Hocon formats.
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">Execution</span><span class="params">(<span name="id">id: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="package$$SL$.html">SL.DefaultStr</a></span></span></span>, <span name="phase">phase: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="goals">goals: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Seq[String]()</span></span>, <span name="inherited">inherited: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">true</span></span>, <span name="configuration">configuration: <span class="extype" name="com.typesafe.config.Config">Config</span> = <span class="symbol">null</span></span>)</span>
+        <span class="name">Fileset</span><span class="params">(<span name="directory">directory: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="lineEnding">lineEnding: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="followSymlinks">followSymlinks: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>, <span name="outputDirectory">outputDirectory: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="useDefaultExcludes">useDefaultExcludes: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">true</span></span>, <span name="includes">includes: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Seq[String]()</span></span>, <span name="excludes">excludes: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Seq[String]()</span></span>, <span name="fileMode">fileMode: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;0644&quot;</span></span>, <span name="directoryMode">directoryMode: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;0755&quot;</span></span>, <span name="mapper">mapper: <a href="Mapper.html" class="extype" name="org.apache.maven.unbound.Mapper">Mapper</a> = <span class="symbol">null</span></span>)</span>
       </span>
       
       
@@ -489,7 +489,7 @@ for translating POM files as XML to and from Json and Hocon formats.
                 <li name="scala.AnyRef#!=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a><a id="!=(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#!=(x$1:Any):Boolean" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#!=(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -505,7 +505,7 @@ for translating POM files as XML to and from Json and Hocon formats.
     </li><li name="scala.AnyRef###" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html###():Int" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html###():Int" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -521,7 +521,7 @@ for translating POM files as XML to and from Json and Hocon formats.
     </li><li name="scala.AnyRef#==" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a><a id="==(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#==(x$1:Any):Boolean" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#==(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -537,7 +537,7 @@ for translating POM files as XML to and from Json and Hocon formats.
     </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#asInstanceOf[T0]:T0" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#asInstanceOf[T0]:T0" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -553,7 +553,7 @@ for translating POM files as XML to and from Json and Hocon formats.
     </li><li name="scala.AnyRef#clone" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a><a id="clone():AnyRef"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#clone():Object" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#clone():Object" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -574,10 +574,10 @@ for translating POM files as XML to and from Json and Hocon formats.
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="org.apache.maven.unbound.Execution#configuration" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="configuration:com.typesafe.config.Config"></a><a id="configuration:Config"></a>
+    </li><li name="org.apache.maven.unbound.Fileset#directory" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="directory:String"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#configuration:com.typesafe.config.Config" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#directory:String" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -586,14 +586,30 @@ for translating POM files as XML to and from Json and Hocon formats.
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">configuration</span><span class="result">: <span class="extype" name="com.typesafe.config.Config">Config</span></span>
+        <span class="name">directory</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      
+      
+    </li><li name="org.apache.maven.unbound.Fileset#directoryMode" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="directoryMode:String"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#directoryMode:String" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">directoryMode</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
       
       
     </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a><a id="eq(AnyRef):Boolean"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#eq(x$1:AnyRef):Boolean" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#eq(x$1:AnyRef):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -606,10 +622,42 @@ for translating POM files as XML to and from Json and Hocon formats.
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="org.apache.maven.unbound.Fileset#excludes" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="excludes:Seq[String]"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#excludes:Seq[String]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">excludes</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>
+      </span>
+      
+      
+    </li><li name="org.apache.maven.unbound.Fileset#fileMode" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="fileMode:String"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#fileMode:String" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">fileMode</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      
+      
     </li><li name="scala.AnyRef#finalize" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#finalize():Unit" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#finalize():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -628,10 +676,26 @@ for translating POM files as XML to and from Json and Hocon formats.
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="org.apache.maven.unbound.Fileset#followSymlinks" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="followSymlinks:Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#followSymlinks:Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">followSymlinks</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      
+      
     </li><li name="scala.AnyRef#getClass" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#getClass():Class[_]" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#getClass():Class[_]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -647,10 +711,10 @@ for translating POM files as XML to and from Json and Hocon formats.
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
-    </li><li name="org.apache.maven.unbound.Execution#goals" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="goals:Seq[String]"></a>
+    </li><li name="org.apache.maven.unbound.Fileset#includes" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="includes:Seq[String]"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#goals:Seq[String]" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#includes:Seq[String]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -659,46 +723,14 @@ for translating POM files as XML to and from Json and Hocon formats.
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">goals</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>
-      </span>
-      
-      
-    </li><li name="org.apache.maven.unbound.Execution#id" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="id:String"></a>
-      <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#id:String" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">id</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
-      </span>
-      
-      
-    </li><li name="org.apache.maven.unbound.Execution#inherited" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="inherited:Boolean"></a>
-      <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#inherited:Boolean" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">inherited</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">includes</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>
       </span>
       
       
     </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#isInstanceOf[T0]:Boolean" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#isInstanceOf[T0]:Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -711,26 +743,42 @@ for translating POM files as XML to and from Json and Hocon formats.
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="org.apache.maven.unbound.Execution#makeModelObject" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="makeModelObject():org.apache.maven.model.PluginExecution"></a><a id="makeModelObject():PluginExecution"></a>
+    </li><li name="org.apache.maven.unbound.Fileset#lineEnding" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="lineEnding:String"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#makeModelObject():org.apache.maven.model.PluginExecution" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#lineEnding:String" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">def</span>
+        <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">makeModelObject</span><span class="params">()</span><span class="result">: <span class="extype" name="org.apache.maven.model.PluginExecution">PluginExecution</span></span>
+        <span class="name">lineEnding</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      
+      
+    </li><li name="org.apache.maven.unbound.Fileset#mapper" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="mapper:org.apache.maven.unbound.Mapper"></a><a id="mapper:Mapper"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#mapper:org.apache.maven.unbound.Mapper" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">mapper</span><span class="result">: <a href="Mapper.html" class="extype" name="org.apache.maven.unbound.Mapper">Mapper</a></span>
       </span>
       
       
     </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#ne(x$1:AnyRef):Boolean" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#ne(x$1:AnyRef):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -746,7 +794,7 @@ for translating POM files as XML to and from Json and Hocon formats.
     </li><li name="scala.AnyRef#notify" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#notify():Unit" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#notify():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -765,7 +813,7 @@ for translating POM files as XML to and from Json and Hocon formats.
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#notifyAll():Unit" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#notifyAll():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -781,10 +829,10 @@ for translating POM files as XML to and from Json and Hocon formats.
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
-    </li><li name="org.apache.maven.unbound.Execution#phase" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="phase:String"></a>
+    </li><li name="org.apache.maven.unbound.Fileset#outputDirectory" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="outputDirectory:String"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#phase:String" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#outputDirectory:String" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -793,14 +841,14 @@ for translating POM files as XML to and from Json and Hocon formats.
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">phase</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">outputDirectory</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
       
       
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -813,10 +861,26 @@ for translating POM files as XML to and from Json and Hocon formats.
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="org.apache.maven.unbound.Fileset#useDefaultExcludes" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="useDefaultExcludes:Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#useDefaultExcludes:Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">useDefaultExcludes</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      
+      
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#wait():Unit" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#wait():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -838,7 +902,7 @@ for translating POM files as XML to and from Json and Hocon formats.
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait(x$1:Long,x$2:Int):Unit"></a><a id="wait(Long,Int):Unit"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -860,7 +924,7 @@ for translating POM files as XML to and from Json and Hocon formats.
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait(x$1:Long):Unit"></a><a id="wait(Long):Unit"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#wait(x$1:Long):Unit" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#wait(x$1:Long):Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -881,10 +945,10 @@ for translating POM files as XML to and from Json and Hocon formats.
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="org.apache.maven.unbound.Execution#xml" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="org.apache.maven.unbound.Fileset#xml" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="xml:scala.xml.Elem"></a><a id="xml:Elem"></a>
       <span class="permalink">
-      <a href="../../../../org/apache/maven/unbound/Execution.html#xml:scala.xml.Elem" title="Permalink">
+      <a href="../../../../org/apache/maven/unbound/Fileset.html#xml:scala.xml.Elem" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>

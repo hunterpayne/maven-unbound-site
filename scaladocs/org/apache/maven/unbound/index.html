@@ -213,6 +213,10 @@ for translating POM files as XML to and from Json and Hocon formats.
                         <a class="class" href="Extension.html" title=""></a>
                         <a href="Extension.html" title="">Extension</a>
                       </li><li class="current-entities indented4">
+                        <a class="object" href="Fileset$.html" title=""></a>
+                        <a class="class" href="Fileset.html" title=""></a>
+                        <a href="Fileset.html" title="">Fileset</a>
+                      </li><li class="current-entities indented4">
                         <span class="separator"></span>
                         <a class="class" href="Filter.html" title=""></a>
                         <a href="Filter.html" title="">Filter</a>
@@ -268,6 +272,10 @@ for translating POM files as XML to and from Json and Hocon formats.
                         <a class="object" href="ManifestSection$.html" title=""></a>
                         <a class="class" href="ManifestSection.html" title=""></a>
                         <a href="ManifestSection.html" title="">ManifestSection</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="class" href="Mapper.html" title=""></a>
+                        <a href="Mapper.html" title="">Mapper</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
                         <a class="class" href="Module.html" title=""></a>
@@ -739,6 +747,22 @@ utility code needed to read/write Json4s objects
       </span>
       
       
+    </li><li name="org.apache.maven.unbound.Fileset" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="FilesetextendsProductwithSerializable"></a><a id="Fileset:Fileset"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/index.html#FilesetextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="Fileset.html"><span class="name">Fileset</span></a><span class="params">(<span name="directory">directory: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="lineEnding">lineEnding: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="followSymlinks">followSymlinks: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>, <span name="outputDirectory">outputDirectory: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="useDefaultExcludes">useDefaultExcludes: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">true</span></span>, <span name="includes">includes: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Seq[String]()</span></span>, <span name="excludes">excludes: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Seq[String]()</span></span>, <span name="fileMode">fileMode: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;0644&quot;</span></span>, <span name="directoryMode">directoryMode: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;0755&quot;</span></span>, <span name="mapper">mapper: <a href="Mapper.html" class="extype" name="org.apache.maven.unbound.Mapper">Mapper</a> = <span class="symbol">null</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      <p class="shortcomment cmt"></p>
     </li><li name="org.apache.maven.unbound.Filter" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="FilterextendsProductwithSerializable"></a><a id="Filter:Filter"></a>
       <span class="permalink">
@@ -920,6 +944,22 @@ objects that can be converted to Strings when in scope.
       </span>
       <span class="symbol">
         <a title="" href="ManifestSection.html"><span class="name">ManifestSection</span></a><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="manifestEntries">manifestEntries: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Map[String, String]()</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="org.apache.maven.unbound.Mapper" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="MapperextendsProductwithSerializable"></a><a id="Mapper:Mapper"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/index.html#MapperextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="Mapper.html"><span class="name">Mapper</span></a><span class="params">(<span name="type">type: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;identity&quot;</span></span>, <span name="from">from: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="to">to: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="classname">classname: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       
       
@@ -1454,6 +1494,22 @@ Hocon.  Hocon is really just a special case of Json afterall.
       
       <p class="shortcomment cmt">Utility method to load Config objects from a list of Hocon files
 </p>
+    </li><li name="org.apache.maven.unbound#unencodeJson" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="unencodeJson(s:String):String"></a><a id="unencodeJson(String):String"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/index.html#unencodeJson(s:String):String" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">unencodeJson</span><span class="params">(<span name="s">s: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      
+      
     </li><li name="org.apache.maven.unbound.Activation" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Activation"></a><a id="Activation:Activation"></a>
       <span class="permalink">
@@ -1716,6 +1772,22 @@ interface but can be used in other cases as well.
       </span>
       
       
+    </li><li name="org.apache.maven.unbound.Fileset" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="Fileset"></a><a id="Fileset:Fileset"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/index.html#Fileset" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="Fileset$.html"><span class="name">Fileset</span></a><span class="result"> extends <a href="CommonJsonReader.html" class="extype" name="org.apache.maven.unbound.CommonJsonReader">CommonJsonReader</a> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd></dl></div>
     </li><li name="org.apache.maven.unbound.HoconReader" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="HoconReader"></a><a id="HoconReader:HoconReader"></a>
       <span class="permalink">
