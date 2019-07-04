@@ -253,7 +253,11 @@
 </span>229 <span style=''>  // used to write an Archiver as Json
 </span>230 <span style=''>  protected[unbound] def writeArchiver(archiver: Archiver): String =
 </span>231 <span style=''>    </span><span style='background: #AEF1AE'>writePretty(archiver)</span><span style=''>
-</span>232 <span style=''>}
+</span>232 <span style=''>
+</span>233 <span style=''>  // used to write an Fileset as Json
+</span>234 <span style=''>  protected[unbound] def writeFileset(fileset: Fileset): String =
+</span>235 <span style=''>    </span><span style='background: #AEF1AE'>writePretty(fileset)</span><span style=''>
+</span>236 <span style=''>}
 </span></pre>
           </div>
           <div class="tab-pane" id="statementlist">
@@ -270,7 +274,7 @@
           43
         </td>
         <td>
-          1482
+          1484
         </td>
         <td>
           1782
@@ -291,7 +295,7 @@
           44
         </td>
         <td>
-          1483
+          1485
         </td>
         <td>
           1838
@@ -312,7 +316,28 @@
           49
         </td>
         <td>
-          1485
+          1488
+        </td>
+        <td>
+          2111
+          -
+          2124
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.ExtractableJsonAstNode.as
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.`package`.jvalue2extractable(v).as[Boolean](CommonJsonReader.this.boolReader)
+        </td>
+      </tr><tr>
+        <td>
+          49
+        </td>
+        <td>
+          1487
         </td>
         <td>
           2115
@@ -333,7 +358,7 @@
           49
         </td>
         <td>
-          1484
+          1486
         </td>
         <td>
           2066
@@ -354,7 +379,7 @@
           49
         </td>
         <td>
-          1487
+          1489
         </td>
         <td>
           2050
@@ -374,31 +399,10 @@
         </td>
       </tr><tr>
         <td>
-          49
-        </td>
-        <td>
-          1486
-        </td>
-        <td>
-          2111
-          -
-          2124
-        </td>
-        <td>
-          ApplyToImplicitArgs
-        </td>
-        <td>
-          org.json4s.ExtractableJsonAstNode.as
-        </td>
-        <td style="background: #AEF1AE">
-          org.json4s.`package`.jvalue2extractable(v).as[Boolean](CommonJsonReader.this.boolReader)
-        </td>
-      </tr><tr>
-        <td>
           53
         </td>
         <td>
-          1488
+          1490
         </td>
         <td>
           2242
@@ -419,7 +423,7 @@
           53
         </td>
         <td>
-          1497
+          1499
         </td>
         <td>
           2226
@@ -445,28 +449,7 @@
           54
         </td>
         <td>
-          1491
-        </td>
-        <td>
-          2322
-          -
-          2376
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.collection.immutable.StringLike.replaceAllLiterally
-        </td>
-        <td style="background: #AEF1AE">
-          scala.Predef.augmentString(s).replaceAllLiterally(&quot;\n&quot;, scala.compat.Platform.EOL)
-        </td>
-      </tr><tr>
-        <td>
-          54
-        </td>
-        <td>
-          1490
+          1492
         </td>
         <td>
           2350
@@ -487,7 +470,7 @@
           54
         </td>
         <td>
-          1489
+          1491
         </td>
         <td>
           2344
@@ -505,10 +488,31 @@
         </td>
       </tr><tr>
         <td>
+          54
+        </td>
+        <td>
+          1493
+        </td>
+        <td>
+          2322
+          -
+          2376
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.immutable.StringLike.replaceAllLiterally
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Predef.augmentString(s).replaceAllLiterally(&quot;\n&quot;, scala.compat.Platform.EOL)
+        </td>
+      </tr><tr>
+        <td>
           56
         </td>
         <td>
-          1492
+          1494
         </td>
         <td>
           2405
@@ -529,7 +533,28 @@
           56
         </td>
         <td>
-          1494
+          1497
+        </td>
+        <td>
+          2440
+          -
+          2465
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.compat.Platform.EOL
+        </td>
+        <td style="background: #F0ADAD">
+          scala.compat.Platform.EOL
+        </td>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          1496
         </td>
         <td>
           2434
@@ -550,7 +575,7 @@
           56
         </td>
         <td>
-          1493
+          1495
         </td>
         <td>
           2401
@@ -571,7 +596,7 @@
           56
         </td>
         <td>
-          1496
+          1498
         </td>
         <td>
           2401
@@ -589,31 +614,10 @@
         </td>
       </tr><tr>
         <td>
-          56
-        </td>
-        <td>
-          1495
-        </td>
-        <td>
-          2440
-          -
-          2465
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.compat.Platform.EOL
-        </td>
-        <td style="background: #F0ADAD">
-          scala.compat.Platform.EOL
-        </td>
-      </tr><tr>
-        <td>
           62
         </td>
         <td>
-          1498
+          1500
         </td>
         <td>
           2615
@@ -634,28 +638,7 @@
           63
         </td>
         <td>
-          1500
-        </td>
-        <td>
-          2662
-          -
-          2689
-        </td>
-        <td>
-          ApplyToImplicitArgs
-        </td>
-        <td>
-          org.json4s.Extraction.extract
-        </td>
-        <td style="background: #AEF1AE">
-          org.json4s.Extraction.extract[T](obj2)(CommonJsonReader.this.formats, m)
-        </td>
-      </tr><tr>
-        <td>
-          63
-        </td>
-        <td>
-          1499
+          1501
         </td>
         <td>
           2683
@@ -673,10 +656,31 @@
         </td>
       </tr><tr>
         <td>
+          63
+        </td>
+        <td>
+          1502
+        </td>
+        <td>
+          2662
+          -
+          2689
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.Extraction.extract
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.Extraction.extract[T](obj2)(CommonJsonReader.this.formats, m)
+        </td>
+      </tr><tr>
+        <td>
           70
         </td>
         <td>
-          1501
+          1503
         </td>
         <td>
           2865
@@ -697,21 +701,23 @@
           72
         </td>
         <td>
-          1503
+          1509
         </td>
         <td>
-          2959
+          2922
           -
-          2971
+          2980
         </td>
         <td>
           ApplyToImplicitArgs
         </td>
         <td>
-          org.json4s.ExtractableJsonAstNode.as
+          scala.collection.TraversableOnce.toMap
         </td>
         <td style="background: #AEF1AE">
-          org.json4s.`package`.jvalue2extractable(v).as[String](CommonJsonReader.this.strReader)
+          fields.map[(String, String), List[(String, String)]](((x0$1: org.json4s.JsonAST.JField) =&gt; x0$1 match {
+  case (_1: String, _2: org.json4s.JsonAST.JValue)(String, org.json4s.JsonAST.JValue)((key @ _), (v @ _)) =&gt; scala.Tuple2.apply[String, String](key, org.json4s.`package`.jvalue2extractable(v).as[String](CommonJsonReader.this.strReader))
+}))(immutable.this.List.canBuildFrom[(String, String)]).toMap[String, String](scala.Predef.$conforms[(String, String)])
         </td>
       </tr><tr>
         <td>
@@ -719,69 +725,6 @@
         </td>
         <td>
           1506
-        </td>
-        <td>
-          2975
-          -
-          2975
-        </td>
-        <td>
-          TypeApply
-        </td>
-        <td>
-          scala.Predef.$conforms
-        </td>
-        <td style="background: #AEF1AE">
-          scala.Predef.$conforms[(String, String)]
-        </td>
-      </tr><tr>
-        <td>
-          72
-        </td>
-        <td>
-          1502
-        </td>
-        <td>
-          2963
-          -
-          2963
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          org.apache.maven.unbound.CommonJsonReader.strReader
-        </td>
-        <td style="background: #AEF1AE">
-          CommonJsonReader.this.strReader
-        </td>
-      </tr><tr>
-        <td>
-          72
-        </td>
-        <td>
-          1505
-        </td>
-        <td>
-          2933
-          -
-          2933
-        </td>
-        <td>
-          TypeApply
-        </td>
-        <td>
-          scala.collection.immutable.List.canBuildFrom
-        </td>
-        <td style="background: #AEF1AE">
-          immutable.this.List.canBuildFrom[(String, String)]
-        </td>
-      </tr><tr>
-        <td>
-          72
-        </td>
-        <td>
-          1504
         </td>
         <td>
           2953
@@ -802,30 +745,91 @@
           72
         </td>
         <td>
-          1507
+          1508
         </td>
         <td>
-          2922
+          2975
           -
-          2980
+          2975
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.Predef.$conforms
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Predef.$conforms[(String, String)]
+        </td>
+      </tr><tr>
+        <td>
+          72
+        </td>
+        <td>
+          1505
+        </td>
+        <td>
+          2959
+          -
+          2971
         </td>
         <td>
           ApplyToImplicitArgs
         </td>
         <td>
-          scala.collection.TraversableOnce.toMap
+          org.json4s.ExtractableJsonAstNode.as
         </td>
         <td style="background: #AEF1AE">
-          fields.map[(String, String), List[(String, String)]](((x0$1: org.json4s.JsonAST.JField) =&gt; x0$1 match {
-  case (_1: String, _2: org.json4s.JsonAST.JValue)(String, org.json4s.JsonAST.JValue)((key @ _), (v @ _)) =&gt; scala.Tuple2.apply[String, String](key, org.json4s.`package`.jvalue2extractable(v).as[String](CommonJsonReader.this.strReader))
-}))(immutable.this.List.canBuildFrom[(String, String)]).toMap[String, String](scala.Predef.$conforms[(String, String)])
+          org.json4s.`package`.jvalue2extractable(v).as[String](CommonJsonReader.this.strReader)
+        </td>
+      </tr><tr>
+        <td>
+          72
+        </td>
+        <td>
+          1504
+        </td>
+        <td>
+          2963
+          -
+          2963
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.CommonJsonReader.strReader
+        </td>
+        <td style="background: #AEF1AE">
+          CommonJsonReader.this.strReader
+        </td>
+      </tr><tr>
+        <td>
+          72
+        </td>
+        <td>
+          1507
+        </td>
+        <td>
+          2933
+          -
+          2933
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.List.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.List.canBuildFrom[(String, String)]
         </td>
       </tr><tr>
         <td>
           73
         </td>
         <td>
-          1508
+          1510
         </td>
         <td>
           2997
@@ -846,7 +850,7 @@
           81
         </td>
         <td>
-          1509
+          1511
         </td>
         <td>
           3208
@@ -867,7 +871,7 @@
           86
         </td>
         <td>
-          1510
+          1512
         </td>
         <td>
           3477
@@ -888,7 +892,28 @@
           87
         </td>
         <td>
-          1512
+          1515
+        </td>
+        <td>
+          3555
+          -
+          3587
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.Extraction.extract
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.Extraction.extract[String](goal)(CommonJsonReader.this.formats, scala.reflect.ManifestFactory.classType[String](classOf[java.lang.String]))
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          1514
         </td>
         <td>
           3581
@@ -909,7 +934,7 @@
           87
         </td>
         <td>
-          1515
+          1517
         </td>
         <td>
           3523
@@ -930,28 +955,7 @@
           87
         </td>
         <td>
-          1514
-        </td>
-        <td>
-          3545
-          -
-          3545
-        </td>
-        <td>
-          TypeApply
-        </td>
-        <td>
-          scala.collection.immutable.List.canBuildFrom
-        </td>
-        <td style="background: #AEF1AE">
-          immutable.this.List.canBuildFrom[String]
-        </td>
-      </tr><tr>
-        <td>
-          87
-        </td>
-        <td>
-          1511
+          1513
         </td>
         <td>
           3581
@@ -972,28 +976,28 @@
           87
         </td>
         <td>
-          1513
+          1516
         </td>
         <td>
-          3555
+          3545
           -
-          3587
+          3545
         </td>
         <td>
-          ApplyToImplicitArgs
+          TypeApply
         </td>
         <td>
-          org.json4s.Extraction.extract
+          scala.collection.immutable.List.canBuildFrom
         </td>
         <td style="background: #AEF1AE">
-          org.json4s.Extraction.extract[String](goal)(CommonJsonReader.this.formats, scala.reflect.ManifestFactory.classType[String](classOf[java.lang.String]))
+          immutable.this.List.canBuildFrom[String]
         </td>
       </tr><tr>
         <td>
           88
         </td>
         <td>
-          1517
+          1519
         </td>
         <td>
           3461
@@ -1014,7 +1018,7 @@
           88
         </td>
         <td>
-          1516
+          1518
         </td>
         <td>
           3606
@@ -1035,7 +1039,7 @@
           93
         </td>
         <td>
-          1519
+          1521
         </td>
         <td>
           3822
@@ -1056,28 +1060,28 @@
           93
         </td>
         <td>
-          1518
+          1524
         </td>
         <td>
-          3797
+          3810
           -
-          3808
+          3832
         </td>
         <td>
-          Apply
+          Block
         </td>
         <td>
-          scala.Boolean.!=
+          scala.Some.apply
         </td>
         <td style="background: #AEF1AE">
-          b.!=(defVal)
+          scala.Some.apply[(String, org.json4s.JsonAST.JBool)](scala.Tuple2.apply[String, org.json4s.JsonAST.JBool](name, org.json4s.`package`.JBool.apply(b)))
         </td>
       </tr><tr>
         <td>
           93
         </td>
         <td>
-          1521
+          1523
         </td>
         <td>
           3810
@@ -1101,6 +1105,27 @@
           1520
         </td>
         <td>
+          3797
+          -
+          3808
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Boolean.!=
+        </td>
+        <td style="background: #AEF1AE">
+          b.!=(defVal)
+        </td>
+      </tr><tr>
+        <td>
+          93
+        </td>
+        <td>
+          1522
+        </td>
+        <td>
           3815
           -
           3831
@@ -1116,31 +1141,10 @@
         </td>
       </tr><tr>
         <td>
-          93
-        </td>
-        <td>
-          1522
-        </td>
-        <td>
-          3810
-          -
-          3832
-        </td>
-        <td>
-          Block
-        </td>
-        <td>
-          scala.Some.apply
-        </td>
-        <td style="background: #AEF1AE">
-          scala.Some.apply[(String, org.json4s.JsonAST.JBool)](scala.Tuple2.apply[String, org.json4s.JsonAST.JBool](name, org.json4s.`package`.JBool.apply(b)))
-        </td>
-      </tr><tr>
-        <td>
           94
         </td>
         <td>
-          1524
+          1526
         </td>
         <td>
           3842
@@ -1161,7 +1165,7 @@
           94
         </td>
         <td>
-          1523
+          1525
         </td>
         <td>
           3842
@@ -1185,6 +1189,48 @@
           1528
         </td>
         <td>
+          3993
+          -
+          4004
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          s.!=(defVal)
+        </td>
+      </tr><tr>
+        <td>
+          99
+        </td>
+        <td>
+          1527
+        </td>
+        <td>
+          3985
+          -
+          3989
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          null
+        </td>
+      </tr><tr>
+        <td>
+          99
+        </td>
+        <td>
+          1530
+        </td>
+        <td>
           4018
           -
           4028
@@ -1203,7 +1249,49 @@
           99
         </td>
         <td>
-          1527
+          1533
+        </td>
+        <td>
+          4006
+          -
+          4030
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.Some.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Some.apply[(String, org.json4s.JsonAST.JString)](scala.Tuple2.apply[String, org.json4s.JsonAST.JString](name, org.json4s.`package`.JString.apply(s)))
+        </td>
+      </tr><tr>
+        <td>
+          99
+        </td>
+        <td>
+          1532
+        </td>
+        <td>
+          4006
+          -
+          4030
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Some.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Some.apply[(String, org.json4s.JsonAST.JString)](scala.Tuple2.apply[String, org.json4s.JsonAST.JString](name, org.json4s.`package`.JString.apply(s)))
+        </td>
+      </tr><tr>
+        <td>
+          99
+        </td>
+        <td>
+          1529
         </td>
         <td>
           3980
@@ -1224,49 +1312,7 @@
           99
         </td>
         <td>
-          1530
-        </td>
-        <td>
-          4006
-          -
-          4030
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.Some.apply
-        </td>
-        <td style="background: #AEF1AE">
-          scala.Some.apply[(String, org.json4s.JsonAST.JString)](scala.Tuple2.apply[String, org.json4s.JsonAST.JString](name, org.json4s.`package`.JString.apply(s)))
-        </td>
-      </tr><tr>
-        <td>
-          99
-        </td>
-        <td>
-          1526
-        </td>
-        <td>
-          3993
-          -
-          4004
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.lang.Object.!=
-        </td>
-        <td style="background: #AEF1AE">
-          s.!=(defVal)
-        </td>
-      </tr><tr>
-        <td>
-          99
-        </td>
-        <td>
-          1529
+          1531
         </td>
         <td>
           4011
@@ -1284,52 +1330,10 @@
         </td>
       </tr><tr>
         <td>
-          99
-        </td>
-        <td>
-          1531
-        </td>
-        <td>
-          4006
-          -
-          4030
-        </td>
-        <td>
-          Block
-        </td>
-        <td>
-          scala.Some.apply
-        </td>
-        <td style="background: #AEF1AE">
-          scala.Some.apply[(String, org.json4s.JsonAST.JString)](scala.Tuple2.apply[String, org.json4s.JsonAST.JString](name, org.json4s.`package`.JString.apply(s)))
-        </td>
-      </tr><tr>
-        <td>
-          99
-        </td>
-        <td>
-          1525
-        </td>
-        <td>
-          3985
-          -
-          3989
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          null
-        </td>
-      </tr><tr>
-        <td>
           100
         </td>
         <td>
-          1533
+          1535
         </td>
         <td>
           4040
@@ -1350,7 +1354,7 @@
           100
         </td>
         <td>
-          1532
+          1534
         </td>
         <td>
           4040
@@ -1374,18 +1378,18 @@
           1536
         </td>
         <td>
-          4194
+          4199
           -
-          4218
+          4203
         </td>
         <td>
-          Apply
+          Literal
         </td>
         <td>
-          scala.Boolean.&amp;&amp;
+          &lt;nosymbol&gt;
         </td>
         <td style="background: #AEF1AE">
-          t.!=(null).&amp;&amp;(t.!=(defVal))
+          null
         </td>
       </tr><tr>
         <td>
@@ -1393,90 +1397,6 @@
         </td>
         <td>
           1539
-        </td>
-        <td>
-          4225
-          -
-          4256
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.Tuple2.apply
-        </td>
-        <td style="background: #AEF1AE">
-          scala.Tuple2.apply[String, org.json4s.JValue](name, org.json4s.Extraction.decompose(t)(CommonJsonReader.this.formats))
-        </td>
-      </tr><tr>
-        <td>
-          106
-        </td>
-        <td>
-          1541
-        </td>
-        <td>
-          4220
-          -
-          4257
-        </td>
-        <td>
-          Block
-        </td>
-        <td>
-          scala.Some.apply
-        </td>
-        <td style="background: #AEF1AE">
-          scala.Some.apply[(String, org.json4s.JValue)](scala.Tuple2.apply[String, org.json4s.JValue](name, org.json4s.Extraction.decompose(t)(CommonJsonReader.this.formats)))
-        </td>
-      </tr><tr>
-        <td>
-          106
-        </td>
-        <td>
-          1535
-        </td>
-        <td>
-          4207
-          -
-          4218
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.Any.!=
-        </td>
-        <td style="background: #AEF1AE">
-          t.!=(defVal)
-        </td>
-      </tr><tr>
-        <td>
-          106
-        </td>
-        <td>
-          1538
-        </td>
-        <td>
-          4232
-          -
-          4255
-        </td>
-        <td>
-          ApplyToImplicitArgs
-        </td>
-        <td>
-          org.json4s.Extraction.decompose
-        </td>
-        <td style="background: #AEF1AE">
-          org.json4s.Extraction.decompose(t)(CommonJsonReader.this.formats)
-        </td>
-      </tr><tr>
-        <td>
-          106
-        </td>
-        <td>
-          1537
         </td>
         <td>
           4252
@@ -1497,7 +1417,7 @@
           106
         </td>
         <td>
-          1540
+          1542
         </td>
         <td>
           4220
@@ -1518,49 +1438,112 @@
           106
         </td>
         <td>
-          1534
+          1541
         </td>
         <td>
-          4199
+          4225
           -
-          4203
+          4256
         </td>
         <td>
-          Literal
+          Apply
         </td>
         <td>
-          &lt;nosymbol&gt;
+          scala.Tuple2.apply
         </td>
         <td style="background: #AEF1AE">
-          null
+          scala.Tuple2.apply[String, org.json4s.JValue](name, org.json4s.Extraction.decompose(t)(CommonJsonReader.this.formats))
         </td>
       </tr><tr>
         <td>
-          107
+          106
         </td>
         <td>
-          1542
+          1538
         </td>
         <td>
-          4267
+          4194
           -
-          4271
+          4218
         </td>
         <td>
-          Select
+          Apply
         </td>
         <td>
-          scala.None
+          scala.Boolean.&amp;&amp;
         </td>
         <td style="background: #AEF1AE">
-          scala.None
+          t.!=(null).&amp;&amp;(t.!=(defVal))
         </td>
       </tr><tr>
         <td>
-          107
+          106
+        </td>
+        <td>
+          1537
+        </td>
+        <td>
+          4207
+          -
+          4218
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Any.!=
+        </td>
+        <td style="background: #AEF1AE">
+          t.!=(defVal)
+        </td>
+      </tr><tr>
+        <td>
+          106
+        </td>
+        <td>
+          1540
+        </td>
+        <td>
+          4232
+          -
+          4255
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.Extraction.decompose
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.Extraction.decompose(t)(CommonJsonReader.this.formats)
+        </td>
+      </tr><tr>
+        <td>
+          106
         </td>
         <td>
           1543
+        </td>
+        <td>
+          4220
+          -
+          4257
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.Some.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Some.apply[(String, org.json4s.JValue)](scala.Tuple2.apply[String, org.json4s.JValue](name, org.json4s.Extraction.decompose(t)(CommonJsonReader.this.formats)))
+        </td>
+      </tr><tr>
+        <td>
+          107
+        </td>
+        <td>
+          1545
         </td>
         <td>
           4267
@@ -1578,10 +1561,31 @@
         </td>
       </tr><tr>
         <td>
-          112
+          107
         </td>
         <td>
           1544
+        </td>
+        <td>
+          4267
+          -
+          4271
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.None
+        </td>
+        <td style="background: #AEF1AE">
+          scala.None
+        </td>
+      </tr><tr>
+        <td>
+          112
+        </td>
+        <td>
+          1546
         </td>
         <td>
           4411
@@ -1602,51 +1606,7 @@
           113
         </td>
         <td>
-          1545
-        </td>
-        <td>
-          4475
-          -
-          4485
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.json4s.JsonAST.JString.apply
-        </td>
-        <td style="background: #AEF1AE">
-          org.json4s.`package`.JString.apply(v)
-        </td>
-      </tr><tr>
-        <td>
-          113
-        </td>
-        <td>
-          1548
-        </td>
-        <td>
-          4449
-          -
-          4495
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.collection.TraversableOnce.toList
-        </td>
-        <td style="background: #AEF1AE">
-          p.map[(String, org.json4s.JsonAST.JString), scala.collection.immutable.Map[String,org.json4s.JsonAST.JString]](((x0$1: (String, String)) =&gt; x0$1 match {
-  case (_1: String, _2: String)(String, String)((k @ _), (v @ _)) =&gt; scala.Tuple2.apply[String, org.json4s.JsonAST.JString](k, org.json4s.`package`.JString.apply(v))
-}))(immutable.this.Map.canBuildFrom[String, org.json4s.JsonAST.JString]).toList
-        </td>
-      </tr><tr>
-        <td>
-          113
-        </td>
-        <td>
-          1551
+          1554
         </td>
         <td>
           4429
@@ -1654,7 +1614,7 @@
           4498
         </td>
         <td>
-          Apply
+          Block
         </td>
         <td>
           scala.Some.apply
@@ -1669,51 +1629,7 @@
           113
         </td>
         <td>
-          1550
-        </td>
-        <td>
-          4434
-          -
-          4497
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.Tuple2.apply
-        </td>
-        <td style="background: #AEF1AE">
-          scala.Tuple2.apply[String, org.json4s.JsonAST.JObject](name, org.json4s.`package`.JObject.apply(p.map[(String, org.json4s.JsonAST.JString), scala.collection.immutable.Map[String,org.json4s.JsonAST.JString]](((x0$1: (String, String)) =&gt; x0$1 match {
-  case (_1: String, _2: String)(String, String)((k @ _), (v @ _)) =&gt; scala.Tuple2.apply[String, org.json4s.JsonAST.JString](k, org.json4s.`package`.JString.apply(v))
-}))(immutable.this.Map.canBuildFrom[String, org.json4s.JsonAST.JString]).toList))
-        </td>
-      </tr><tr>
-        <td>
-          113
-        </td>
-        <td>
-          1547
-        </td>
-        <td>
-          4455
-          -
-          4455
-        </td>
-        <td>
-          TypeApply
-        </td>
-        <td>
-          scala.collection.immutable.Map.canBuildFrom
-        </td>
-        <td style="background: #AEF1AE">
-          immutable.this.Map.canBuildFrom[String, org.json4s.JsonAST.JString]
-        </td>
-      </tr><tr>
-        <td>
-          113
-        </td>
-        <td>
-          1546
+          1548
         </td>
         <td>
           4471
@@ -1734,7 +1650,7 @@
           113
         </td>
         <td>
-          1549
+          1551
         </td>
         <td>
           4441
@@ -1757,7 +1673,30 @@
           113
         </td>
         <td>
-          1552
+          1550
+        </td>
+        <td>
+          4449
+          -
+          4495
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.collection.TraversableOnce.toList
+        </td>
+        <td style="background: #AEF1AE">
+          p.map[(String, org.json4s.JsonAST.JString), scala.collection.immutable.Map[String,org.json4s.JsonAST.JString]](((x0$1: (String, String)) =&gt; x0$1 match {
+  case (_1: String, _2: String)(String, String)((k @ _), (v @ _)) =&gt; scala.Tuple2.apply[String, org.json4s.JsonAST.JString](k, org.json4s.`package`.JString.apply(v))
+}))(immutable.this.Map.canBuildFrom[String, org.json4s.JsonAST.JString]).toList
+        </td>
+      </tr><tr>
+        <td>
+          113
+        </td>
+        <td>
+          1553
         </td>
         <td>
           4429
@@ -1765,7 +1704,7 @@
           4498
         </td>
         <td>
-          Block
+          Apply
         </td>
         <td>
           scala.Some.apply
@@ -1777,10 +1716,75 @@
         </td>
       </tr><tr>
         <td>
+          113
+        </td>
+        <td>
+          1547
+        </td>
+        <td>
+          4475
+          -
+          4485
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.json4s.JsonAST.JString.apply
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.`package`.JString.apply(v)
+        </td>
+      </tr><tr>
+        <td>
+          113
+        </td>
+        <td>
+          1549
+        </td>
+        <td>
+          4455
+          -
+          4455
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Map.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Map.canBuildFrom[String, org.json4s.JsonAST.JString]
+        </td>
+      </tr><tr>
+        <td>
+          113
+        </td>
+        <td>
+          1552
+        </td>
+        <td>
+          4434
+          -
+          4497
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Tuple2.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Tuple2.apply[String, org.json4s.JsonAST.JObject](name, org.json4s.`package`.JObject.apply(p.map[(String, org.json4s.JsonAST.JString), scala.collection.immutable.Map[String,org.json4s.JsonAST.JString]](((x0$1: (String, String)) =&gt; x0$1 match {
+  case (_1: String, _2: String)(String, String)((k @ _), (v @ _)) =&gt; scala.Tuple2.apply[String, org.json4s.JsonAST.JString](k, org.json4s.`package`.JString.apply(v))
+}))(immutable.this.Map.canBuildFrom[String, org.json4s.JsonAST.JString]).toList))
+        </td>
+      </tr><tr>
+        <td>
           114
         </td>
         <td>
-          1554
+          1556
         </td>
         <td>
           4508
@@ -1801,7 +1805,7 @@
           114
         </td>
         <td>
-          1553
+          1555
         </td>
         <td>
           4508
@@ -1825,6 +1829,27 @@
           1557
         </td>
         <td>
+          4690
+          -
+          4694
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          null
+        </td>
+      </tr><tr>
+        <td>
+          119
+        </td>
+        <td>
+          1559
+        </td>
+        <td>
           4683
           -
           4711
@@ -1843,7 +1868,7 @@
           119
         </td>
         <td>
-          1556
+          1558
         </td>
         <td>
           4698
@@ -1861,157 +1886,10 @@
         </td>
       </tr><tr>
         <td>
-          119
-        </td>
-        <td>
-          1555
-        </td>
-        <td>
-          4690
-          -
-          4694
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          null
-        </td>
-      </tr><tr>
-        <td>
           120
         </td>
         <td>
           1560
-        </td>
-        <td>
-          4746
-          -
-          4746
-        </td>
-        <td>
-          TypeApply
-        </td>
-        <td>
-          scala.collection.Seq.canBuildFrom
-        </td>
-        <td style="background: #AEF1AE">
-          collection.this.Seq.canBuildFrom[org.json4s.JValue]
-        </td>
-      </tr><tr>
-        <td>
-          120
-        </td>
-        <td>
-          1563
-        </td>
-        <td>
-          4724
-          -
-          4782
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.Tuple2.apply
-        </td>
-        <td style="background: #AEF1AE">
-          scala.Tuple2.apply[String, org.json4s.JsonAST.JArray](name, org.json4s.`package`.JArray.apply(arr.map[org.json4s.JValue, Seq[org.json4s.JValue]](((x$6: T) =&gt; org.json4s.Extraction.decompose(x$6)(CommonJsonReader.this.formats)))(collection.this.Seq.canBuildFrom[org.json4s.JValue]).toList))
-        </td>
-      </tr><tr>
-        <td>
-          120
-        </td>
-        <td>
-          1559
-        </td>
-        <td>
-          4748
-          -
-          4771
-        </td>
-        <td>
-          ApplyToImplicitArgs
-        </td>
-        <td>
-          org.json4s.Extraction.decompose
-        </td>
-        <td style="background: #AEF1AE">
-          org.json4s.Extraction.decompose(x$6)(CommonJsonReader.this.formats)
-        </td>
-      </tr><tr>
-        <td>
-          120
-        </td>
-        <td>
-          1562
-        </td>
-        <td>
-          4731
-          -
-          4781
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.json4s.JsonAST.JArray.apply
-        </td>
-        <td style="background: #AEF1AE">
-          org.json4s.`package`.JArray.apply(arr.map[org.json4s.JValue, Seq[org.json4s.JValue]](((x$6: T) =&gt; org.json4s.Extraction.decompose(x$6)(CommonJsonReader.this.formats)))(collection.this.Seq.canBuildFrom[org.json4s.JValue]).toList)
-        </td>
-      </tr><tr>
-        <td>
-          120
-        </td>
-        <td>
-          1565
-        </td>
-        <td>
-          4719
-          -
-          4783
-        </td>
-        <td>
-          Block
-        </td>
-        <td>
-          scala.Some.apply
-        </td>
-        <td style="background: #AEF1AE">
-          scala.Some.apply[(String, org.json4s.JsonAST.JArray)](scala.Tuple2.apply[String, org.json4s.JsonAST.JArray](name, org.json4s.`package`.JArray.apply(arr.map[org.json4s.JValue, Seq[org.json4s.JValue]](((x$6: T) =&gt; org.json4s.Extraction.decompose(x$6)(CommonJsonReader.this.formats)))(collection.this.Seq.canBuildFrom[org.json4s.JValue]).toList)))
-        </td>
-      </tr><tr>
-        <td>
-          120
-        </td>
-        <td>
-          1564
-        </td>
-        <td>
-          4719
-          -
-          4783
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.Some.apply
-        </td>
-        <td style="background: #AEF1AE">
-          scala.Some.apply[(String, org.json4s.JsonAST.JArray)](scala.Tuple2.apply[String, org.json4s.JsonAST.JArray](name, org.json4s.`package`.JArray.apply(arr.map[org.json4s.JValue, Seq[org.json4s.JValue]](((x$6: T) =&gt; org.json4s.Extraction.decompose(x$6)(CommonJsonReader.this.formats)))(collection.this.Seq.canBuildFrom[org.json4s.JValue]).toList)))
-        </td>
-      </tr><tr>
-        <td>
-          120
-        </td>
-        <td>
-          1558
         </td>
         <td>
           4768
@@ -2032,7 +1910,7 @@
           120
         </td>
         <td>
-          1561
+          1563
         </td>
         <td>
           4738
@@ -2050,31 +1928,136 @@
         </td>
       </tr><tr>
         <td>
-          121
+          120
         </td>
         <td>
           1566
         </td>
         <td>
-          4793
+          4719
           -
-          4797
+          4783
         </td>
         <td>
-          Select
+          Apply
         </td>
         <td>
-          scala.None
+          scala.Some.apply
         </td>
         <td style="background: #AEF1AE">
-          scala.None
+          scala.Some.apply[(String, org.json4s.JsonAST.JArray)](scala.Tuple2.apply[String, org.json4s.JsonAST.JArray](name, org.json4s.`package`.JArray.apply(arr.map[org.json4s.JValue, Seq[org.json4s.JValue]](((x$6: T) =&gt; org.json4s.Extraction.decompose(x$6)(CommonJsonReader.this.formats)))(collection.this.Seq.canBuildFrom[org.json4s.JValue]).toList)))
+        </td>
+      </tr><tr>
+        <td>
+          120
+        </td>
+        <td>
+          1562
+        </td>
+        <td>
+          4746
+          -
+          4746
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          collection.this.Seq.canBuildFrom[org.json4s.JValue]
+        </td>
+      </tr><tr>
+        <td>
+          120
+        </td>
+        <td>
+          1565
+        </td>
+        <td>
+          4724
+          -
+          4782
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Tuple2.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Tuple2.apply[String, org.json4s.JsonAST.JArray](name, org.json4s.`package`.JArray.apply(arr.map[org.json4s.JValue, Seq[org.json4s.JValue]](((x$6: T) =&gt; org.json4s.Extraction.decompose(x$6)(CommonJsonReader.this.formats)))(collection.this.Seq.canBuildFrom[org.json4s.JValue]).toList))
+        </td>
+      </tr><tr>
+        <td>
+          120
+        </td>
+        <td>
+          1564
+        </td>
+        <td>
+          4731
+          -
+          4781
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.json4s.JsonAST.JArray.apply
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.`package`.JArray.apply(arr.map[org.json4s.JValue, Seq[org.json4s.JValue]](((x$6: T) =&gt; org.json4s.Extraction.decompose(x$6)(CommonJsonReader.this.formats)))(collection.this.Seq.canBuildFrom[org.json4s.JValue]).toList)
+        </td>
+      </tr><tr>
+        <td>
+          120
+        </td>
+        <td>
+          1567
+        </td>
+        <td>
+          4719
+          -
+          4783
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.Some.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Some.apply[(String, org.json4s.JsonAST.JArray)](scala.Tuple2.apply[String, org.json4s.JsonAST.JArray](name, org.json4s.`package`.JArray.apply(arr.map[org.json4s.JValue, Seq[org.json4s.JValue]](((x$6: T) =&gt; org.json4s.Extraction.decompose(x$6)(CommonJsonReader.this.formats)))(collection.this.Seq.canBuildFrom[org.json4s.JValue]).toList)))
+        </td>
+      </tr><tr>
+        <td>
+          120
+        </td>
+        <td>
+          1561
+        </td>
+        <td>
+          4748
+          -
+          4771
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.Extraction.decompose
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.Extraction.decompose(x$6)(CommonJsonReader.this.formats)
         </td>
       </tr><tr>
         <td>
           121
         </td>
         <td>
-          1567
+          1569
         </td>
         <td>
           4793
@@ -2092,10 +2075,52 @@
         </td>
       </tr><tr>
         <td>
+          121
+        </td>
+        <td>
+          1568
+        </td>
+        <td>
+          4793
+          -
+          4797
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.None
+        </td>
+        <td style="background: #AEF1AE">
+          scala.None
+        </td>
+      </tr><tr>
+        <td>
           126
         </td>
         <td>
-          1569
+          1572
+        </td>
+        <td>
+          4931
+          -
+          4954
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Boolean.&amp;&amp;
+        </td>
+        <td style="background: #AEF1AE">
+          v.!=(null).&amp;&amp;(v.isEmpty.unary_!)
+        </td>
+      </tr><tr>
+        <td>
+          126
+        </td>
+        <td>
+          1571
         </td>
         <td>
           4944
@@ -2116,7 +2141,7 @@
           126
         </td>
         <td>
-          1568
+          1570
         </td>
         <td>
           4936
@@ -2134,94 +2159,10 @@
         </td>
       </tr><tr>
         <td>
-          126
-        </td>
-        <td>
-          1570
-        </td>
-        <td>
-          4931
-          -
-          4954
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.Boolean.&amp;&amp;
-        </td>
-        <td style="background: #AEF1AE">
-          v.!=(null).&amp;&amp;(v.isEmpty.unary_!)
-        </td>
-      </tr><tr>
-        <td>
           127
         </td>
         <td>
-          1572
-        </td>
-        <td>
-          4987
-          -
-          4987
-        </td>
-        <td>
-          TypeApply
-        </td>
-        <td>
-          scala.collection.Seq.canBuildFrom
-        </td>
-        <td style="background: #AEF1AE">
-          collection.this.Seq.canBuildFrom[org.json4s.JsonAST.JString]
-        </td>
-      </tr><tr>
-        <td>
-          127
-        </td>
-        <td>
-          1575
-        </td>
-        <td>
-          4967
-          -
-          5010
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.Tuple2.apply
-        </td>
-        <td style="background: #AEF1AE">
-          scala.Tuple2.apply[String, org.json4s.JsonAST.JArray](name, org.json4s.`package`.JArray.apply(v.map[org.json4s.JsonAST.JString, Seq[org.json4s.JsonAST.JString]](((x$7: String) =&gt; org.json4s.`package`.JString.apply(x$7)))(collection.this.Seq.canBuildFrom[org.json4s.JsonAST.JString]).toList))
-        </td>
-      </tr><tr>
-        <td>
-          127
-        </td>
-        <td>
-          1574
-        </td>
-        <td>
-          4974
-          -
-          5009
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.json4s.JsonAST.JArray.apply
-        </td>
-        <td style="background: #AEF1AE">
-          org.json4s.`package`.JArray.apply(v.map[org.json4s.JsonAST.JString, Seq[org.json4s.JsonAST.JString]](((x$7: String) =&gt; org.json4s.`package`.JString.apply(x$7)))(collection.this.Seq.canBuildFrom[org.json4s.JsonAST.JString]).toList)
-        </td>
-      </tr><tr>
-        <td>
-          127
-        </td>
-        <td>
-          1577
+          1578
         </td>
         <td>
           4962
@@ -2229,7 +2170,7 @@
           5011
         </td>
         <td>
-          Block
+          Apply
         </td>
         <td>
           scala.Some.apply
@@ -2242,28 +2183,7 @@
           127
         </td>
         <td>
-          1571
-        </td>
-        <td>
-          4989
-          -
-          4999
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.json4s.JsonAST.JString.apply
-        </td>
-        <td style="background: #AEF1AE">
-          org.json4s.`package`.JString.apply(x$7)
-        </td>
-      </tr><tr>
-        <td>
-          127
-        </td>
-        <td>
-          1573
+          1575
         </td>
         <td>
           4981
@@ -2284,7 +2204,91 @@
           127
         </td>
         <td>
+          1574
+        </td>
+        <td>
+          4987
+          -
+          4987
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          collection.this.Seq.canBuildFrom[org.json4s.JsonAST.JString]
+        </td>
+      </tr><tr>
+        <td>
+          127
+        </td>
+        <td>
+          1577
+        </td>
+        <td>
+          4967
+          -
+          5010
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Tuple2.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Tuple2.apply[String, org.json4s.JsonAST.JArray](name, org.json4s.`package`.JArray.apply(v.map[org.json4s.JsonAST.JString, Seq[org.json4s.JsonAST.JString]](((x$7: String) =&gt; org.json4s.`package`.JString.apply(x$7)))(collection.this.Seq.canBuildFrom[org.json4s.JsonAST.JString]).toList))
+        </td>
+      </tr><tr>
+        <td>
+          127
+        </td>
+        <td>
+          1573
+        </td>
+        <td>
+          4989
+          -
+          4999
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.json4s.JsonAST.JString.apply
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.`package`.JString.apply(x$7)
+        </td>
+      </tr><tr>
+        <td>
+          127
+        </td>
+        <td>
           1576
+        </td>
+        <td>
+          4974
+          -
+          5009
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.json4s.JsonAST.JArray.apply
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.`package`.JArray.apply(v.map[org.json4s.JsonAST.JString, Seq[org.json4s.JsonAST.JString]](((x$7: String) =&gt; org.json4s.`package`.JString.apply(x$7)))(collection.this.Seq.canBuildFrom[org.json4s.JsonAST.JString]).toList)
+        </td>
+      </tr><tr>
+        <td>
+          127
+        </td>
+        <td>
+          1579
         </td>
         <td>
           4962
@@ -2292,7 +2296,7 @@
           5011
         </td>
         <td>
-          Apply
+          Block
         </td>
         <td>
           scala.Some.apply
@@ -2305,28 +2309,7 @@
           128
         </td>
         <td>
-          1578
-        </td>
-        <td>
-          5021
-          -
-          5025
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.None
-        </td>
-        <td style="background: #AEF1AE">
-          scala.None
-        </td>
-      </tr><tr>
-        <td>
-          128
-        </td>
-        <td>
-          1579
+          1581
         </td>
         <td>
           5021
@@ -2344,10 +2327,31 @@
         </td>
       </tr><tr>
         <td>
-          138
+          128
         </td>
         <td>
           1580
+        </td>
+        <td>
+          5021
+          -
+          5025
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.None
+        </td>
+        <td style="background: #AEF1AE">
+          scala.None
+        </td>
+      </tr><tr>
+        <td>
+          138
+        </td>
+        <td>
+          1582
         </td>
         <td>
           5288
@@ -2368,7 +2372,7 @@
           139
         </td>
         <td>
-          1581
+          1583
         </td>
         <td>
           5307
@@ -2389,7 +2393,7 @@
           140
         </td>
         <td>
-          1582
+          1584
         </td>
         <td>
           5343
@@ -2410,7 +2414,7 @@
           141
         </td>
         <td>
-          1583
+          1585
         </td>
         <td>
           5375
@@ -2431,7 +2435,7 @@
           142
         </td>
         <td>
-          1584
+          1586
         </td>
         <td>
           5409
@@ -2452,7 +2456,7 @@
           143
         </td>
         <td>
-          1585
+          1587
         </td>
         <td>
           5455
@@ -2473,7 +2477,7 @@
           144
         </td>
         <td>
-          1586
+          1588
         </td>
         <td>
           5495
@@ -2494,7 +2498,7 @@
           145
         </td>
         <td>
-          1587
+          1589
         </td>
         <td>
           5529
@@ -2515,7 +2519,7 @@
           146
         </td>
         <td>
-          1588
+          1590
         </td>
         <td>
           5571
@@ -2536,7 +2540,7 @@
           147
         </td>
         <td>
-          1589
+          1591
         </td>
         <td>
           5611
@@ -2557,7 +2561,7 @@
           148
         </td>
         <td>
-          1590
+          1592
         </td>
         <td>
           5651
@@ -2578,7 +2582,7 @@
           149
         </td>
         <td>
-          1591
+          1593
         </td>
         <td>
           5697
@@ -2599,7 +2603,7 @@
           150
         </td>
         <td>
-          1592
+          1594
         </td>
         <td>
           5735
@@ -2620,7 +2624,7 @@
           151
         </td>
         <td>
-          1593
+          1595
         </td>
         <td>
           5781
@@ -2641,7 +2645,7 @@
           152
         </td>
         <td>
-          1594
+          1596
         </td>
         <td>
           5819
@@ -2662,7 +2666,7 @@
           153
         </td>
         <td>
-          1595
+          1597
         </td>
         <td>
           5863
@@ -2683,7 +2687,7 @@
           154
         </td>
         <td>
-          1596
+          1598
         </td>
         <td>
           5903
@@ -2704,7 +2708,7 @@
           155
         </td>
         <td>
-          1597
+          1599
         </td>
         <td>
           5947
@@ -2725,7 +2729,7 @@
           156
         </td>
         <td>
-          1598
+          1600
         </td>
         <td>
           5981
@@ -2746,7 +2750,7 @@
           157
         </td>
         <td>
-          1599
+          1601
         </td>
         <td>
           6017
@@ -2767,7 +2771,7 @@
           158
         </td>
         <td>
-          1600
+          1602
         </td>
         <td>
           6045
@@ -2788,7 +2792,7 @@
           159
         </td>
         <td>
-          1601
+          1603
         </td>
         <td>
           6097
@@ -2809,7 +2813,7 @@
           160
         </td>
         <td>
-          1602
+          1604
         </td>
         <td>
           6127
@@ -2830,7 +2834,7 @@
           161
         </td>
         <td>
-          1603
+          1605
         </td>
         <td>
           6193
@@ -2851,7 +2855,7 @@
           162
         </td>
         <td>
-          1604
+          1606
         </td>
         <td>
           6235
@@ -2872,7 +2876,7 @@
           163
         </td>
         <td>
-          1605
+          1607
         </td>
         <td>
           6297
@@ -2893,7 +2897,7 @@
           164
         </td>
         <td>
-          1606
+          1608
         </td>
         <td>
           6339
@@ -2914,7 +2918,7 @@
           165
         </td>
         <td>
-          1607
+          1609
         </td>
         <td>
           6393
@@ -2935,7 +2939,7 @@
           166
         </td>
         <td>
-          1608
+          1610
         </td>
         <td>
           6433
@@ -2956,7 +2960,7 @@
           167
         </td>
         <td>
-          1609
+          1611
         </td>
         <td>
           6473
@@ -2977,7 +2981,7 @@
           168
         </td>
         <td>
-          1610
+          1612
         </td>
         <td>
           6515
@@ -2998,7 +3002,7 @@
           169
         </td>
         <td>
-          1611
+          1613
         </td>
         <td>
           6561
@@ -3019,7 +3023,7 @@
           170
         </td>
         <td>
-          1612
+          1614
         </td>
         <td>
           6619
@@ -3040,7 +3044,7 @@
           171
         </td>
         <td>
-          1613
+          1615
         </td>
         <td>
           6669
@@ -3061,7 +3065,7 @@
           172
         </td>
         <td>
-          1614
+          1616
         </td>
         <td>
           6705
@@ -3082,7 +3086,7 @@
           173
         </td>
         <td>
-          1615
+          1617
         </td>
         <td>
           6743
@@ -3103,28 +3107,7 @@
           174
         </td>
         <td>
-          1616
-        </td>
-        <td>
-          6784
-          -
-          6829
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.ManifestSection.ManifestSectionSerializer.&lt;init&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          new ManifestSection.ManifestSectionSerializer()
-        </td>
-      </tr><tr>
-        <td>
-          174
-        </td>
-        <td>
-          1618
+          1620
         </td>
         <td>
           5266
@@ -3142,10 +3125,31 @@
         </td>
       </tr><tr>
         <td>
+          174
+        </td>
+        <td>
+          1618
+        </td>
+        <td>
+          6784
+          -
+          6829
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ManifestSection.ManifestSectionSerializer.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new ManifestSection.ManifestSectionSerializer()
+        </td>
+      </tr><tr>
+        <td>
           175
         </td>
         <td>
-          1617
+          1619
         </td>
         <td>
           6836
@@ -3166,49 +3170,7 @@
           185
         </td>
         <td>
-          1620
-        </td>
-        <td>
-          7153
-          -
-          7153
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.reflect.ManifestFactory.classType
-        </td>
-        <td style="background: #AEF1AE">
-          scala.reflect.ManifestFactory.classType[org.apache.maven.unbound.Project](classOf[org.apache.maven.unbound.Project])
-        </td>
-      </tr><tr>
-        <td>
-          185
-        </td>
-        <td>
-          1619
-        </td>
-        <td>
-          7153
-          -
-          7153
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          org.apache.maven.unbound.JsonProjectAPI.formats
-        </td>
-        <td style="background: #AEF1AE">
-          JsonReader.this.formats
-        </td>
-      </tr><tr>
-        <td>
-          185
-        </td>
-        <td>
-          1621
+          1623
         </td>
         <td>
           7140
@@ -3226,10 +3188,73 @@
         </td>
       </tr><tr>
         <td>
+          185
+        </td>
+        <td>
+          1622
+        </td>
+        <td>
+          7153
+          -
+          7153
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.reflect.ManifestFactory.classType
+        </td>
+        <td style="background: #AEF1AE">
+          scala.reflect.ManifestFactory.classType[org.apache.maven.unbound.Project](classOf[org.apache.maven.unbound.Project])
+        </td>
+      </tr><tr>
+        <td>
+          185
+        </td>
+        <td>
+          1621
+        </td>
+        <td>
+          7153
+          -
+          7153
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #AEF1AE">
+          JsonReader.this.formats
+        </td>
+      </tr><tr>
+        <td>
           188
         </td>
         <td>
-          1623
+          1626
+        </td>
+        <td>
+          7271
+          -
+          7292
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.native.Serialization.read
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.native.Serialization.read[org.apache.maven.unbound.Project](reader)(JsonReader.this.formats, scala.reflect.ManifestFactory.classType[org.apache.maven.unbound.Project](classOf[org.apache.maven.unbound.Project]))
+        </td>
+      </tr><tr>
+        <td>
+          188
+        </td>
+        <td>
+          1625
         </td>
         <td>
           7284
@@ -3250,7 +3275,7 @@
           188
         </td>
         <td>
-          1622
+          1624
         </td>
         <td>
           7284
@@ -3265,34 +3290,13 @@
         </td>
         <td style="background: #AEF1AE">
           JsonReader.this.formats
-        </td>
-      </tr><tr>
-        <td>
-          188
-        </td>
-        <td>
-          1624
-        </td>
-        <td>
-          7271
-          -
-          7292
-        </td>
-        <td>
-          ApplyToImplicitArgs
-        </td>
-        <td>
-          org.json4s.native.Serialization.read
-        </td>
-        <td style="background: #AEF1AE">
-          org.json4s.native.Serialization.read[org.apache.maven.unbound.Project](reader)(JsonReader.this.formats, scala.reflect.ManifestFactory.classType[org.apache.maven.unbound.Project](classOf[org.apache.maven.unbound.Project]))
         </td>
       </tr><tr>
         <td>
           195
         </td>
         <td>
-          1626
+          1629
         </td>
         <td>
           7497
@@ -3300,13 +3304,13 @@
           7497
         </td>
         <td>
-          Select
+          Apply
         </td>
         <td>
-          org.apache.maven.unbound.JsonProjectAPI.formats
+          scala.reflect.ManifestFactory.classType
         </td>
         <td style="background: #AEF1AE">
-          JsonReader.this.formats
+          scala.reflect.ManifestFactory.classType[org.apache.maven.unbound.Project](classOf[org.apache.maven.unbound.Project])
         </td>
       </tr><tr>
         <td>
@@ -3316,25 +3320,25 @@
           1628
         </td>
         <td>
-          7484
+          7497
           -
-          7529
+          7497
         </td>
         <td>
-          ApplyToImplicitArgs
+          Select
         </td>
         <td>
-          org.json4s.native.Serialization.read
+          org.apache.maven.unbound.JsonProjectAPI.formats
         </td>
         <td style="background: #AEF1AE">
-          org.json4s.native.Serialization.read[org.apache.maven.unbound.Project](new java.io.InputStreamReader(in, enc))(JsonReader.this.formats, scala.reflect.ManifestFactory.classType[org.apache.maven.unbound.Project](classOf[org.apache.maven.unbound.Project]))
+          JsonReader.this.formats
         </td>
       </tr><tr>
         <td>
           195
         </td>
         <td>
-          1625
+          1627
         </td>
         <td>
           7498
@@ -3355,49 +3359,28 @@
           195
         </td>
         <td>
-          1627
-        </td>
-        <td>
-          7497
-          -
-          7497
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.reflect.ManifestFactory.classType
-        </td>
-        <td style="background: #AEF1AE">
-          scala.reflect.ManifestFactory.classType[org.apache.maven.unbound.Project](classOf[org.apache.maven.unbound.Project])
-        </td>
-      </tr><tr>
-        <td>
-          205
-        </td>
-        <td>
-          1629
-        </td>
-        <td>
-          7847
-          -
-          7847
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          org.apache.maven.unbound.JsonProjectAPI.formats
-        </td>
-        <td style="background: #AEF1AE">
-          JsonWriter.this.formats
-        </td>
-      </tr><tr>
-        <td>
-          205
-        </td>
-        <td>
           1630
+        </td>
+        <td>
+          7484
+          -
+          7529
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.native.Serialization.read
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.native.Serialization.read[org.apache.maven.unbound.Project](new java.io.InputStreamReader(in, enc))(JsonReader.this.formats, scala.reflect.ManifestFactory.classType[org.apache.maven.unbound.Project](classOf[org.apache.maven.unbound.Project]))
+        </td>
+      </tr><tr>
+        <td>
+          205
+        </td>
+        <td>
+          1632
         </td>
         <td>
           7833
@@ -3415,10 +3398,31 @@
         </td>
       </tr><tr>
         <td>
+          205
+        </td>
+        <td>
+          1631
+        </td>
+        <td>
+          7847
+          -
+          7847
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #AEF1AE">
+          JsonWriter.this.formats
+        </td>
+      </tr><tr>
+        <td>
           211
         </td>
         <td>
-          1632
+          1634
         </td>
         <td>
           8003
@@ -3439,7 +3443,7 @@
           211
         </td>
         <td>
-          1631
+          1633
         </td>
         <td>
           8014
@@ -3468,6 +3472,27 @@
           8217
         </td>
         <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #F0ADAD">
+          JsonWriter.this.formats
+        </td>
+      </tr><tr>
+        <td>
+          218
+        </td>
+        <td>
+          1637
+        </td>
+        <td>
+          8217
+          -
+          8217
+        </td>
+        <td>
           Literal
         </td>
         <td>
@@ -3481,7 +3506,7 @@
           218
         </td>
         <td>
-          1634
+          1636
         </td>
         <td>
           8194
@@ -3499,31 +3524,31 @@
         </td>
       </tr><tr>
         <td>
-          218
+          226
         </td>
         <td>
-          1633
+          1641
         </td>
         <td>
-          8217
+          8492
           -
-          8217
+          8492
         </td>
         <td>
-          Select
+          Literal
         </td>
         <td>
-          org.apache.maven.unbound.JsonProjectAPI.formats
+          &lt;nosymbol&gt;
         </td>
         <td style="background: #F0ADAD">
-          JsonWriter.this.formats
+          ()
         </td>
       </tr><tr>
         <td>
           226
         </td>
         <td>
-          1638
+          1640
         </td>
         <td>
           8452
@@ -3544,7 +3569,7 @@
           226
         </td>
         <td>
-          1637
+          1639
         </td>
         <td>
           8492
@@ -3562,31 +3587,10 @@
         </td>
       </tr><tr>
         <td>
-          226
-        </td>
-        <td>
-          1639
-        </td>
-        <td>
-          8492
-          -
-          8492
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #F0ADAD">
-          ()
-        </td>
-      </tr><tr>
-        <td>
           227
         </td>
         <td>
-          1636
+          1638
         </td>
         <td>
           8509
@@ -3607,7 +3611,7 @@
           231
         </td>
         <td>
-          1641
+          1643
         </td>
         <td>
           8655
@@ -3628,7 +3632,7 @@
           231
         </td>
         <td>
-          1640
+          1642
         </td>
         <td>
           8666
@@ -3643,6 +3647,48 @@
         </td>
         <td style="background: #AEF1AE">
           JsonWriter.this.formats
+        </td>
+      </tr><tr>
+        <td>
+          235
+        </td>
+        <td>
+          1644
+        </td>
+        <td>
+          8797
+          -
+          8797
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonProjectAPI.formats
+        </td>
+        <td style="background: #AEF1AE">
+          JsonWriter.this.formats
+        </td>
+      </tr><tr>
+        <td>
+          235
+        </td>
+        <td>
+          1645
+        </td>
+        <td>
+          8786
+          -
+          8806
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          org.json4s.native.Serialization.writePretty
+        </td>
+        <td style="background: #AEF1AE">
+          org.json4s.native.Serialization.writePretty[org.apache.maven.unbound.Fileset](fileset)(JsonWriter.this.formats)
         </td>
       </tr>
     </table>

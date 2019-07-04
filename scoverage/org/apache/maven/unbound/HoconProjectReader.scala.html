@@ -203,10 +203,14 @@
 </span>179 <span style=''>  // allows reading of the Archive object from a Typesafe Config via Ficus
 </span>180 <span style=''>  protected[unbound] def readArchiver(conf: Config): Archiver =
 </span>181 <span style=''>    </span><span style='background: #AEF1AE'>conf.as[Archiver](Archive)</span><span style=''>
-</span>182 <span style=''>}
-</span>183 <span style=''>
-</span>184 <span style=''>/** Static accessor to the Config -&gt; Project case class conversion code */
-</span>185 <span style=''>object HoconReader extends HoconProjectReader
+</span>182 <span style=''>
+</span>183 <span style=''>  // allows reading of the Fileset object from a Typesafe Config via Ficus
+</span>184 <span style=''>  protected[unbound] def readFileset(conf: Config): Fileset =
+</span>185 <span style=''>    </span><span style='background: #F0ADAD'>conf.as[Fileset](&quot;fileset&quot;)</span><span style=''>
+</span>186 <span style=''>}
+</span>187 <span style=''>
+</span>188 <span style=''>/** Static accessor to the Config -&gt; Project case class conversion code */
+</span>189 <span style=''>object HoconReader extends HoconProjectReader
 </span></pre>
           </div>
           <div class="tab-pane" id="statementlist">
@@ -14920,6 +14924,108 @@ else
         </td>
         <td style="background: #AEF1AE">
           unbound.this.`package`.SL.strToString(unbound.this.`package`.SL.Archive)
+        </td>
+      </tr><tr>
+        <td>
+          185
+        </td>
+        <td>
+          1483
+        </td>
+        <td>
+          7347
+          -
+          7374
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          net.ceedubs.ficus.FicusConfig.as
+        </td>
+        <td style="background: #F0ADAD">
+          net.ceedubs.ficus.Ficus.toFicusConfig(conf).as[org.apache.maven.unbound.Fileset](&quot;fileset&quot;)(({
+  final class $anon extends AnyRef with net.ceedubs.ficus.readers.ValueReader[org.apache.maven.unbound.Fileset] {
+    def &lt;init&gt;(): &lt;$anon: net.ceedubs.ficus.readers.ValueReader[org.apache.maven.unbound.Fileset]&gt; = {
+      $anon.super.&lt;init&gt;();
+      ()
+    };
+    def read(config: com.typesafe.config.Config, path: String): org.apache.maven.unbound.Fileset = Fileset.apply(net.ceedubs.ficus.Ficus.optionValueReader[String](net.ceedubs.ficus.Ficus.stringValueReader).read(config, if (path.==(&quot;.&quot;))
+  net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;directory&quot;)
+else
+  path.+(&quot;.&quot;).+(net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;directory&quot;))).getOrElse[String](Fileset.apply$default$1), net.ceedubs.ficus.Ficus.optionValueReader[String](net.ceedubs.ficus.Ficus.stringValueReader).read(config, if (path.==(&quot;.&quot;))
+  net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;lineEnding&quot;)
+else
+  path.+(&quot;.&quot;).+(net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;lineEnding&quot;))).getOrElse[String](Fileset.apply$default$2), net.ceedubs.ficus.Ficus.optionValueReader[Boolean](net.ceedubs.ficus.Ficus.booleanValueReader).read(config, if (path.==(&quot;.&quot;))
+  net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;followSymlinks&quot;)
+else
+  path.+(&quot;.&quot;).+(net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;followSymlinks&quot;))).getOrElse[Boolean](Fileset.apply$default$3), net.ceedubs.ficus.Ficus.optionValueReader[String](net.ceedubs.ficus.Ficus.stringValueReader).read(config, if (path.==(&quot;.&quot;))
+  net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;outputDirectory&quot;)
+else
+  path.+(&quot;.&quot;).+(net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;outputDirectory&quot;))).getOrElse[String](Fileset.apply$default$4), net.ceedubs.ficus.Ficus.optionValueReader[Boolean](net.ceedubs.ficus.Ficus.booleanValueReader).read(config, if (path.==(&quot;.&quot;))
+  net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;useDefaultExcludes&quot;)
+else
+  path.+(&quot;.&quot;).+(net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;useDefaultExcludes&quot;))).getOrElse[Boolean](Fileset.apply$default$5), net.ceedubs.ficus.Ficus.optionValueReader[Seq[String]](net.ceedubs.ficus.Ficus.traversableReader[Seq, String](net.ceedubs.ficus.Ficus.stringValueReader, scala.Predef.fallbackStringCanBuildFrom[String])).read(config, if (path.==(&quot;.&quot;))
+  net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;includes&quot;)
+else
+  path.+(&quot;.&quot;).+(net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;includes&quot;))).getOrElse[Seq[String]](Fileset.apply$default$6), net.ceedubs.ficus.Ficus.optionValueReader[Seq[String]](net.ceedubs.ficus.Ficus.traversableReader[Seq, String](net.ceedubs.ficus.Ficus.stringValueReader, scala.Predef.fallbackStringCanBuildFrom[String])).read(config, if (path.==(&quot;.&quot;))
+  net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;excludes&quot;)
+else
+  path.+(&quot;.&quot;).+(net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;excludes&quot;))).getOrElse[Seq[String]](Fileset.apply$default$7), net.ceedubs.ficus.Ficus.optionValueReader[String](net.ceedubs.ficus.Ficus.stringValueReader).read(config, if (path.==(&quot;.&quot;))
+  net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;fileMode&quot;)
+else
+  path.+(&quot;.&quot;).+(net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;fileMode&quot;))).getOrElse[String](Fileset.apply$default$8), net.ceedubs.ficus.Ficus.optionValueReader[String](net.ceedubs.ficus.Ficus.stringValueReader).read(config, if (path.==(&quot;.&quot;))
+  net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;directoryMode&quot;)
+else
+  path.+(&quot;.&quot;).+(net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;directoryMode&quot;))).getOrElse[String](Fileset.apply$default$9), net.ceedubs.ficus.Ficus.optionValueReader[org.apache.maven.unbound.Mapper](({
+  final class $anon extends AnyRef with net.ceedubs.ficus.readers.ValueReader[org.apache.maven.unbound.Mapper] {
+    def &lt;init&gt;(): &lt;$anon: net.ceedubs.ficus.readers.ValueReader[org.apache.maven.unbound.Mapper]&gt; = {
+      $anon.super.&lt;init&gt;();
+      ()
+    };
+    def read(config: com.typesafe.config.Config, path: String): org.apache.maven.unbound.Mapper = Mapper.apply(net.ceedubs.ficus.Ficus.optionValueReader[String](net.ceedubs.ficus.Ficus.stringValueReader).read(config, if (path.==(&quot;.&quot;))
+  net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;type&quot;)
+else
+  path.+(&quot;.&quot;).+(net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;type&quot;))).getOrElse[String](Mapper.apply$default$1), net.ceedubs.ficus.Ficus.optionValueReader[String](net.ceedubs.ficus.Ficus.stringValueReader).read(config, if (path.==(&quot;.&quot;))
+  net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;from&quot;)
+else
+  path.+(&quot;.&quot;).+(net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;from&quot;))).getOrElse[String](Mapper.apply$default$2), net.ceedubs.ficus.Ficus.optionValueReader[String](net.ceedubs.ficus.Ficus.stringValueReader).read(config, if (path.==(&quot;.&quot;))
+  net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;to&quot;)
+else
+  path.+(&quot;.&quot;).+(net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;to&quot;))).getOrElse[String](Mapper.apply$default$3), net.ceedubs.ficus.Ficus.optionValueReader[String](net.ceedubs.ficus.Ficus.stringValueReader).read(config, if (path.==(&quot;.&quot;))
+  net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;classname&quot;)
+else
+  path.+(&quot;.&quot;).+(net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;classname&quot;))).getOrElse[String](Mapper.apply$default$4))
+  };
+  new $anon()
+}: net.ceedubs.ficus.readers.ValueReader[org.apache.maven.unbound.Mapper])).read(config, if (path.==(&quot;.&quot;))
+  net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;mapper&quot;)
+else
+  path.+(&quot;.&quot;).+(net.ceedubs.ficus.readers.NameMapper.apply()(net.ceedubs.ficus.readers.NameMapper.apply$default$1()).map(&quot;mapper&quot;))).getOrElse[org.apache.maven.unbound.Mapper](Fileset.apply$default$10))
+  };
+  new $anon()
+}: net.ceedubs.ficus.readers.ValueReader[org.apache.maven.unbound.Fileset]))
+        </td>
+      </tr><tr>
+        <td>
+          185
+        </td>
+        <td>
+          1482
+        </td>
+        <td>
+          7364
+          -
+          7373
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;fileset&quot;
         </td>
       </tr>
     </table>

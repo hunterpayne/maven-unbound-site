@@ -132,7 +132,7 @@
         <span class="name">unbound</span>
       </span>
       
-      <p class="shortcomment cmt">This is the Maven Unbound package.</p><div class="fullcomment"><div class="comment cmt"><p>This is the Maven Unbound package.  It contains a scala implementation
+      <p class="shortcomment cmt">This is the Maven Unbound package.</p><div class="fullcomment"><div class="comment cmt"><p>This is the Maven Unbound package.  It contains a Scala implementation
 of the Maven POM object and serialization/deserialization functionality
 for translating POM files as XML to and from Json and Hocon formats.
 </p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="org.apache.maven">maven</a></dd></dl></div>
@@ -392,7 +392,7 @@ for translating POM files as XML to and from Json and Hocon formats.
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>This is the Maven Unbound package.  It contains a scala implementation
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>This is the Maven Unbound package.  It contains a Scala implementation
 of the Maven POM object and serialization/deserialization functionality
 for translating POM files as XML to and from Json and Hocon formats.
 </p></div><div class="toggleContainer block">
@@ -1336,7 +1336,7 @@ key1&lt;/name&gt;&lt;value&gt;property
 value1&lt;/value&gt;&lt;/property&gt;
 &lt;property&gt;&lt;name&gt;property key2&lt;/name&gt;
 &lt;value&gt;property value2&lt;/value&gt;&lt;/property&gt;...&lt;/key&gt;</li><li>Seq[Dependency] Special case where child elements all have the
-keys of a valid &quot;dependency&quot; object in the POM</li><li>Archiver Special case where a child key is &quot;archive&quot;</li><li>Resource Transformer Special case where a child key is
+keys of a valid &quot;dependency&quot; object in the POM</li><li>Archiver Special case where a child key is &quot;archive&quot;</li><li>Fileset Special case where a child key is &quot;fileset&quot;</li><li>Resource Transformer Special case where a child key is
 implementation</li><li>Map[String, Any] general/default case, returns whatever
 the value translates to inside a XML element labeled by the key</li></ul></div></div>
     </li><li name="org.apache.maven.unbound#configToJson" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
@@ -1378,7 +1378,7 @@ converts Elements into Maps keyed by the names of the child tags.  It
 also looks for special patterns of XML to do more specific type
 conversions. Supported type conversions:</p><ul><li>Boolean the strings true or false</li><li>Number both Integers and Doubles</li><li>String Text nodes of the XML document</li><li>Seq[Any] Elements whose child labels are the singlar form of elem's
 label</li><li>Properties Elements whose grand child labels are all name or value</li><li>Seq[Dependency] Special case where child elements all have the
-label &quot;dependency&quot;</li><li>Archiver Special case where elem's label is &quot;archive&quot;</li><li>Resource Transformer Special case where the elem's label is
+label &quot;dependency&quot;</li><li>Archiver Special case where elem's label is &quot;archive&quot;</li><li>Fileset Special case where elem's label is &quot;fileset&quot;</li><li>Resource Transformer Special case where the elem's label is
 transformers, the child's label is transformer and there is an attribute
 named implementation defined</li><li>Map[String, Any] general/default case
 </li></ul></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p>Configuring Plugins
