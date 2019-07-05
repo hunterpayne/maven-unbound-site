@@ -41,42 +41,49 @@
 </span>17 <span style=''>
 </span>18 <span style=''>package org.apache.maven.unbound
 </span>19 <span style=''>
-</span>20 <span style=''>import java.io.{ File, FileOutputStream, OutputStreamWriter, Writer }
-</span>21 <span style=''>
-</span>22 <span style=''>import scala.util.Try
-</span>23 <span style=''>import scala.xml.{ Elem, PrettyPrinter, XML }
-</span>24 <span style=''>
-</span>25 <span style=''>/**
-</span>26 <span style=''>  * A trait case classes can extend to get the ability to write themselves
-</span>27 <span style=''>  * as XML provided they have a field named xml of type Elem
-</span>28 <span style=''>  */
-</span>29 <span style=''>trait Writeable {
-</span>30 <span style=''>
-</span>31 <span style=''>  val xml: Elem
-</span>32 <span style=''>
-</span>33 <span style=''>  // max width: 80 chars
-</span>34 <span style=''>  // indent:     2 spaces
-</span>35 <span style=''>  /**
-</span>36 <span style=''>    * returns a string containing a pretty printed XML document represented
-</span>37 <span style=''>    * by the field xml
-</span>38 <span style=''>    */
-</span>39 <span style=''>  def toXmlString: String = {
-</span>40 <span style=''>    val printer = </span><span style='background: #AEF1AE'>new PrettyPrinter(80, 2)</span><span style=''>
-</span>41 <span style=''>    val sb = </span><span style='background: #AEF1AE'>new StringBuilder()</span><span style=''>
-</span>42 <span style=''>    </span><span style='background: #AEF1AE'>printer.format(xml, sb)</span><span style=''>
-</span>43 <span style=''>    </span><span style='background: #AEF1AE'>sb.toString()</span><span style=''>
-</span>44 <span style=''>  }
-</span>45 <span style=''>
-</span>46 <span style=''>  /** writes this object into the provided Writer */
-</span>47 <span style=''>  def writePOM(writer: Writer): Unit = </span><span style='background: #F0ADAD'>writer.write(toXmlString)</span><span style=''>
-</span>48 <span style=''>
-</span>49 <span style=''>  /** writes this object to the specified file using UTF-8 character encoding */
-</span>50 <span style=''>  def writePOM(filename: String): Unit = {
-</span>51 <span style=''>    val writer =
-</span>52 <span style=''>      </span><span style='background: #F0ADAD'>new OutputStreamWriter(new FileOutputStream(new File(filename)), &quot;UTF-8&quot;)</span><span style=''>
-</span>53 <span style=''>    try { </span><span style='background: #F0ADAD'>writePOM(writer)</span><span style=''> } finally { </span><span style='background: #F0ADAD'>writer.close()</span><span style=''> }
-</span>54 <span style=''>  }
-</span>55 <span style=''>}
+</span>20 <span style=''>import java.io.{
+</span>21 <span style=''>  File, FileOutputStream, OutputStream, OutputStreamWriter, Writer }
+</span>22 <span style=''>
+</span>23 <span style=''>import scala.util.Try
+</span>24 <span style=''>import scala.xml.{ Elem, PrettyPrinter, XML }
+</span>25 <span style=''>
+</span>26 <span style=''>/**
+</span>27 <span style=''>  * A trait case classes can extend to get the ability to write themselves
+</span>28 <span style=''>  * as XML provided they have a field named xml of type Elem
+</span>29 <span style=''>  */
+</span>30 <span style=''>trait Writeable {
+</span>31 <span style=''>
+</span>32 <span style=''>  val xml: Elem
+</span>33 <span style=''>
+</span>34 <span style=''>  // max width: 80 chars
+</span>35 <span style=''>  // indent:     2 spaces
+</span>36 <span style=''>  /**
+</span>37 <span style=''>    * returns a string containing a pretty printed XML document represented
+</span>38 <span style=''>    * by the field xml
+</span>39 <span style=''>    */
+</span>40 <span style=''>  def toXmlString: String = {
+</span>41 <span style=''>    val printer = </span><span style='background: #AEF1AE'>new PrettyPrinter(80, 2)</span><span style=''>
+</span>42 <span style=''>    val sb = </span><span style='background: #AEF1AE'>new StringBuilder()</span><span style=''>
+</span>43 <span style=''>    </span><span style='background: #AEF1AE'>printer.format(xml, sb)</span><span style=''>
+</span>44 <span style=''>    </span><span style='background: #AEF1AE'>sb.toString()</span><span style=''>
+</span>45 <span style=''>  }
+</span>46 <span style=''>
+</span>47 <span style=''>  /** writes this object into the provided Writer */
+</span>48 <span style=''>  def writePOM(writer: Writer): Unit = </span><span style='background: #AEF1AE'>writer.write(toXmlString)</span><span style=''>
+</span>49 <span style=''>
+</span>50 <span style=''>  /** writes this object to the specified file using UTF-8 character encoding */
+</span>51 <span style=''>  def writePOM(filename: String): Unit = {
+</span>52 <span style=''>    val writer =
+</span>53 <span style=''>      </span><span style='background: #F0ADAD'>new OutputStreamWriter(new FileOutputStream(new File(filename)), &quot;UTF-8&quot;)</span><span style=''>
+</span>54 <span style=''>    try { </span><span style='background: #F0ADAD'>writePOM(writer)</span><span style=''> } finally { </span><span style='background: #F0ADAD'>writer.close()</span><span style=''> }
+</span>55 <span style=''>  }
+</span>56 <span style=''>
+</span>57 <span style=''>  /** writes this object to the specified stream using the specified encoding */
+</span>58 <span style=''>  def writePOM(os: OutputStream, enc: String): Unit = {
+</span>59 <span style=''>    val writer = </span><span style='background: #AEF1AE'>new OutputStreamWriter(os, enc)</span><span style=''>
+</span>60 <span style=''>    try { </span><span style='background: #AEF1AE'>writePOM(writer)</span><span style=''> } finally { </span><span style='background: #AEF1AE'>writer.close()</span><span style=''> }
+</span>61 <span style=''>  }
+</span>62 <span style=''>}
 </span></pre>
           </div>
           <div class="tab-pane" id="statementlist">
@@ -90,15 +97,15 @@
         <th>Code</th>
       </tr><tr>
         <td>
-          40
+          41
         </td>
         <td>
-          3824
+          3933
         </td>
         <td>
-          1368
+          1384
           -
-          1392
+          1408
         </td>
         <td>
           Apply
@@ -111,15 +118,15 @@
         </td>
       </tr><tr>
         <td>
-          41
+          42
         </td>
         <td>
-          3825
+          3934
         </td>
         <td>
-          1406
+          1422
           -
-          1425
+          1441
         </td>
         <td>
           Apply
@@ -132,36 +139,15 @@
         </td>
       </tr><tr>
         <td>
-          42
+          43
         </td>
         <td>
-          3827
+          3935
         </td>
         <td>
-          1430
+          1461
           -
-          1453
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.xml.PrettyPrinter.format
-        </td>
-        <td style="background: #AEF1AE">
-          printer.format(Writeable.this.xml, sb)
-        </td>
-      </tr><tr>
-        <td>
-          42
-        </td>
-        <td>
-          3826
-        </td>
-        <td>
-          1445
-          -
-          1448
+          1464
         </td>
         <td>
           Select
@@ -177,12 +163,33 @@
           43
         </td>
         <td>
-          3828
+          3936
         </td>
         <td>
-          1458
+          1446
           -
-          1471
+          1469
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.xml.PrettyPrinter.format
+        </td>
+        <td style="background: #AEF1AE">
+          printer.format(Writeable.this.xml, sb)
+        </td>
+      </tr><tr>
+        <td>
+          44
+        </td>
+        <td>
+          3937
+        </td>
+        <td>
+          1474
+          -
+          1487
         </td>
         <td>
           Apply
@@ -195,36 +202,15 @@
         </td>
       </tr><tr>
         <td>
-          47
+          48
         </td>
         <td>
-          3830
+          3938
         </td>
         <td>
-          1569
+          1598
           -
-          1594
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.io.Writer.write
-        </td>
-        <td style="background: #F0ADAD">
-          writer.write(Writeable.this.toXmlString)
-        </td>
-      </tr><tr>
-        <td>
-          47
-        </td>
-        <td>
-          3829
-        </td>
-        <td>
-          1582
-          -
-          1593
+          1609
         </td>
         <td>
           Select
@@ -232,41 +218,41 @@
         <td>
           org.apache.maven.unbound.Writeable.toXmlString
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           Writeable.this.toXmlString
         </td>
       </tr><tr>
         <td>
-          52
+          48
         </td>
         <td>
-          3833
+          3939
         </td>
         <td>
-          1808
+          1585
           -
-          1815
+          1610
         </td>
         <td>
-          Literal
+          Apply
         </td>
         <td>
-          &lt;nosymbol&gt;
+          java.io.Writer.write
         </td>
-        <td style="background: #F0ADAD">
-          &quot;UTF-8&quot;
+        <td style="background: #AEF1AE">
+          writer.write(Writeable.this.toXmlString)
         </td>
       </tr><tr>
         <td>
-          52
+          53
         </td>
         <td>
-          3832
+          3941
         </td>
         <td>
-          1766
+          1782
           -
-          1806
+          1822
         </td>
         <td>
           Apply
@@ -279,15 +265,15 @@
         </td>
       </tr><tr>
         <td>
-          52
+          53
         </td>
         <td>
-          3831
+          3940
         </td>
         <td>
-          1787
+          1803
           -
-          1805
+          1821
         </td>
         <td>
           Apply
@@ -300,15 +286,15 @@
         </td>
       </tr><tr>
         <td>
-          52
+          53
         </td>
         <td>
-          3834
+          3943
         </td>
         <td>
-          1743
+          1759
           -
-          1816
+          1832
         </td>
         <td>
           Apply
@@ -324,33 +310,33 @@
           53
         </td>
         <td>
-          3836
+          3942
         </td>
         <td>
-          1827
+          1824
           -
-          1843
+          1831
         </td>
         <td>
-          Block
+          Literal
         </td>
         <td>
-          org.apache.maven.unbound.Writeable.writePOM
+          &lt;nosymbol&gt;
         </td>
         <td style="background: #F0ADAD">
-          Writeable.this.writePOM(writer)
+          &quot;UTF-8&quot;
         </td>
       </tr><tr>
         <td>
-          53
+          54
         </td>
         <td>
-          3835
+          3944
         </td>
         <td>
-          1827
-          -
           1843
+          -
+          1859
         </td>
         <td>
           Apply
@@ -363,15 +349,15 @@
         </td>
       </tr><tr>
         <td>
-          53
+          54
         </td>
         <td>
-          3838
+          3947
         </td>
         <td>
-          1856
+          1872
           -
-          1870
+          1886
         </td>
         <td>
           Block
@@ -384,15 +370,15 @@
         </td>
       </tr><tr>
         <td>
-          53
+          54
         </td>
         <td>
-          3837
+          3946
         </td>
         <td>
-          1856
+          1872
           -
-          1870
+          1886
         </td>
         <td>
           Apply
@@ -401,6 +387,132 @@
           java.io.OutputStreamWriter.close
         </td>
         <td style="background: #F0ADAD">
+          writer.close()
+        </td>
+      </tr><tr>
+        <td>
+          54
+        </td>
+        <td>
+          3945
+        </td>
+        <td>
+          1843
+          -
+          1859
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.unbound.Writeable.writePOM
+        </td>
+        <td style="background: #F0ADAD">
+          Writeable.this.writePOM(writer)
+        </td>
+      </tr><tr>
+        <td>
+          59
+        </td>
+        <td>
+          3948
+        </td>
+        <td>
+          2048
+          -
+          2079
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.OutputStreamWriter.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new java.io.OutputStreamWriter(os, enc)
+        </td>
+      </tr><tr>
+        <td>
+          60
+        </td>
+        <td>
+          3950
+        </td>
+        <td>
+          2090
+          -
+          2106
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.unbound.Writeable.writePOM
+        </td>
+        <td style="background: #AEF1AE">
+          Writeable.this.writePOM(writer)
+        </td>
+      </tr><tr>
+        <td>
+          60
+        </td>
+        <td>
+          3949
+        </td>
+        <td>
+          2090
+          -
+          2106
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Writeable.writePOM
+        </td>
+        <td style="background: #AEF1AE">
+          Writeable.this.writePOM(writer)
+        </td>
+      </tr><tr>
+        <td>
+          60
+        </td>
+        <td>
+          3952
+        </td>
+        <td>
+          2119
+          -
+          2133
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          java.io.OutputStreamWriter.close
+        </td>
+        <td style="background: #AEF1AE">
+          writer.close()
+        </td>
+      </tr><tr>
+        <td>
+          60
+        </td>
+        <td>
+          3951
+        </td>
+        <td>
+          2119
+          -
+          2133
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.OutputStreamWriter.close
+        </td>
+        <td style="background: #AEF1AE">
           writer.close()
         </td>
       </tr>

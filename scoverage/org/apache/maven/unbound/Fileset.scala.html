@@ -63,30 +63,30 @@
 </span>39 <span style=''>      case obj @ JObject(fields) =&gt;
 </span>40 <span style=''>        new Fileset(
 </span>41 <span style=''>          readStr(fields, DirectoryStr).getOrElse(null),
-</span>42 <span style=''>          readStr(fields, &quot;lineEnding&quot;).getOrElse(null),
-</span>43 <span style=''>          readBool(fields, &quot;followSymlinks&quot;).getOrElse(false),
-</span>44 <span style=''>          readStr(fields, &quot;outputDirectory&quot;).getOrElse(null),
-</span>45 <span style=''>          readBool(fields, &quot;useDefaultExcludes&quot;).getOrElse(true),
-</span>46 <span style=''>          readStringSequence(fields, &quot;includes&quot;),
-</span>47 <span style=''>          readStringSequence(fields, &quot;excludes&quot;),
-</span>48 <span style=''>          readStr(fields, &quot;modeFile&quot;).getOrElse(&quot;0644&quot;),
-</span>49 <span style=''>          readStr(fields, &quot;modeDirectory&quot;).getOrElse(&quot;0755&quot;),
-</span>50 <span style=''>          readObject[Mapper](obj, &quot;mapper&quot;)
+</span>42 <span style=''>          readStr(fields, LineEnding).getOrElse(null),
+</span>43 <span style=''>          readBool(fields, FollowSymlinks).getOrElse(false),
+</span>44 <span style=''>          readStr(fields, OutputDirectory).getOrElse(null),
+</span>45 <span style=''>          readBool(fields, UseDefaultExcludes).getOrElse(true),
+</span>46 <span style=''>          readStringSequence(fields, Includes),
+</span>47 <span style=''>          readStringSequence(fields, Excludes),
+</span>48 <span style=''>          readStr(fields, FileMode).getOrElse(DefaultFileMode),
+</span>49 <span style=''>          readStr(fields, DirectoryMode).getOrElse(DefaultDirectoryMode),
+</span>50 <span style=''>          readObject[Mapper](obj, Mapper)
 </span>51 <span style=''>        )
 </span>52 <span style=''>    },
 </span>53 <span style=''>    {
 </span>54 <span style=''>      case f: Fileset =&gt;
 </span>55 <span style=''>        JObject(Seq[Option[JField]](
 </span>56 <span style=''>          writeStr(DirectoryStr, f.directory),
-</span>57 <span style=''>          writeStr(&quot;lineEnding&quot;, f.lineEnding),
-</span>58 <span style=''>          writeBool(&quot;followSymlinks&quot;, f.followSymlinks, false),
-</span>59 <span style=''>          writeStr(&quot;outputDirectory&quot;, f.outputDirectory),
-</span>60 <span style=''>          writeBool(&quot;useDefaultExcludes&quot;, f.useDefaultExcludes, true),
+</span>57 <span style=''>          writeStr(LineEnding, f.lineEnding),
+</span>58 <span style=''>          writeBool(FollowSymlinks, f.followSymlinks, false),
+</span>59 <span style=''>          writeStr(OutputDirectory, f.outputDirectory),
+</span>60 <span style=''>          writeBool(UseDefaultExcludes, f.useDefaultExcludes, true),
 </span>61 <span style=''>          writeStringSequence(Includes, f.includes),
 </span>62 <span style=''>          writeStringSequence(Excludes, f.excludes),
-</span>63 <span style=''>          writeStr(&quot;fileMode&quot;, f.fileMode),
-</span>64 <span style=''>          writeStr(&quot;directoryMode&quot;, f.directoryMode),
-</span>65 <span style=''>          writeObject(&quot;mapper&quot;, f.mapper)
+</span>63 <span style=''>          writeStr(FileMode, f.fileMode),
+</span>64 <span style=''>          writeStr(DirectoryMode, f.directoryMode),
+</span>65 <span style=''>          writeObject(Mapper, f.mapper)
 </span>66 <span style=''>        ).flatten.toList)
 </span>67 <span style=''>    }
 </span>68 <span style=''>  ))
@@ -100,66 +100,68 @@
 </span>76 <span style=''>  followSymlinks: Boolean = false,
 </span>77 <span style=''>  outputDirectory: String = null, useDefaultExcludes: Boolean = true,
 </span>78 <span style=''>  includes: Seq[String] = Seq[String](), excludes: Seq[String] = Seq[String](),
-</span>79 <span style=''>  fileMode: String = &quot;0644&quot;, directoryMode: String = &quot;0755&quot;,
-</span>80 <span style=''>  mapper: Mapper = null
-</span>81 <span style=''>) {
-</span>82 <span style=''>
-</span>83 <span style=''>  def this(elem: Elem) = </span><span style='background: #AEF1AE'>this(
-</span>84 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.DirectoryStr).text),
-</span>85 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ &quot;lineEnding&quot;).text),
-</span>86 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefaultBool((elem \ &quot;followSymlinks&quot;).text, false),
-</span>87 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ &quot;outputDirectory&quot;).text),
-</span>88 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefaultBool((elem \ &quot;useDefaultExcludes&quot;).text, true),
-</span>89 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Includes).map { _.text },
-</span>90 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Excludes).map { _.text },
-</span>91 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault((elem \ &quot;fileMode&quot;).text, &quot;0644&quot;),
-</span>92 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault((elem \ &quot;directoryMode&quot;).text, &quot;0755&quot;),
-</span>93 <span style=''></span><span style='background: #AEF1AE'>    (elem \ &quot;mapper&quot;).map { case e: Elem =&gt;
-</span>94 <span style=''></span><span style='background: #AEF1AE'>      new Mapper(e) }.headOption.getOrElse(null)
-</span>95 <span style=''></span><span style='background: #AEF1AE'>  )</span><span style=''>
-</span>96 <span style=''>
-</span>97 <span style=''>  lazy val xml =
-</span>98 <span style=''>    &lt;fileset&gt;
-</span>99 <span style=''>      { if (directory != null) &lt;directory&gt;{directory}&lt;/directory&gt; }
-</span>100 <span style=''>      { if (lineEnding != null) &lt;lineEnding&gt;{lineEnding}&lt;/lineEnding&gt; }
-</span>101 <span style=''>      { if (followSymlinks) &lt;followSymlinks&gt;true&lt;/followSymlinks&gt; }
-</span>102 <span style=''>      { if (outputDirectory != null)
-</span>103 <span style=''>        &lt;outputDirectory&gt;{outputDirectory}&lt;/outputDirectory&gt; }
-</span>104 <span style=''>      { if (!useDefaultExcludes)
-</span>105 <span style=''>        &lt;useDefaultExcludes&gt;false&lt;/useDefaultExcludes&gt; }
-</span>106 <span style=''>      { if (!includes.isEmpty) &lt;includes&gt;
-</span>107 <span style=''>        { includes.map { Include(_).xml } }
-</span>108 <span style=''>        &lt;/includes&gt; }
-</span>109 <span style=''>      { if (!excludes.isEmpty) &lt;excludes&gt;
-</span>110 <span style=''>        { excludes.map { Exclude(_).xml } }
-</span>111 <span style=''>        &lt;/excludes&gt; }
-</span>112 <span style=''>      { if (fileMode != null &amp;&amp; fileMode != &quot;0644&quot;)
-</span>113 <span style=''>        &lt;fileMode&gt;{fileMode}&lt;/fileMode&gt; }
-</span>114 <span style=''>      { if (directoryMode != null &amp;&amp; directoryMode != &quot;0755&quot;)
-</span>115 <span style=''>        &lt;directoryMode&gt;{directoryMode}&lt;/directoryMode&gt; }
-</span>116 <span style=''>      { if (mapper != null) mapper.xml }
-</span>117 <span style=''>    &lt;/fileset&gt;
-</span>118 <span style=''>}
-</span>119 <span style=''>
-</span>120 <span style=''>case class Mapper(
-</span>121 <span style=''>  `type`: String = &quot;identity&quot;, from: String = null,
-</span>122 <span style=''>  to: String = null, classname: String = null) {
-</span>123 <span style=''>
-</span>124 <span style=''>  def this(elem: Elem) = </span><span style='background: #AEF1AE'>this(
-</span>125 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault((elem \ SL.TypeStr).text, &quot;identity&quot;),
-</span>126 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ &quot;from&quot;).text),
-</span>127 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ &quot;to&quot;).text),
-</span>128 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ &quot;classname&quot;).text)
-</span>129 <span style=''></span><span style='background: #AEF1AE'>  )</span><span style=''>
-</span>130 <span style=''>
-</span>131 <span style=''>  lazy val xml =
-</span>132 <span style=''>    &lt;mapper&gt;
-</span>133 <span style=''>      { if (`type` != null) &lt;type&gt;{`type`}&lt;/type&gt; }
-</span>134 <span style=''>      { if (from != null) &lt;from&gt;{from}&lt;/from&gt; }
-</span>135 <span style=''>      { if (to != null) &lt;to&gt;{to}&lt;/to&gt; }
-</span>136 <span style=''>      { if (classname != null) &lt;classname&gt;{classname}&lt;/classname&gt; }
-</span>137 <span style=''>    &lt;/mapper&gt;
-</span>138 <span style=''>}
+</span>79 <span style=''>  fileMode: String = SL.DefaultFileMode,
+</span>80 <span style=''>  directoryMode: String = SL.DefaultDirectoryMode,
+</span>81 <span style=''>  mapper: Mapper = null
+</span>82 <span style=''>) {
+</span>83 <span style=''>
+</span>84 <span style=''>  def this(elem: Elem) = </span><span style='background: #AEF1AE'>this(
+</span>85 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.DirectoryStr).text),
+</span>86 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.LineEnding).text),
+</span>87 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefaultBool((elem \ SL.FollowSymlinks).text, false),
+</span>88 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.OutputDirectory).text),
+</span>89 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefaultBool((elem \ SL.UseDefaultExcludes).text, true),
+</span>90 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Includes).map { _.text },
+</span>91 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Excludes).map { _.text },
+</span>92 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault((elem \ SL.FileMode).text, SL.DefaultFileMode),
+</span>93 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault((elem \ SL.DirectoryMode).text, SL.DefaultDirectoryMode),
+</span>94 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Mapper).map { case e: Elem =&gt;
+</span>95 <span style=''></span><span style='background: #AEF1AE'>      new Mapper(e) }.headOption.getOrElse(null)
+</span>96 <span style=''></span><span style='background: #AEF1AE'>  )</span><span style=''>
+</span>97 <span style=''>
+</span>98 <span style=''>  lazy val xml =
+</span>99 <span style=''>    &lt;fileset&gt;
+</span>100 <span style=''>      { if (directory != null) &lt;directory&gt;{directory}&lt;/directory&gt; }
+</span>101 <span style=''>      { if (lineEnding != null) &lt;lineEnding&gt;{lineEnding}&lt;/lineEnding&gt; }
+</span>102 <span style=''>      { if (followSymlinks) &lt;followSymlinks&gt;true&lt;/followSymlinks&gt; }
+</span>103 <span style=''>      { if (outputDirectory != null)
+</span>104 <span style=''>        &lt;outputDirectory&gt;{outputDirectory}&lt;/outputDirectory&gt; }
+</span>105 <span style=''>      { if (!useDefaultExcludes)
+</span>106 <span style=''>        &lt;useDefaultExcludes&gt;false&lt;/useDefaultExcludes&gt; }
+</span>107 <span style=''>      { if (!includes.isEmpty) &lt;includes&gt;
+</span>108 <span style=''>        { includes.map { Include(_).xml } }
+</span>109 <span style=''>        &lt;/includes&gt; }
+</span>110 <span style=''>      { if (!excludes.isEmpty) &lt;excludes&gt;
+</span>111 <span style=''>        { excludes.map { Exclude(_).xml } }
+</span>112 <span style=''>        &lt;/excludes&gt; }
+</span>113 <span style=''>      { if (fileMode != null &amp;&amp; fileMode != SL.DefaultFileMode.toString)
+</span>114 <span style=''>        &lt;fileMode&gt;{fileMode}&lt;/fileMode&gt; }
+</span>115 <span style=''>      { if (directoryMode != null &amp;&amp;
+</span>116 <span style=''>        directoryMode != SL.DefaultDirectoryMode.toString)
+</span>117 <span style=''>        &lt;directoryMode&gt;{directoryMode}&lt;/directoryMode&gt; }
+</span>118 <span style=''>      { if (mapper != null) mapper.xml }
+</span>119 <span style=''>    &lt;/fileset&gt;
+</span>120 <span style=''>}
+</span>121 <span style=''>
+</span>122 <span style=''>case class Mapper(
+</span>123 <span style=''>  `type`: String = SL.Identity, from: String = null,
+</span>124 <span style=''>  to: String = null, classname: String = null) {
+</span>125 <span style=''>
+</span>126 <span style=''>  def this(elem: Elem) = </span><span style='background: #AEF1AE'>this(
+</span>127 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault((elem \ SL.TypeStr).text, SL.Identity),
+</span>128 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.From).text),
+</span>129 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.To).text),
+</span>130 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.Classname).text)
+</span>131 <span style=''></span><span style='background: #AEF1AE'>  )</span><span style=''>
+</span>132 <span style=''>
+</span>133 <span style=''>  lazy val xml =
+</span>134 <span style=''>    &lt;mapper&gt;
+</span>135 <span style=''>      { if (`type` != null) &lt;type&gt;{`type`}&lt;/type&gt; }
+</span>136 <span style=''>      { if (from != null) &lt;from&gt;{from}&lt;/from&gt; }
+</span>137 <span style=''>      { if (to != null) &lt;to&gt;{to}&lt;/to&gt; }
+</span>138 <span style=''>      { if (classname != null) &lt;classname&gt;{classname}&lt;/classname&gt; }
+</span>139 <span style=''>    &lt;/mapper&gt;
+</span>140 <span style=''>}
 </span></pre>
           </div>
           <div class="tab-pane" id="statementlist">
@@ -176,7 +178,7 @@
           29
         </td>
         <td>
-          952
+          945
         </td>
         <td>
           1066
@@ -197,7 +199,7 @@
           32
         </td>
         <td>
-          953
+          946
         </td>
         <td>
           1152
@@ -218,7 +220,7 @@
           35
         </td>
         <td>
-          954
+          947
         </td>
         <td>
           1245
@@ -236,38 +238,15 @@
         </td>
       </tr><tr>
         <td>
-          83
+          84
         </td>
         <td>
-          992
+          994
         </td>
         <td>
-          3044
+          3066
           -
-          3613
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.Fileset.&lt;init&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          Fileset.this.&lt;init&gt;(unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryStr)).text), unbound.this.`package`.emptyToNull(elem.\(&quot;lineEnding&quot;).text), unbound.this.`package`.emptyToDefaultBool(elem.\(&quot;followSymlinks&quot;).text, false), unbound.this.`package`.emptyToNull(elem.\(&quot;outputDirectory&quot;).text), unbound.this.`package`.emptyToDefaultBool(elem.\(&quot;useDefaultExcludes&quot;).text, true), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Includes)).map[String, Seq[String]](((x$1: scala.xml.Node) =&gt; x$1.text))(immutable.this.Seq.canBuildFrom[String]), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Excludes)).map[String, Seq[String]](((x$2: scala.xml.Node) =&gt; x$2.text))(immutable.this.Seq.canBuildFrom[String]), unbound.this.`package`.emptyToDefault(elem.\(&quot;fileMode&quot;).text, &quot;0644&quot;), unbound.this.`package`.emptyToDefault(elem.\(&quot;directoryMode&quot;).text, &quot;0755&quot;), elem.\(&quot;mapper&quot;).map[org.apache.maven.unbound.Mapper, scala.collection.immutable.Seq[org.apache.maven.unbound.Mapper]](((x0$1: scala.xml.Node) =&gt; x0$1 match {
-  case (e @ (_: scala.xml.Elem)) =&gt; new Mapper(e)
-}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Mapper]).headOption.getOrElse[org.apache.maven.unbound.Mapper](null))
-        </td>
-      </tr><tr>
-        <td>
-          83
-        </td>
-        <td>
-          993
-        </td>
-        <td>
-          3044
-          -
-          3044
+          3066
         </td>
         <td>
           Literal
@@ -283,75 +262,35 @@
           84
         </td>
         <td>
-          956
+          993
         </td>
         <td>
-          3074
+          3066
           -
-          3089
-        </td>
-        <td>
-          ApplyImplicitView
-        </td>
-        <td>
-          org.apache.maven.unbound.Labels.strToString
-        </td>
-        <td style="background: #AEF1AE">
-          `package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryStr)
-        </td>
-      </tr><tr>
-        <td>
-          84
-        </td>
-        <td>
-          955
-        </td>
-        <td>
-          3074
-          -
-          3089
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          org.apache.maven.unbound.Labels.DirectoryStr
-        </td>
-        <td style="background: #AEF1AE">
-          unbound.this.`package`.SL.DirectoryStr
-        </td>
-      </tr><tr>
-        <td>
-          84
-        </td>
-        <td>
-          958
-        </td>
-        <td>
-          3054
-          -
-          3096
+          3671
         </td>
         <td>
           Apply
         </td>
         <td>
-          org.apache.maven.unbound.emptyToNull
+          org.apache.maven.unbound.Fileset.&lt;init&gt;
         </td>
         <td style="background: #AEF1AE">
-          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryStr)).text)
+          Fileset.this.&lt;init&gt;(unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryStr)).text), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.LineEnding)).text), unbound.this.`package`.emptyToDefaultBool(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.FollowSymlinks)).text, false), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.OutputDirectory)).text), unbound.this.`package`.emptyToDefaultBool(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.UseDefaultExcludes)).text, true), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Includes)).map[String, Seq[String]](((x$1: scala.xml.Node) =&gt; x$1.text))(immutable.this.Seq.canBuildFrom[String]), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Excludes)).map[String, Seq[String]](((x$2: scala.xml.Node) =&gt; x$2.text))(immutable.this.Seq.canBuildFrom[String]), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.FileMode)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.DefaultFileMode)), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryMode)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.DefaultDirectoryMode)), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Mapper)).map[org.apache.maven.unbound.Mapper, scala.collection.immutable.Seq[org.apache.maven.unbound.Mapper]](((x0$1: scala.xml.Node) =&gt; x0$1 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; new Mapper(e)
+}))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Mapper]).headOption.getOrElse[org.apache.maven.unbound.Mapper](null))
         </td>
       </tr><tr>
         <td>
-          84
+          85
         </td>
         <td>
-          957
+          950
         </td>
         <td>
-          3067
+          3089
           -
-          3095
+          3117
         </td>
         <td>
           Select
@@ -367,33 +306,54 @@
           85
         </td>
         <td>
-          959
+          949
         </td>
         <td>
-          3122
+          3096
           -
-          3134
+          3111
         </td>
         <td>
-          Literal
+          ApplyImplicitView
         </td>
         <td>
-          &lt;nosymbol&gt;
+          org.apache.maven.unbound.Labels.strToString
         </td>
         <td style="background: #AEF1AE">
-          &quot;lineEnding&quot;
+          `package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryStr)
         </td>
       </tr><tr>
         <td>
           85
         </td>
         <td>
-          961
+          948
         </td>
         <td>
-          3102
+          3096
           -
-          3141
+          3111
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.DirectoryStr
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.DirectoryStr
+        </td>
+      </tr><tr>
+        <td>
+          85
+        </td>
+        <td>
+          951
+        </td>
+        <td>
+          3076
+          -
+          3118
         </td>
         <td>
           Apply
@@ -402,19 +362,82 @@
           org.apache.maven.unbound.emptyToNull
         </td>
         <td style="background: #AEF1AE">
-          unbound.this.`package`.emptyToNull(elem.\(&quot;lineEnding&quot;).text)
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryStr)).text)
         </td>
       </tr><tr>
         <td>
-          85
+          86
         </td>
         <td>
-          960
+          953
         </td>
         <td>
-          3115
+          3144
           -
-          3140
+          3157
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.LineEnding)
+        </td>
+      </tr><tr>
+        <td>
+          86
+        </td>
+        <td>
+          955
+        </td>
+        <td>
+          3124
+          -
+          3164
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.LineEnding)).text)
+        </td>
+      </tr><tr>
+        <td>
+          86
+        </td>
+        <td>
+          952
+        </td>
+        <td>
+          3144
+          -
+          3157
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.LineEnding
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.LineEnding
+        </td>
+      </tr><tr>
+        <td>
+          86
+        </td>
+        <td>
+          954
+        </td>
+        <td>
+          3137
+          -
+          3163
         </td>
         <td>
           Select
@@ -423,61 +446,19 @@
           scala.xml.NodeSeq.text
         </td>
         <td style="background: #AEF1AE">
-          elem.\(&quot;lineEnding&quot;).text
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.LineEnding)).text
         </td>
       </tr><tr>
         <td>
-          86
+          87
         </td>
         <td>
-          962
+          959
         </td>
         <td>
-          3174
+          3222
           -
-          3190
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          &quot;followSymlinks&quot;
-        </td>
-      </tr><tr>
-        <td>
-          86
-        </td>
-        <td>
-          965
-        </td>
-        <td>
-          3147
-          -
-          3204
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.emptyToDefaultBool
-        </td>
-        <td style="background: #AEF1AE">
-          unbound.this.`package`.emptyToDefaultBool(elem.\(&quot;followSymlinks&quot;).text, false)
-        </td>
-      </tr><tr>
-        <td>
-          86
-        </td>
-        <td>
-          964
-        </td>
-        <td>
-          3198
-          -
-          3203
+          3227
         </td>
         <td>
           Literal
@@ -490,15 +471,36 @@
         </td>
       </tr><tr>
         <td>
-          86
+          87
         </td>
         <td>
-          963
+          956
         </td>
         <td>
-          3167
+          3197
           -
-          3196
+          3214
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.FollowSymlinks
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.FollowSymlinks
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          958
+        </td>
+        <td>
+          3190
+          -
+          3220
         </td>
         <td>
           Select
@@ -507,19 +509,82 @@
           scala.xml.NodeSeq.text
         </td>
         <td style="background: #AEF1AE">
-          elem.\(&quot;followSymlinks&quot;).text
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.FollowSymlinks)).text
         </td>
       </tr><tr>
         <td>
           87
         </td>
         <td>
-          968
+          960
         </td>
         <td>
-          3210
+          3170
           -
+          3228
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToDefaultBool
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefaultBool(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.FollowSymlinks)).text, false)
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          957
+        </td>
+        <td>
+          3197
+          -
+          3214
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.FollowSymlinks)
+        </td>
+      </tr><tr>
+        <td>
+          88
+        </td>
+        <td>
+          962
+        </td>
+        <td>
           3254
+          -
+          3272
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.OutputDirectory)
+        </td>
+      </tr><tr>
+        <td>
+          88
+        </td>
+        <td>
+          964
+        </td>
+        <td>
+          3234
+          -
+          3279
         </td>
         <td>
           Apply
@@ -528,19 +593,40 @@
           org.apache.maven.unbound.emptyToNull
         </td>
         <td style="background: #AEF1AE">
-          unbound.this.`package`.emptyToNull(elem.\(&quot;outputDirectory&quot;).text)
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.OutputDirectory)).text)
         </td>
       </tr><tr>
         <td>
-          87
+          88
         </td>
         <td>
-          967
+          961
         </td>
         <td>
-          3223
+          3254
           -
-          3253
+          3272
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.OutputDirectory
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.OutputDirectory
+        </td>
+      </tr><tr>
+        <td>
+          88
+        </td>
+        <td>
+          963
+        </td>
+        <td>
+          3247
+          -
+          3278
         </td>
         <td>
           Select
@@ -549,40 +635,19 @@
           scala.xml.NodeSeq.text
         </td>
         <td style="background: #AEF1AE">
-          elem.\(&quot;outputDirectory&quot;).text
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.OutputDirectory)).text
         </td>
       </tr><tr>
         <td>
-          87
+          89
         </td>
         <td>
-          966
+          968
         </td>
         <td>
-          3230
+          3341
           -
-          3247
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          &quot;outputDirectory&quot;
-        </td>
-      </tr><tr>
-        <td>
-          88
-        </td>
-        <td>
-          971
-        </td>
-        <td>
-          3315
-          -
-          3319
+          3345
         </td>
         <td>
           Literal
@@ -595,15 +660,36 @@
         </td>
       </tr><tr>
         <td>
-          88
+          89
         </td>
         <td>
-          970
+          965
         </td>
         <td>
-          3280
+          3312
           -
-          3313
+          3333
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.UseDefaultExcludes
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.UseDefaultExcludes
+        </td>
+      </tr><tr>
+        <td>
+          89
+        </td>
+        <td>
+          967
+        </td>
+        <td>
+          3305
+          -
+          3339
         </td>
         <td>
           Select
@@ -612,40 +698,19 @@
           scala.xml.NodeSeq.text
         </td>
         <td style="background: #AEF1AE">
-          elem.\(&quot;useDefaultExcludes&quot;).text
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.UseDefaultExcludes)).text
         </td>
       </tr><tr>
         <td>
-          88
+          89
         </td>
         <td>
           969
         </td>
         <td>
-          3287
+          3285
           -
-          3307
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          &quot;useDefaultExcludes&quot;
-        </td>
-      </tr><tr>
-        <td>
-          88
-        </td>
-        <td>
-          972
-        </td>
-        <td>
-          3260
-          -
-          3320
+          3346
         </td>
         <td>
           Apply
@@ -654,40 +719,40 @@
           org.apache.maven.unbound.emptyToDefaultBool
         </td>
         <td style="background: #AEF1AE">
-          unbound.this.`package`.emptyToDefaultBool(elem.\(&quot;useDefaultExcludes&quot;).text, true)
+          unbound.this.`package`.emptyToDefaultBool(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.UseDefaultExcludes)).text, true)
         </td>
       </tr><tr>
         <td>
           89
         </td>
         <td>
-          977
+          966
         </td>
         <td>
-          3327
+          3312
           -
-          3361
+          3333
         </td>
         <td>
-          ApplyToImplicitArgs
+          ApplyImplicitView
         </td>
         <td>
-          scala.collection.TraversableLike.map
+          org.apache.maven.unbound.Labels.strToString
         </td>
         <td style="background: #AEF1AE">
-          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Includes)).map[String, Seq[String]](((x$1: scala.xml.Node) =&gt; x$1.text))(immutable.this.Seq.canBuildFrom[String])
+          `package`.this.SL.strToString(unbound.this.`package`.SL.UseDefaultExcludes)
         </td>
       </tr><tr>
         <td>
-          89
+          90
         </td>
         <td>
-          974
+          971
         </td>
         <td>
-          3334
+          3360
           -
-          3345
+          3371
         </td>
         <td>
           ApplyImplicitView
@@ -700,15 +765,57 @@
         </td>
       </tr><tr>
         <td>
-          89
+          90
+        </td>
+        <td>
+          974
+        </td>
+        <td>
+          3353
+          -
+          3387
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Includes)).map[String, Seq[String]](((x$1: scala.xml.Node) =&gt; x$1.text))(immutable.this.Seq.canBuildFrom[String])
+        </td>
+      </tr><tr>
+        <td>
+          90
         </td>
         <td>
           973
         </td>
         <td>
-          3334
+          3377
           -
-          3345
+          3377
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.Seq.canBuildFrom[String]
+        </td>
+      </tr><tr>
+        <td>
+          90
+        </td>
+        <td>
+          970
+        </td>
+        <td>
+          3360
+          -
+          3371
         </td>
         <td>
           Select
@@ -721,36 +828,15 @@
         </td>
       </tr><tr>
         <td>
-          89
+          90
         </td>
         <td>
-          976
+          972
         </td>
         <td>
-          3351
+          3379
           -
-          3351
-        </td>
-        <td>
-          TypeApply
-        </td>
-        <td>
-          scala.collection.immutable.Seq.canBuildFrom
-        </td>
-        <td style="background: #AEF1AE">
-          immutable.this.Seq.canBuildFrom[String]
-        </td>
-      </tr><tr>
-        <td>
-          89
-        </td>
-        <td>
-          975
-        </td>
-        <td>
-          3353
-          -
-          3359
+          3385
         </td>
         <td>
           Select
@@ -763,15 +849,15 @@
         </td>
       </tr><tr>
         <td>
-          90
+          91
         </td>
         <td>
-          980
+          977
         </td>
         <td>
-          3394
+          3420
           -
-          3400
+          3426
         </td>
         <td>
           Select
@@ -784,36 +870,15 @@
         </td>
       </tr><tr>
         <td>
-          90
+          91
         </td>
         <td>
-          982
+          976
         </td>
         <td>
-          3368
+          3401
           -
-          3402
-        </td>
-        <td>
-          ApplyToImplicitArgs
-        </td>
-        <td>
-          scala.collection.TraversableLike.map
-        </td>
-        <td style="background: #AEF1AE">
-          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Excludes)).map[String, Seq[String]](((x$2: scala.xml.Node) =&gt; x$2.text))(immutable.this.Seq.canBuildFrom[String])
-        </td>
-      </tr><tr>
-        <td>
-          90
-        </td>
-        <td>
-          979
-        </td>
-        <td>
-          3375
-          -
-          3386
+          3412
         </td>
         <td>
           ApplyImplicitView
@@ -826,36 +891,36 @@
         </td>
       </tr><tr>
         <td>
-          90
+          91
+        </td>
+        <td>
+          979
+        </td>
+        <td>
+          3394
+          -
+          3428
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.map
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Excludes)).map[String, Seq[String]](((x$2: scala.xml.Node) =&gt; x$2.text))(immutable.this.Seq.canBuildFrom[String])
+        </td>
+      </tr><tr>
+        <td>
+          91
         </td>
         <td>
           978
         </td>
         <td>
-          3375
+          3418
           -
-          3386
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          org.apache.maven.unbound.Labels.Excludes
-        </td>
-        <td style="background: #AEF1AE">
-          unbound.this.`package`.SL.Excludes
-        </td>
-      </tr><tr>
-        <td>
-          90
-        </td>
-        <td>
-          981
-        </td>
-        <td>
-          3392
-          -
-          3392
+          3418
         </td>
         <td>
           TypeApply
@@ -871,159 +936,96 @@
           91
         </td>
         <td>
+          975
+        </td>
+        <td>
+          3401
+          -
+          3412
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Excludes
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Excludes
+        </td>
+      </tr><tr>
+        <td>
+          92
+        </td>
+        <td>
           983
         </td>
         <td>
-          3431
+          3476
           -
-          3441
+          3494
         </td>
         <td>
-          Literal
+          Select
         </td>
         <td>
-          &lt;nosymbol&gt;
+          org.apache.maven.unbound.Labels.DefaultFileMode
         </td>
         <td style="background: #AEF1AE">
-          &quot;fileMode&quot;
+          unbound.this.`package`.SL.DefaultFileMode
         </td>
       </tr><tr>
         <td>
-          91
+          92
         </td>
         <td>
-          986
+          980
         </td>
         <td>
-          3408
+          3457
           -
-          3456
+          3468
         </td>
         <td>
-          Apply
+          Select
         </td>
         <td>
-          org.apache.maven.unbound.emptyToDefault
+          org.apache.maven.unbound.Labels.FileMode
         </td>
         <td style="background: #AEF1AE">
-          unbound.this.`package`.emptyToDefault(elem.\(&quot;fileMode&quot;).text, &quot;0644&quot;)
+          unbound.this.`package`.SL.FileMode
         </td>
       </tr><tr>
         <td>
-          91
+          92
+        </td>
+        <td>
+          982
+        </td>
+        <td>
+          3450
+          -
+          3474
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.FileMode)).text
+        </td>
+      </tr><tr>
+        <td>
+          92
         </td>
         <td>
           985
         </td>
         <td>
-          3449
+          3434
           -
-          3455
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          &quot;0644&quot;
-        </td>
-      </tr><tr>
-        <td>
-          91
-        </td>
-        <td>
-          984
-        </td>
-        <td>
-          3424
-          -
-          3447
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.xml.NodeSeq.text
-        </td>
-        <td style="background: #AEF1AE">
-          elem.\(&quot;fileMode&quot;).text
-        </td>
-      </tr><tr>
-        <td>
-          92
-        </td>
-        <td>
-          989
-        </td>
-        <td>
-          3508
-          -
-          3514
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          &quot;0755&quot;
-        </td>
-      </tr><tr>
-        <td>
-          92
-        </td>
-        <td>
-          988
-        </td>
-        <td>
-          3478
-          -
-          3506
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.xml.NodeSeq.text
-        </td>
-        <td style="background: #AEF1AE">
-          elem.\(&quot;directoryMode&quot;).text
-        </td>
-      </tr><tr>
-        <td>
-          92
-        </td>
-        <td>
-          987
-        </td>
-        <td>
-          3485
-          -
-          3500
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          &quot;directoryMode&quot;
-        </td>
-      </tr><tr>
-        <td>
-          92
-        </td>
-        <td>
-          990
-        </td>
-        <td>
-          3462
-          -
-          3515
+          3495
         </td>
         <td>
           Apply
@@ -1032,19 +1034,187 @@
           org.apache.maven.unbound.emptyToDefault
         </td>
         <td style="background: #AEF1AE">
-          unbound.this.`package`.emptyToDefault(elem.\(&quot;directoryMode&quot;).text, &quot;0755&quot;)
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.FileMode)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.DefaultFileMode))
         </td>
       </tr><tr>
         <td>
-          94
+          92
+        </td>
+        <td>
+          981
+        </td>
+        <td>
+          3457
+          -
+          3468
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.FileMode)
+        </td>
+      </tr><tr>
+        <td>
+          92
+        </td>
+        <td>
+          984
+        </td>
+        <td>
+          3476
+          -
+          3494
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.DefaultFileMode)
+        </td>
+      </tr><tr>
+        <td>
+          93
+        </td>
+        <td>
+          986
+        </td>
+        <td>
+          3524
+          -
+          3540
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.DirectoryMode
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.DirectoryMode
+        </td>
+      </tr><tr>
+        <td>
+          93
+        </td>
+        <td>
+          989
+        </td>
+        <td>
+          3548
+          -
+          3571
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.DefaultDirectoryMode
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.DefaultDirectoryMode
+        </td>
+      </tr><tr>
+        <td>
+          93
         </td>
         <td>
           991
         </td>
         <td>
-          3522
+          3501
           -
-          3609
+          3572
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToDefault
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryMode)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.DefaultDirectoryMode))
+        </td>
+      </tr><tr>
+        <td>
+          93
+        </td>
+        <td>
+          988
+        </td>
+        <td>
+          3517
+          -
+          3546
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryMode)).text
+        </td>
+      </tr><tr>
+        <td>
+          93
+        </td>
+        <td>
+          987
+        </td>
+        <td>
+          3524
+          -
+          3540
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.DirectoryMode)
+        </td>
+      </tr><tr>
+        <td>
+          93
+        </td>
+        <td>
+          990
+        </td>
+        <td>
+          3548
+          -
+          3571
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.DefaultDirectoryMode)
+        </td>
+      </tr><tr>
+        <td>
+          95
+        </td>
+        <td>
+          992
+        </td>
+        <td>
+          3579
+          -
+          3667
         </td>
         <td>
           Apply
@@ -1053,21 +1223,42 @@
           scala.Option.getOrElse
         </td>
         <td style="background: #AEF1AE">
-          elem.\(&quot;mapper&quot;).map[org.apache.maven.unbound.Mapper, scala.collection.immutable.Seq[org.apache.maven.unbound.Mapper]](((x0$1: scala.xml.Node) =&gt; x0$1 match {
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Mapper)).map[org.apache.maven.unbound.Mapper, scala.collection.immutable.Seq[org.apache.maven.unbound.Mapper]](((x0$1: scala.xml.Node) =&gt; x0$1 match {
   case (e @ (_: scala.xml.Elem)) =&gt; new Mapper(e)
 }))(immutable.this.Seq.canBuildFrom[org.apache.maven.unbound.Mapper]).headOption.getOrElse[org.apache.maven.unbound.Mapper](null)
         </td>
       </tr><tr>
         <td>
-          124
+          126
         </td>
         <td>
-          1009
+          1013
         </td>
         <td>
-          4678
+          4792
           -
-          4678
+          4982
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Mapper.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          Mapper.this.&lt;init&gt;(unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TypeStr)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.Identity)), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.From)).text), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.To)).text), unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Classname)).text))
+        </td>
+      </tr><tr>
+        <td>
+          126
+        </td>
+        <td>
+          1014
+        </td>
+        <td>
+          4792
+          -
+          4792
         </td>
         <td>
           Literal
@@ -1080,99 +1271,15 @@
         </td>
       </tr><tr>
         <td>
-          124
-        </td>
-        <td>
-          1008
-        </td>
-        <td>
-          4678
-          -
-          4864
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.Mapper.&lt;init&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          Mapper.this.&lt;init&gt;(unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TypeStr)).text, &quot;identity&quot;), unbound.this.`package`.emptyToNull(elem.\(&quot;from&quot;).text), unbound.this.`package`.emptyToNull(elem.\(&quot;to&quot;).text), unbound.this.`package`.emptyToNull(elem.\(&quot;classname&quot;).text))
-        </td>
-      </tr><tr>
-        <td>
-          125
+          127
         </td>
         <td>
           995
         </td>
         <td>
-          4711
+          4825
           -
-          4721
-        </td>
-        <td>
-          ApplyImplicitView
-        </td>
-        <td>
-          org.apache.maven.unbound.Labels.strToString
-        </td>
-        <td style="background: #AEF1AE">
-          `package`.this.SL.strToString(unbound.this.`package`.SL.TypeStr)
-        </td>
-      </tr><tr>
-        <td>
-          125
-        </td>
-        <td>
-          998
-        </td>
-        <td>
-          4688
-          -
-          4740
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.emptyToDefault
-        </td>
-        <td style="background: #AEF1AE">
-          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TypeStr)).text, &quot;identity&quot;)
-        </td>
-      </tr><tr>
-        <td>
-          125
-        </td>
-        <td>
-          997
-        </td>
-        <td>
-          4729
-          -
-          4739
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          &quot;identity&quot;
-        </td>
-      </tr><tr>
-        <td>
-          125
-        </td>
-        <td>
-          994
-        </td>
-        <td>
-          4711
-          -
-          4721
+          4835
         </td>
         <td>
           Select
@@ -1185,15 +1292,36 @@
         </td>
       </tr><tr>
         <td>
-          125
+          127
         </td>
         <td>
-          996
+          998
         </td>
         <td>
-          4704
+          4843
           -
-          4727
+          4854
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Identity
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Identity
+        </td>
+      </tr><tr>
+        <td>
+          127
+        </td>
+        <td>
+          997
+        </td>
+        <td>
+          4818
+          -
+          4841
         </td>
         <td>
           Select
@@ -1206,78 +1334,99 @@
         </td>
       </tr><tr>
         <td>
-          126
-        </td>
-        <td>
-          1001
-        </td>
-        <td>
-          4746
-          -
-          4779
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.emptyToNull
-        </td>
-        <td style="background: #AEF1AE">
-          unbound.this.`package`.emptyToNull(elem.\(&quot;from&quot;).text)
-        </td>
-      </tr><tr>
-        <td>
-          126
+          127
         </td>
         <td>
           1000
         </td>
         <td>
-          4759
+          4802
           -
-          4778
+          4855
         </td>
         <td>
-          Select
+          Apply
         </td>
         <td>
-          scala.xml.NodeSeq.text
+          org.apache.maven.unbound.emptyToDefault
         </td>
         <td style="background: #AEF1AE">
-          elem.\(&quot;from&quot;).text
+          unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TypeStr)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.Identity))
         </td>
       </tr><tr>
         <td>
-          126
+          127
+        </td>
+        <td>
+          996
+        </td>
+        <td>
+          4825
+          -
+          4835
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.TypeStr)
+        </td>
+      </tr><tr>
+        <td>
+          127
         </td>
         <td>
           999
         </td>
         <td>
-          4766
+          4843
           -
-          4772
+          4854
         </td>
         <td>
-          Literal
+          ApplyImplicitView
         </td>
         <td>
-          &lt;nosymbol&gt;
+          org.apache.maven.unbound.Labels.strToString
         </td>
         <td style="background: #AEF1AE">
-          &quot;from&quot;
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Identity)
         </td>
       </tr><tr>
         <td>
-          127
+          128
+        </td>
+        <td>
+          1001
+        </td>
+        <td>
+          4881
+          -
+          4888
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.From
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.From
+        </td>
+      </tr><tr>
+        <td>
+          128
         </td>
         <td>
           1004
         </td>
         <td>
-          4785
+          4861
           -
-          4816
+          4895
         </td>
         <td>
           Apply
@@ -1286,19 +1435,19 @@
           org.apache.maven.unbound.emptyToNull
         </td>
         <td style="background: #AEF1AE">
-          unbound.this.`package`.emptyToNull(elem.\(&quot;to&quot;).text)
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.From)).text)
         </td>
       </tr><tr>
         <td>
-          127
+          128
         </td>
         <td>
           1003
         </td>
         <td>
-          4798
+          4874
           -
-          4815
+          4894
         </td>
         <td>
           Select
@@ -1307,40 +1456,103 @@
           scala.xml.NodeSeq.text
         </td>
         <td style="background: #AEF1AE">
-          elem.\(&quot;to&quot;).text
-        </td>
-      </tr><tr>
-        <td>
-          127
-        </td>
-        <td>
-          1002
-        </td>
-        <td>
-          4805
-          -
-          4809
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          &quot;to&quot;
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.From)).text
         </td>
       </tr><tr>
         <td>
           128
         </td>
         <td>
+          1002
+        </td>
+        <td>
+          4881
+          -
+          4888
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.From)
+        </td>
+      </tr><tr>
+        <td>
+          129
+        </td>
+        <td>
           1007
         </td>
         <td>
-          4822
+          4914
           -
-          4860
+          4932
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.NodeSeq.text
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.To)).text
+        </td>
+      </tr><tr>
+        <td>
+          129
+        </td>
+        <td>
+          1006
+        </td>
+        <td>
+          4921
+          -
+          4926
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.To)
+        </td>
+      </tr><tr>
+        <td>
+          129
+        </td>
+        <td>
+          1005
+        </td>
+        <td>
+          4921
+          -
+          4926
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.To
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.To
+        </td>
+      </tr><tr>
+        <td>
+          129
+        </td>
+        <td>
+          1008
+        </td>
+        <td>
+          4901
+          -
+          4933
         </td>
         <td>
           Apply
@@ -1349,19 +1561,82 @@
           org.apache.maven.unbound.emptyToNull
         </td>
         <td style="background: #AEF1AE">
-          unbound.this.`package`.emptyToNull(elem.\(&quot;classname&quot;).text)
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.To)).text)
         </td>
       </tr><tr>
         <td>
-          128
+          130
         </td>
         <td>
-          1006
+          1010
         </td>
         <td>
-          4835
+          4959
           -
-          4859
+          4971
+        </td>
+        <td>
+          ApplyImplicitView
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.strToString
+        </td>
+        <td style="background: #AEF1AE">
+          `package`.this.SL.strToString(unbound.this.`package`.SL.Classname)
+        </td>
+      </tr><tr>
+        <td>
+          130
+        </td>
+        <td>
+          1009
+        </td>
+        <td>
+          4959
+          -
+          4971
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Labels.Classname
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.SL.Classname
+        </td>
+      </tr><tr>
+        <td>
+          130
+        </td>
+        <td>
+          1012
+        </td>
+        <td>
+          4939
+          -
+          4978
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.emptyToNull
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.emptyToNull(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Classname)).text)
+        </td>
+      </tr><tr>
+        <td>
+          130
+        </td>
+        <td>
+          1011
+        </td>
+        <td>
+          4952
+          -
+          4977
         </td>
         <td>
           Select
@@ -1370,28 +1645,7 @@
           scala.xml.NodeSeq.text
         </td>
         <td style="background: #AEF1AE">
-          elem.\(&quot;classname&quot;).text
-        </td>
-      </tr><tr>
-        <td>
-          128
-        </td>
-        <td>
-          1005
-        </td>
-        <td>
-          4842
-          -
-          4853
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          &quot;classname&quot;
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Classname)).text
         </td>
       </tr>
     </table>
