@@ -74,16 +74,19 @@
 </span>50 <span style=''>  /** writes this object to the specified file using UTF-8 character encoding */
 </span>51 <span style=''>  def writePOM(filename: String): Unit = {
 </span>52 <span style=''>    val writer =
-</span>53 <span style=''>      </span><span style='background: #F0ADAD'>new OutputStreamWriter(new FileOutputStream(new File(filename)), &quot;UTF-8&quot;)</span><span style=''>
-</span>54 <span style=''>    try { </span><span style='background: #F0ADAD'>writePOM(writer)</span><span style=''> } finally { </span><span style='background: #F0ADAD'>writer.close()</span><span style=''> }
-</span>55 <span style=''>  }
-</span>56 <span style=''>
-</span>57 <span style=''>  /** writes this object to the specified stream using the specified encoding */
-</span>58 <span style=''>  def writePOM(os: OutputStream, enc: String): Unit = {
-</span>59 <span style=''>    val writer = </span><span style='background: #AEF1AE'>new OutputStreamWriter(os, enc)</span><span style=''>
-</span>60 <span style=''>    try { </span><span style='background: #AEF1AE'>writePOM(writer)</span><span style=''> } finally { </span><span style='background: #AEF1AE'>writer.close()</span><span style=''> }
-</span>61 <span style=''>  }
-</span>62 <span style=''>}
+</span>53 <span style=''>      </span><span style='background: #AEF1AE'>new OutputStreamWriter(new FileOutputStream(new File(filename)), &quot;UTF-8&quot;)</span><span style=''>
+</span>54 <span style=''>    try {
+</span>55 <span style=''>      </span><span style='background: #AEF1AE'>writePOM(writer)
+</span>56 <span style=''></span><span style='background: #AEF1AE'>      writer.flush()</span><span style=''>
+</span>57 <span style=''>    } finally { </span><span style='background: #AEF1AE'>writer.close()</span><span style=''> }
+</span>58 <span style=''>  }
+</span>59 <span style=''>
+</span>60 <span style=''>  /** writes this object to the specified stream using the specified encoding */
+</span>61 <span style=''>  def writePOM(os: OutputStream, enc: String): Unit = {
+</span>62 <span style=''>    val writer = </span><span style='background: #AEF1AE'>new OutputStreamWriter(os, enc)</span><span style=''>
+</span>63 <span style=''>    try { </span><span style='background: #AEF1AE'>writePOM(writer)</span><span style=''> } finally { </span><span style='background: #AEF1AE'>writer.close()</span><span style=''> }
+</span>64 <span style=''>  }
+</span>65 <span style=''>}
 </span></pre>
           </div>
           <div class="tab-pane" id="statementlist">
@@ -100,7 +103,7 @@
           41
         </td>
         <td>
-          3933
+          3932
         </td>
         <td>
           1384
@@ -121,7 +124,7 @@
           42
         </td>
         <td>
-          3934
+          3933
         </td>
         <td>
           1422
@@ -145,27 +148,6 @@
           3935
         </td>
         <td>
-          1461
-          -
-          1464
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          org.apache.maven.unbound.Writeable.xml
-        </td>
-        <td style="background: #AEF1AE">
-          Writeable.this.xml
-        </td>
-      </tr><tr>
-        <td>
-          43
-        </td>
-        <td>
-          3936
-        </td>
-        <td>
           1446
           -
           1469
@@ -181,10 +163,31 @@
         </td>
       </tr><tr>
         <td>
+          43
+        </td>
+        <td>
+          3934
+        </td>
+        <td>
+          1461
+          -
+          1464
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Writeable.xml
+        </td>
+        <td style="background: #AEF1AE">
+          Writeable.this.xml
+        </td>
+      </tr><tr>
+        <td>
           44
         </td>
         <td>
-          3937
+          3936
         </td>
         <td>
           1474
@@ -208,27 +211,6 @@
           3938
         </td>
         <td>
-          1598
-          -
-          1609
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          org.apache.maven.unbound.Writeable.toXmlString
-        </td>
-        <td style="background: #AEF1AE">
-          Writeable.this.toXmlString
-        </td>
-      </tr><tr>
-        <td>
-          48
-        </td>
-        <td>
-          3939
-        </td>
-        <td>
           1585
           -
           1610
@@ -244,73 +226,31 @@
         </td>
       </tr><tr>
         <td>
+          48
+        </td>
+        <td>
+          3937
+        </td>
+        <td>
+          1598
+          -
+          1609
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Writeable.toXmlString
+        </td>
+        <td style="background: #AEF1AE">
+          Writeable.this.toXmlString
+        </td>
+      </tr><tr>
+        <td>
           53
         </td>
         <td>
           3941
-        </td>
-        <td>
-          1782
-          -
-          1822
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.io.FileOutputStream.&lt;init&gt;
-        </td>
-        <td style="background: #F0ADAD">
-          new java.io.FileOutputStream(new java.io.File(filename))
-        </td>
-      </tr><tr>
-        <td>
-          53
-        </td>
-        <td>
-          3940
-        </td>
-        <td>
-          1803
-          -
-          1821
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.io.File.&lt;init&gt;
-        </td>
-        <td style="background: #F0ADAD">
-          new java.io.File(filename)
-        </td>
-      </tr><tr>
-        <td>
-          53
-        </td>
-        <td>
-          3943
-        </td>
-        <td>
-          1759
-          -
-          1832
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.io.OutputStreamWriter.&lt;init&gt;
-        </td>
-        <td style="background: #F0ADAD">
-          new java.io.OutputStreamWriter(new java.io.FileOutputStream(new java.io.File(filename)), &quot;UTF-8&quot;)
-        </td>
-      </tr><tr>
-        <td>
-          53
-        </td>
-        <td>
-          3942
         </td>
         <td>
           1824
@@ -323,71 +263,71 @@
         <td>
           &lt;nosymbol&gt;
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           &quot;UTF-8&quot;
         </td>
       </tr><tr>
         <td>
-          54
+          53
         </td>
         <td>
-          3944
+          3940
         </td>
         <td>
-          1843
+          1782
           -
-          1859
+          1822
         </td>
         <td>
           Apply
         </td>
         <td>
-          org.apache.maven.unbound.Writeable.writePOM
+          java.io.FileOutputStream.&lt;init&gt;
         </td>
-        <td style="background: #F0ADAD">
-          Writeable.this.writePOM(writer)
-        </td>
-      </tr><tr>
-        <td>
-          54
-        </td>
-        <td>
-          3947
-        </td>
-        <td>
-          1872
-          -
-          1886
-        </td>
-        <td>
-          Block
-        </td>
-        <td>
-          java.io.OutputStreamWriter.close
-        </td>
-        <td style="background: #F0ADAD">
-          writer.close()
+        <td style="background: #AEF1AE">
+          new java.io.FileOutputStream(new java.io.File(filename))
         </td>
       </tr><tr>
         <td>
-          54
+          53
         </td>
         <td>
-          3946
+          3942
         </td>
         <td>
-          1872
+          1759
           -
-          1886
+          1832
         </td>
         <td>
           Apply
         </td>
         <td>
-          java.io.OutputStreamWriter.close
+          java.io.OutputStreamWriter.&lt;init&gt;
         </td>
-        <td style="background: #F0ADAD">
-          writer.close()
+        <td style="background: #AEF1AE">
+          new java.io.OutputStreamWriter(new java.io.FileOutputStream(new java.io.File(filename)), &quot;UTF-8&quot;)
+        </td>
+      </tr><tr>
+        <td>
+          53
+        </td>
+        <td>
+          3939
+        </td>
+        <td>
+          1803
+          -
+          1821
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.File.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new java.io.File(filename)
         </td>
       </tr><tr>
         <td>
@@ -397,30 +337,117 @@
           3945
         </td>
         <td>
-          1843
+          1849
           -
-          1859
+          1886
         </td>
         <td>
           Block
         </td>
         <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          {
+  Writeable.this.writePOM(writer);
+  writer.flush()
+}
+        </td>
+      </tr><tr>
+        <td>
+          55
+        </td>
+        <td>
+          3943
+        </td>
+        <td>
+          1849
+          -
+          1865
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
           org.apache.maven.unbound.Writeable.writePOM
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           Writeable.this.writePOM(writer)
         </td>
       </tr><tr>
         <td>
-          59
+          56
+        </td>
+        <td>
+          3944
+        </td>
+        <td>
+          1872
+          -
+          1886
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.OutputStreamWriter.flush
+        </td>
+        <td style="background: #AEF1AE">
+          writer.flush()
+        </td>
+      </tr><tr>
+        <td>
+          57
+        </td>
+        <td>
+          3947
+        </td>
+        <td>
+          1903
+          -
+          1917
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          java.io.OutputStreamWriter.close
+        </td>
+        <td style="background: #AEF1AE">
+          writer.close()
+        </td>
+      </tr><tr>
+        <td>
+          57
+        </td>
+        <td>
+          3946
+        </td>
+        <td>
+          1903
+          -
+          1917
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.OutputStreamWriter.close
+        </td>
+        <td style="background: #AEF1AE">
+          writer.close()
+        </td>
+      </tr><tr>
+        <td>
+          62
         </td>
         <td>
           3948
         </td>
         <td>
-          2048
-          -
           2079
+          -
+          2110
         </td>
         <td>
           Apply
@@ -433,15 +460,15 @@
         </td>
       </tr><tr>
         <td>
-          60
+          63
         </td>
         <td>
           3950
         </td>
         <td>
-          2090
+          2121
           -
-          2106
+          2137
         </td>
         <td>
           Block
@@ -454,15 +481,15 @@
         </td>
       </tr><tr>
         <td>
-          60
+          63
         </td>
         <td>
           3949
         </td>
         <td>
-          2090
+          2121
           -
-          2106
+          2137
         </td>
         <td>
           Apply
@@ -475,15 +502,15 @@
         </td>
       </tr><tr>
         <td>
-          60
+          63
         </td>
         <td>
           3952
         </td>
         <td>
-          2119
+          2150
           -
-          2133
+          2164
         </td>
         <td>
           Block
@@ -496,15 +523,15 @@
         </td>
       </tr><tr>
         <td>
-          60
+          63
         </td>
         <td>
           3951
         </td>
         <td>
-          2119
+          2150
           -
-          2133
+          2164
         </td>
         <td>
           Apply

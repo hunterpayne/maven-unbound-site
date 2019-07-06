@@ -89,7 +89,7 @@
 </span>65 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.SystemStr).text),
 </span>66 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.UrlStr).text),
 </span>67 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Notifiers \ SL.NotifierStr).map { case n: Elem =&gt;
-</span>68 <span style=''></span><span style='background: #AEF1AE'>      </span><span style='background: #F0ADAD'>new Notifier(n)</span><span style='background: #AEF1AE'> })</span><span style=''>
+</span>68 <span style=''></span><span style='background: #AEF1AE'>      new Notifier(n) })</span><span style=''>
 </span>69 <span style=''>
 </span>70 <span style=''>  lazy val xml = &lt;ciManagement&gt;
 </span>71 <span style=''>                   { if (system != null) &lt;system&gt;{system}&lt;/system&gt; }
@@ -103,7 +103,7 @@
 </span>79 <span style=''>    val cim = </span><span style='background: #AEF1AE'>new org.apache.maven.model.CiManagement()</span><span style=''>
 </span>80 <span style=''>    if (</span><span style='background: #AEF1AE'>system != null</span><span style=''>) </span><span style='background: #AEF1AE'>cim.setSystem(system)</span><span style=''>
 </span>81 <span style=''>    if (</span><span style='background: #AEF1AE'>url != null</span><span style=''>) </span><span style='background: #AEF1AE'>cim.setUrl(url)</span><span style=''>
-</span>82 <span style=''>    </span><span style='background: #AEF1AE'>notifiers.foreach { n =&gt; </span><span style='background: #F0ADAD'>cim.getNotifiers().add(n.makeModelObject())</span><span style='background: #AEF1AE'> }</span><span style=''>
+</span>82 <span style=''>    </span><span style='background: #AEF1AE'>notifiers.foreach { n =&gt; cim.getNotifiers().add(n.makeModelObject()) }</span><span style=''>
 </span>83 <span style=''>    cim
 </span>84 <span style=''>  }
 </span>85 <span style=''>}
@@ -165,31 +165,33 @@
 </span>141 <span style=''></span><span style='background: #AEF1AE'>    emptyToDefault(
 </span>142 <span style=''></span><span style='background: #AEF1AE'>      (elem \ SL.SendOnWarning).text.toLowerCase(Locale.ROOT), SL.TrueStr) ==
 </span>143 <span style=''></span><span style='background: #AEF1AE'>      SL.TrueStr.toString,
-</span>144 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Configuration).flatMap(</span><span style='background: #F0ADAD'>_.map { e =&gt; (e.label, e.text) }</span><span style='background: #AEF1AE'>).toMap)</span><span style=''>
-</span>145 <span style=''>
-</span>146 <span style=''>  lazy val xml = &lt;notifier&gt;
-</span>147 <span style=''>                   &lt;type&gt;{`type`}&lt;/type&gt;
-</span>148 <span style=''>                   &lt;sendOnError&gt;{sendOnError}&lt;/sendOnError&gt;
-</span>149 <span style=''>                   &lt;sendOnWarning&gt;{sendOnWarning}&lt;/sendOnWarning&gt;
-</span>150 <span style=''>                   &lt;sendOnSuccess&gt;{sendOnSuccess}&lt;/sendOnSuccess&gt;
-</span>151 <span style=''>                   &lt;sendOnWarning&gt;{sendOnWarning}&lt;/sendOnWarning&gt;
-</span>152 <span style=''>                   { if (!configuration.isEmpty) &lt;configuration&gt;
-</span>153 <span style=''>                     { configuration.foreach { case(k, v) =&gt;
-</span>154 <span style=''>                       PropertyValue(k, v).xml } }
-</span>155 <span style=''>                   &lt;/configuration&gt; }
-</span>156 <span style=''>                 &lt;/notifier&gt;
-</span>157 <span style=''>
-</span>158 <span style=''>  def makeModelObject(): org.apache.maven.model.Notifier = {
-</span>159 <span style=''>    val notifier = </span><span style='background: #F0ADAD'>new org.apache.maven.model.Notifier()</span><span style=''>
-</span>160 <span style=''>    </span><span style='background: #F0ADAD'>notifier.setType(`type`)</span><span style=''>
-</span>161 <span style=''>    </span><span style='background: #F0ADAD'>notifier.setSendOnError(sendOnError)</span><span style=''>
-</span>162 <span style=''>    </span><span style='background: #F0ADAD'>notifier.setSendOnFailure(sendOnFailure)</span><span style=''>
-</span>163 <span style=''>    </span><span style='background: #F0ADAD'>notifier.setSendOnSuccess(sendOnSuccess)</span><span style=''>
-</span>164 <span style=''>    </span><span style='background: #F0ADAD'>notifier.setSendOnWarning(sendOnWarning)</span><span style=''>
-</span>165 <span style=''>    </span><span style='background: #F0ADAD'>configuration.map { case(k, v) =&gt; notifier.addConfiguration(k, v) }</span><span style=''>
-</span>166 <span style=''>    notifier
-</span>167 <span style=''>  }
-</span>168 <span style=''>}
+</span>144 <span style=''></span><span style='background: #AEF1AE'>    (elem \ SL.Configuration).headOption.map(
+</span>145 <span style=''></span><span style='background: #AEF1AE'>      _.child.filter(_.isInstanceOf[Elem]).map { e =&gt;
+</span>146 <span style=''></span><span style='background: #AEF1AE'>        (e.label, e.text.trim) }.toMap).getOrElse(Map[String, String]()))</span><span style=''>
+</span>147 <span style=''>
+</span>148 <span style=''>  lazy val xml = &lt;notifier&gt;
+</span>149 <span style=''>                   &lt;type&gt;{`type`}&lt;/type&gt;
+</span>150 <span style=''>                   &lt;sendOnError&gt;{sendOnError}&lt;/sendOnError&gt;
+</span>151 <span style=''>                   &lt;sendOnFailure&gt;{sendOnFailure}&lt;/sendOnFailure&gt;
+</span>152 <span style=''>                   &lt;sendOnSuccess&gt;{sendOnSuccess}&lt;/sendOnSuccess&gt;
+</span>153 <span style=''>                   &lt;sendOnWarning&gt;{sendOnWarning}&lt;/sendOnWarning&gt;
+</span>154 <span style=''>                   { if (!configuration.isEmpty) &lt;configuration&gt;
+</span>155 <span style=''>                     { configuration.map { case(k, v) =&gt;
+</span>156 <span style=''>                       PropertyValue(k, v).xml } }
+</span>157 <span style=''>                   &lt;/configuration&gt; }
+</span>158 <span style=''>                 &lt;/notifier&gt;
+</span>159 <span style=''>
+</span>160 <span style=''>  def makeModelObject(): org.apache.maven.model.Notifier = {
+</span>161 <span style=''>    val notifier = </span><span style='background: #AEF1AE'>new org.apache.maven.model.Notifier()</span><span style=''>
+</span>162 <span style=''>    </span><span style='background: #AEF1AE'>notifier.setType(`type`)</span><span style=''>
+</span>163 <span style=''>    </span><span style='background: #AEF1AE'>notifier.setSendOnError(sendOnError)</span><span style=''>
+</span>164 <span style=''>    </span><span style='background: #AEF1AE'>notifier.setSendOnFailure(sendOnFailure)</span><span style=''>
+</span>165 <span style=''>    </span><span style='background: #AEF1AE'>notifier.setSendOnSuccess(sendOnSuccess)</span><span style=''>
+</span>166 <span style=''>    </span><span style='background: #AEF1AE'>notifier.setSendOnWarning(sendOnWarning)</span><span style=''>
+</span>167 <span style=''>    </span><span style='background: #AEF1AE'>configuration.map { case(k, v) =&gt; notifier.addConfiguration(k, v) }</span><span style=''>
+</span>168 <span style=''>    notifier
+</span>169 <span style=''>  }
+</span>170 <span style=''>}
 </span></pre>
           </div>
           <div class="tab-pane" id="statementlist">
@@ -643,7 +645,7 @@
         <td>
           org.apache.maven.unbound.Notifier.&lt;init&gt;
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           new Notifier(n)
         </td>
       </tr><tr>
@@ -937,7 +939,7 @@
         <td>
           java.util.List.add
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           cim.getNotifiers().add(n.makeModelObject())
         </td>
       </tr><tr>
@@ -958,7 +960,7 @@
         <td>
           org.apache.maven.unbound.Notifier.makeModelObject
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           n.makeModelObject()
         </td>
       </tr><tr>
@@ -1055,6 +1057,27 @@
         <td>
           4333
           -
+          5065
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Notifier.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          Notifier.this.&lt;init&gt;(unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TypeStr)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.Mail)), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SendOnError)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString()), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SendOnFailure)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString()), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SendOnSuccess)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString()), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SendOnWarning)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString()), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Configuration)).headOption.map[scala.collection.immutable.Map[String,String]](((x$2: scala.xml.Node) =&gt; x$2.child.filter(((x$3: scala.xml.Node) =&gt; x$3.isInstanceOf[scala.xml.Elem])).map[(String, String), Seq[(String, String)]](((e: scala.xml.Node) =&gt; scala.Tuple2.apply[String, String](e.label, e.text.trim())))(collection.this.Seq.canBuildFrom[(String, String)]).toMap[String, String](scala.Predef.$conforms[(String, String)]))).getOrElse[scala.collection.immutable.Map[String,String]](scala.Predef.Map.apply[String, String]()))
+        </td>
+      </tr><tr>
+        <td>
+          130
+        </td>
+        <td>
+          491
+        </td>
+        <td>
+          4333
+          -
           4333
         </td>
         <td>
@@ -1065,27 +1088,6 @@
         </td>
         <td style="background: #AEF1AE">
           ()
-        </td>
-      </tr><tr>
-        <td>
-          130
-        </td>
-        <td>
-          489
-        </td>
-        <td>
-          4333
-          -
-          4970
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.Notifier.&lt;init&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          Notifier.this.&lt;init&gt;(unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.TypeStr)).text, `package`.this.SL.strToString(unbound.this.`package`.SL.Mail)), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SendOnError)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString()), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SendOnFailure)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString()), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SendOnSuccess)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString()), unbound.this.`package`.emptyToDefault(elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.SendOnWarning)).text.toLowerCase(java.util.Locale.ROOT), `package`.this.SL.strToString(unbound.this.`package`.SL.TrueStr)).==(unbound.this.`package`.SL.TrueStr.toString()), elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Configuration)).flatMap[(String, String), scala.collection.immutable.Seq[(String, String)]](((x$2: scala.xml.Node) =&gt; x$2.map[(String, String), scala.collection.immutable.Seq[(String, String)]](((e: scala.xml.Node) =&gt; scala.Tuple2.apply[String, String](e.label, e.text)))(immutable.this.Seq.canBuildFrom[(String, String)])))(immutable.this.Seq.canBuildFrom[(String, String)]).toMap[String, String](scala.Predef.$conforms[(String, String)]))
         </td>
       </tr><tr>
         <td>
@@ -1890,48 +1892,6 @@
           144
         </td>
         <td>
-          487
-        </td>
-        <td>
-          4964
-          -
-          4964
-        </td>
-        <td>
-          TypeApply
-        </td>
-        <td>
-          scala.Predef.$conforms
-        </td>
-        <td style="background: #AEF1AE">
-          scala.Predef.$conforms[(String, String)]
-        </td>
-      </tr><tr>
-        <td>
-          144
-        </td>
-        <td>
-          481
-        </td>
-        <td>
-          4944
-          -
-          4951
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.xml.Node.label
-        </td>
-        <td style="background: #F0ADAD">
-          e.label
-        </td>
-      </tr><tr>
-        <td>
-          144
-        </td>
-        <td>
           480
         </td>
         <td>
@@ -1947,69 +1907,6 @@
         </td>
         <td style="background: #AEF1AE">
           `package`.this.SL.strToString(unbound.this.`package`.SL.Configuration)
-        </td>
-      </tr><tr>
-        <td>
-          144
-        </td>
-        <td>
-          483
-        </td>
-        <td>
-          4943
-          -
-          4960
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.Tuple2.apply
-        </td>
-        <td style="background: #F0ADAD">
-          scala.Tuple2.apply[String, String](e.label, e.text)
-        </td>
-      </tr><tr>
-        <td>
-          144
-        </td>
-        <td>
-          486
-        </td>
-        <td>
-          4929
-          -
-          4929
-        </td>
-        <td>
-          TypeApply
-        </td>
-        <td>
-          scala.collection.immutable.Seq.canBuildFrom
-        </td>
-        <td style="background: #AEF1AE">
-          immutable.this.Seq.canBuildFrom[(String, String)]
-        </td>
-      </tr><tr>
-        <td>
-          144
-        </td>
-        <td>
-          488
-        </td>
-        <td>
-          4897
-          -
-          4969
-        </td>
-        <td>
-          ApplyToImplicitArgs
-        </td>
-        <td>
-          scala.collection.TraversableOnce.toMap
-        </td>
-        <td style="background: #AEF1AE">
-          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Configuration)).flatMap[(String, String), scala.collection.immutable.Seq[(String, String)]](((x$2: scala.xml.Node) =&gt; x$2.map[(String, String), scala.collection.immutable.Seq[(String, String)]](((e: scala.xml.Node) =&gt; scala.Tuple2.apply[String, String](e.label, e.text)))(immutable.this.Seq.canBuildFrom[(String, String)])))(immutable.this.Seq.canBuildFrom[(String, String)]).toMap[String, String](scala.Predef.$conforms[(String, String)])
         </td>
       </tr><tr>
         <td>
@@ -2034,78 +1931,204 @@
         </td>
       </tr><tr>
         <td>
-          144
+          145
         </td>
         <td>
-          482
+          481
         </td>
         <td>
-          4953
-          -
           4959
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.xml.Node.text
-        </td>
-        <td style="background: #F0ADAD">
-          e.text
-        </td>
-      </tr><tr>
-        <td>
-          144
-        </td>
-        <td>
-          485
-        </td>
-        <td>
-          4930
           -
-          4962
-        </td>
-        <td>
-          ApplyToImplicitArgs
-        </td>
-        <td>
-          scala.collection.TraversableLike.map
-        </td>
-        <td style="background: #F0ADAD">
-          x$2.map[(String, String), scala.collection.immutable.Seq[(String, String)]](((e: scala.xml.Node) =&gt; scala.Tuple2.apply[String, String](e.label, e.text)))(immutable.this.Seq.canBuildFrom[(String, String)])
-        </td>
-      </tr><tr>
-        <td>
-          144
-        </td>
-        <td>
-          484
-        </td>
-        <td>
-          4936
-          -
-          4936
+          4979
         </td>
         <td>
           TypeApply
         </td>
         <td>
-          scala.collection.immutable.Seq.canBuildFrom
+          scala.Any.isInstanceOf
         </td>
-        <td style="background: #F0ADAD">
-          immutable.this.Seq.canBuildFrom[(String, String)]
+        <td style="background: #AEF1AE">
+          x$3.isInstanceOf[scala.xml.Elem]
         </td>
       </tr><tr>
         <td>
-          159
+          145
         </td>
         <td>
-          491
+          485
         </td>
         <td>
-          5624
+          4985
           -
-          5661
+          4985
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          collection.this.Seq.canBuildFrom[(String, String)]
+        </td>
+      </tr><tr>
+        <td>
+          146
+        </td>
+        <td>
+          487
+        </td>
+        <td>
+          4944
+          -
+          5030
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableOnce.toMap
+        </td>
+        <td style="background: #AEF1AE">
+          x$2.child.filter(((x$3: scala.xml.Node) =&gt; x$3.isInstanceOf[scala.xml.Elem])).map[(String, String), Seq[(String, String)]](((e: scala.xml.Node) =&gt; scala.Tuple2.apply[String, String](e.label, e.text.trim())))(collection.this.Seq.canBuildFrom[(String, String)]).toMap[String, String](scala.Predef.$conforms[(String, String)])
+        </td>
+      </tr><tr>
+        <td>
+          146
+        </td>
+        <td>
+          489
+        </td>
+        <td>
+          4897
+          -
+          5064
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Option.getOrElse
+        </td>
+        <td style="background: #AEF1AE">
+          elem.\(`package`.this.SL.strToString(unbound.this.`package`.SL.Configuration)).headOption.map[scala.collection.immutable.Map[String,String]](((x$2: scala.xml.Node) =&gt; x$2.child.filter(((x$3: scala.xml.Node) =&gt; x$3.isInstanceOf[scala.xml.Elem])).map[(String, String), Seq[(String, String)]](((e: scala.xml.Node) =&gt; scala.Tuple2.apply[String, String](e.label, e.text.trim())))(collection.this.Seq.canBuildFrom[(String, String)]).toMap[String, String](scala.Predef.$conforms[(String, String)]))).getOrElse[scala.collection.immutable.Map[String,String]](scala.Predef.Map.apply[String, String]())
+        </td>
+      </tr><tr>
+        <td>
+          146
+        </td>
+        <td>
+          483
+        </td>
+        <td>
+          5010
+          -
+          5021
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.trim
+        </td>
+        <td style="background: #AEF1AE">
+          e.text.trim()
+        </td>
+      </tr><tr>
+        <td>
+          146
+        </td>
+        <td>
+          486
+        </td>
+        <td>
+          5025
+          -
+          5025
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.Predef.$conforms
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Predef.$conforms[(String, String)]
+        </td>
+      </tr><tr>
+        <td>
+          146
+        </td>
+        <td>
+          488
+        </td>
+        <td>
+          5042
+          -
+          5063
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.generic.GenMapFactory.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Predef.Map.apply[String, String]()
+        </td>
+      </tr><tr>
+        <td>
+          146
+        </td>
+        <td>
+          482
+        </td>
+        <td>
+          5001
+          -
+          5008
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Node.label
+        </td>
+        <td style="background: #AEF1AE">
+          e.label
+        </td>
+      </tr><tr>
+        <td>
+          146
+        </td>
+        <td>
+          484
+        </td>
+        <td>
+          5000
+          -
+          5022
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Tuple2.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Tuple2.apply[String, String](e.label, e.text.trim())
+        </td>
+      </tr><tr>
+        <td>
+          161
+        </td>
+        <td>
+          492
+        </td>
+        <td>
+          5715
+          -
+          5752
         </td>
         <td>
           Apply
@@ -2113,41 +2136,20 @@
         <td>
           org.apache.maven.model.Notifier.&lt;init&gt;
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           new org.apache.maven.model.Notifier()
         </td>
       </tr><tr>
         <td>
-          160
+          162
         </td>
         <td>
-          492
+          494
         </td>
         <td>
-          5683
+          5757
           -
-          5689
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          org.apache.maven.unbound.Notifier.type
-        </td>
-        <td style="background: #F0ADAD">
-          Notifier.this.`type`
-        </td>
-      </tr><tr>
-        <td>
-          160
-        </td>
-        <td>
-          493
-        </td>
-        <td>
-          5666
-          -
-          5690
+          5781
         </td>
         <td>
           Apply
@@ -2155,20 +2157,41 @@
         <td>
           org.apache.maven.model.Notifier.setType
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           notifier.setType(Notifier.this.`type`)
         </td>
       </tr><tr>
         <td>
-          161
+          162
         </td>
         <td>
-          495
+          493
         </td>
         <td>
-          5695
+          5774
           -
-          5731
+          5780
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Notifier.type
+        </td>
+        <td style="background: #AEF1AE">
+          Notifier.this.`type`
+        </td>
+      </tr><tr>
+        <td>
+          163
+        </td>
+        <td>
+          496
+        </td>
+        <td>
+          5786
+          -
+          5822
         </td>
         <td>
           Apply
@@ -2176,20 +2199,20 @@
         <td>
           org.apache.maven.model.Notifier.setSendOnError
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           notifier.setSendOnError(Notifier.this.sendOnError)
         </td>
       </tr><tr>
         <td>
-          161
+          163
         </td>
         <td>
-          494
+          495
         </td>
         <td>
-          5719
+          5810
           -
-          5730
+          5821
         </td>
         <td>
           Select
@@ -2197,41 +2220,20 @@
         <td>
           org.apache.maven.unbound.Notifier.sendOnError
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           Notifier.this.sendOnError
         </td>
       </tr><tr>
         <td>
-          162
+          164
         </td>
         <td>
-          496
+          498
         </td>
         <td>
-          5762
+          5827
           -
-          5775
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          org.apache.maven.unbound.Notifier.sendOnFailure
-        </td>
-        <td style="background: #F0ADAD">
-          Notifier.this.sendOnFailure
-        </td>
-      </tr><tr>
-        <td>
-          162
-        </td>
-        <td>
-          497
-        </td>
-        <td>
-          5736
-          -
-          5776
+          5867
         </td>
         <td>
           Apply
@@ -2239,41 +2241,41 @@
         <td>
           org.apache.maven.model.Notifier.setSendOnFailure
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           notifier.setSendOnFailure(Notifier.this.sendOnFailure)
         </td>
       </tr><tr>
         <td>
-          163
+          164
+        </td>
+        <td>
+          497
+        </td>
+        <td>
+          5853
+          -
+          5866
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Notifier.sendOnFailure
+        </td>
+        <td style="background: #AEF1AE">
+          Notifier.this.sendOnFailure
+        </td>
+      </tr><tr>
+        <td>
+          165
         </td>
         <td>
           499
         </td>
         <td>
-          5781
+          5898
           -
-          5821
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.model.Notifier.setSendOnSuccess
-        </td>
-        <td style="background: #F0ADAD">
-          notifier.setSendOnSuccess(Notifier.this.sendOnSuccess)
-        </td>
-      </tr><tr>
-        <td>
-          163
-        </td>
-        <td>
-          498
-        </td>
-        <td>
-          5807
-          -
-          5820
+          5911
         </td>
         <td>
           Select
@@ -2281,41 +2283,41 @@
         <td>
           org.apache.maven.unbound.Notifier.sendOnSuccess
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           Notifier.this.sendOnSuccess
         </td>
       </tr><tr>
         <td>
-          164
-        </td>
-        <td>
-          501
-        </td>
-        <td>
-          5826
-          -
-          5866
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.model.Notifier.setSendOnWarning
-        </td>
-        <td style="background: #F0ADAD">
-          notifier.setSendOnWarning(Notifier.this.sendOnWarning)
-        </td>
-      </tr><tr>
-        <td>
-          164
+          165
         </td>
         <td>
           500
         </td>
         <td>
-          5852
+          5872
           -
-          5865
+          5912
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Notifier.setSendOnSuccess
+        </td>
+        <td style="background: #AEF1AE">
+          notifier.setSendOnSuccess(Notifier.this.sendOnSuccess)
+        </td>
+      </tr><tr>
+        <td>
+          166
+        </td>
+        <td>
+          501
+        </td>
+        <td>
+          5943
+          -
+          5956
         </td>
         <td>
           Select
@@ -2323,20 +2325,41 @@
         <td>
           org.apache.maven.unbound.Notifier.sendOnWarning
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           Notifier.this.sendOnWarning
         </td>
       </tr><tr>
         <td>
-          165
+          166
         </td>
         <td>
-          504
+          502
         </td>
         <td>
-          5871
+          5917
           -
-          5938
+          5957
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Notifier.setSendOnWarning
+        </td>
+        <td style="background: #AEF1AE">
+          notifier.setSendOnWarning(Notifier.this.sendOnWarning)
+        </td>
+      </tr><tr>
+        <td>
+          167
+        </td>
+        <td>
+          505
+        </td>
+        <td>
+          5962
+          -
+          6029
         </td>
         <td>
           ApplyToImplicitArgs
@@ -2344,22 +2367,22 @@
         <td>
           scala.collection.TraversableLike.map
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           Notifier.this.configuration.map[Unit, scala.collection.immutable.Iterable[Unit]](((x0$1: (String, String)) =&gt; x0$1 match {
   case (_1: String, _2: String)(String, String)((k @ _), (v @ _)) =&gt; notifier.addConfiguration(k, v)
 }))(immutable.this.Iterable.canBuildFrom[Unit])
         </td>
       </tr><tr>
         <td>
-          165
+          167
         </td>
         <td>
-          503
+          504
         </td>
         <td>
-          5889
+          5980
           -
-          5889
+          5980
         </td>
         <td>
           TypeApply
@@ -2367,20 +2390,20 @@
         <td>
           scala.collection.immutable.Iterable.canBuildFrom
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           immutable.this.Iterable.canBuildFrom[Unit]
         </td>
       </tr><tr>
         <td>
-          165
+          167
         </td>
         <td>
-          502
+          503
         </td>
         <td>
-          5905
+          5996
           -
-          5936
+          6027
         </td>
         <td>
           Apply
@@ -2388,7 +2411,7 @@
         <td>
           org.apache.maven.model.Notifier.addConfiguration
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           notifier.addConfiguration(k, v)
         </td>
       </tr>
