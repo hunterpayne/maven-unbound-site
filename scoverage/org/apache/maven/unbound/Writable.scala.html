@@ -103,7 +103,7 @@
           41
         </td>
         <td>
-          3932
+          3933
         </td>
         <td>
           1384
@@ -124,7 +124,7 @@
           42
         </td>
         <td>
-          3933
+          3934
         </td>
         <td>
           1422
@@ -148,27 +148,6 @@
           3935
         </td>
         <td>
-          1446
-          -
-          1469
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.xml.PrettyPrinter.format
-        </td>
-        <td style="background: #AEF1AE">
-          printer.format(Writeable.this.xml, sb)
-        </td>
-      </tr><tr>
-        <td>
-          43
-        </td>
-        <td>
-          3934
-        </td>
-        <td>
           1461
           -
           1464
@@ -184,10 +163,31 @@
         </td>
       </tr><tr>
         <td>
-          44
+          43
         </td>
         <td>
           3936
+        </td>
+        <td>
+          1446
+          -
+          1469
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.xml.PrettyPrinter.format
+        </td>
+        <td style="background: #AEF1AE">
+          printer.format(Writeable.this.xml, sb)
+        </td>
+      </tr><tr>
+        <td>
+          44
+        </td>
+        <td>
+          3937
         </td>
         <td>
           1474
@@ -211,27 +211,6 @@
           3938
         </td>
         <td>
-          1585
-          -
-          1610
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.io.Writer.write
-        </td>
-        <td style="background: #AEF1AE">
-          writer.write(Writeable.this.toXmlString)
-        </td>
-      </tr><tr>
-        <td>
-          48
-        </td>
-        <td>
-          3937
-        </td>
-        <td>
           1598
           -
           1609
@@ -247,31 +226,31 @@
         </td>
       </tr><tr>
         <td>
-          53
+          48
         </td>
         <td>
-          3941
+          3939
         </td>
         <td>
-          1824
+          1585
           -
-          1831
+          1610
         </td>
         <td>
-          Literal
+          Apply
         </td>
         <td>
-          &lt;nosymbol&gt;
+          java.io.Writer.write
         </td>
         <td style="background: #AEF1AE">
-          &quot;UTF-8&quot;
+          writer.write(Writeable.this.toXmlString)
         </td>
       </tr><tr>
         <td>
           53
         </td>
         <td>
-          3940
+          3941
         </td>
         <td>
           1782
@@ -292,7 +271,28 @@
           53
         </td>
         <td>
-          3942
+          3940
+        </td>
+        <td>
+          1803
+          -
+          1821
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.File.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new java.io.File(filename)
+        </td>
+      </tr><tr>
+        <td>
+          53
+        </td>
+        <td>
+          3943
         </td>
         <td>
           1759
@@ -313,28 +313,28 @@
           53
         </td>
         <td>
-          3939
+          3942
         </td>
         <td>
-          1803
+          1824
           -
-          1821
+          1831
         </td>
         <td>
-          Apply
+          Literal
         </td>
         <td>
-          java.io.File.&lt;init&gt;
+          &lt;nosymbol&gt;
         </td>
         <td style="background: #AEF1AE">
-          new java.io.File(filename)
+          &quot;UTF-8&quot;
         </td>
       </tr><tr>
         <td>
           54
         </td>
         <td>
-          3945
+          3946
         </td>
         <td>
           1849
@@ -358,7 +358,7 @@
           55
         </td>
         <td>
-          3943
+          3944
         </td>
         <td>
           1849
@@ -379,7 +379,7 @@
           56
         </td>
         <td>
-          3944
+          3945
         </td>
         <td>
           1872
@@ -408,7 +408,7 @@
           1917
         </td>
         <td>
-          Block
+          Apply
         </td>
         <td>
           java.io.OutputStreamWriter.close
@@ -421,7 +421,7 @@
           57
         </td>
         <td>
-          3946
+          3948
         </td>
         <td>
           1903
@@ -429,7 +429,7 @@
           1917
         </td>
         <td>
-          Apply
+          Block
         </td>
         <td>
           java.io.OutputStreamWriter.close
@@ -442,7 +442,7 @@
           62
         </td>
         <td>
-          3948
+          3949
         </td>
         <td>
           2079
@@ -471,7 +471,7 @@
           2137
         </td>
         <td>
-          Block
+          Apply
         </td>
         <td>
           org.apache.maven.unbound.Writeable.writePOM
@@ -484,21 +484,21 @@
           63
         </td>
         <td>
-          3949
+          3953
         </td>
         <td>
-          2121
+          2150
           -
-          2137
+          2164
         </td>
         <td>
-          Apply
+          Block
         </td>
         <td>
-          org.apache.maven.unbound.Writeable.writePOM
+          java.io.OutputStreamWriter.close
         </td>
         <td style="background: #AEF1AE">
-          Writeable.this.writePOM(writer)
+          writer.close()
         </td>
       </tr><tr>
         <td>
@@ -513,7 +513,7 @@
           2164
         </td>
         <td>
-          Block
+          Apply
         </td>
         <td>
           java.io.OutputStreamWriter.close
@@ -529,18 +529,18 @@
           3951
         </td>
         <td>
-          2150
+          2121
           -
-          2164
+          2137
         </td>
         <td>
-          Apply
+          Block
         </td>
         <td>
-          java.io.OutputStreamWriter.close
+          org.apache.maven.unbound.Writeable.writePOM
         </td>
         <td style="background: #AEF1AE">
-          writer.close()
+          Writeable.this.writePOM(writer)
         </td>
       </tr>
     </table>
