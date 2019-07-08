@@ -45,169 +45,193 @@
 </span>21 <span style=''>  File, FileInputStream, FileOutputStream, FileWriter, OutputStreamWriter }
 </span>22 <span style=''>
 </span>23 <span style=''>import scala.io.Source
-</span>24 <span style=''>import scala.xml.XML
-</span>25 <span style=''>
-</span>26 <span style=''>import com.typesafe.config.{ ConfigFactory, ConfigRenderOptions }
-</span>27 <span style=''>
-</span>28 <span style=''>/**
-</span>29 <span style=''>  * The Maven Unbound Command Line Interface(CLI).  It converts pom.json
-</span>30 <span style=''>  * and pom.conf files to pom.xml files and visa-versa.  It reads the parsed
-</span>31 <span style=''>  * files to extract the list of sub-modules to recurse down a heirarchy
-</span>32 <span style=''>  * performing the same conversions on all necessary modules of a multi-module
-</span>33 <span style=''>  * project.  Normally this class is only used when building a command line
-</span>34 <span style=''>  * interface but can be used in other cases as well.
-</span>35 <span style=''>  */
-</span>36 <span style=''>object Cli {
-</span>37 <span style=''>
-</span>38 <span style=''>  val xmlFileName = </span><span style='background: #AEF1AE'>&quot;/pom.xml&quot;</span><span style=''>
-</span>39 <span style=''>  val hoconFileName = </span><span style='background: #AEF1AE'>&quot;/pom.conf&quot;</span><span style=''>
-</span>40 <span style=''>  val jsonFileName = </span><span style='background: #AEF1AE'>&quot;/pom.json&quot;</span><span style=''>
-</span>41 <span style=''>
-</span>42 <span style=''>  /**
-</span>43 <span style=''>    * Converts a project at path at from Hocon to XML by writing a new pom.xml
-</span>44 <span style=''>    * in at
-</span>45 <span style=''>    * @param at the path where we are writing the new pom.xml file
-</span>46 <span style=''>    * @param project the parsed form of the Project to write to disk
-</span>47 <span style=''>    */
-</span>48 <span style=''>  def createPomHoconFiles(at: String, project: Project): Unit = {
-</span>49 <span style=''>
-</span>50 <span style=''>    val hocon = </span><span style='background: #AEF1AE'>ConfigFactory.parseString(JsonWriter.writeConcisePOM(project))</span><span style=''>
-</span>51 <span style=''>    val writer = </span><span style='background: #AEF1AE'>new OutputStreamWriter(
-</span>52 <span style=''></span><span style='background: #AEF1AE'>      new FileOutputStream(new File(at + hoconFileName)), &quot;UTF-8&quot;)</span><span style=''>
-</span>53 <span style=''>    val options = </span><span style='background: #AEF1AE'>ConfigRenderOptions.defaults().setOriginComments(false)</span><span style=''>
-</span>54 <span style=''>    try {
-</span>55 <span style=''>      </span><span style='background: #AEF1AE'>writer.write(hocon.root().render(options))
-</span>56 <span style=''></span><span style='background: #AEF1AE'>      writer.flush()
-</span>57 <span style=''></span><span style='background: #AEF1AE'>      println(s&quot;generated ${at}${hoconFileName} from ${at}${xmlFileName}&quot;)</span><span style=''>
-</span>58 <span style=''>    } finally {
-</span>59 <span style=''>      </span><span style='background: #AEF1AE'>writer.close()</span><span style=''>
-</span>60 <span style=''>    }
-</span>61 <span style=''>    </span><span style='background: #AEF1AE'>project.modules.foreach { module =&gt;
-</span>62 <span style=''></span><span style='background: #AEF1AE'>      </span><span style='background: #F0ADAD'>recurseXml(at + File.separator + module, (s, p) =&gt;
-</span>63 <span style=''></span><span style='background: #F0ADAD'>        createPomHoconFiles(s, p))</span><span style='background: #AEF1AE'> }</span><span style=''>
-</span>64 <span style=''>  }
-</span>65 <span style=''>
-</span>66 <span style=''>  /**
-</span>67 <span style=''>    * Converts a project at path at from Json to XML by writing a new pom.xml
-</span>68 <span style=''>    * in at
-</span>69 <span style=''>    * @param at the path where we are writing the new pom.xml file
-</span>70 <span style=''>    * @param project the parsed form of the Project to write to disk
-</span>71 <span style=''>    */
-</span>72 <span style=''>  def createPomJsonFiles(at: String, project: Project): Unit = {
-</span>73 <span style=''>
-</span>74 <span style=''>    val fos = </span><span style='background: #AEF1AE'>new FileOutputStream(new File(at + jsonFileName))</span><span style=''>
-</span>75 <span style=''>    try {
-</span>76 <span style=''>      </span><span style='background: #AEF1AE'>JsonWriter.writePOM(project, fos)
-</span>77 <span style=''></span><span style='background: #AEF1AE'>      fos.flush()
-</span>78 <span style=''></span><span style='background: #AEF1AE'>      println(s&quot;generated ${at}${jsonFileName} from ${at}${xmlFileName}&quot;)</span><span style=''>
-</span>79 <span style=''>    } finally </span><span style='background: #AEF1AE'>{
-</span>80 <span style=''></span><span style='background: #AEF1AE'>      fos.close()
-</span>81 <span style=''></span><span style='background: #AEF1AE'>
-</span>82 <span style=''></span><span style='background: #AEF1AE'>      project.modules.foreach { module =&gt;
-</span>83 <span style=''></span><span style='background: #AEF1AE'>        </span><span style='background: #F0ADAD'>recurseXml(at + File.separator + module, (s, p) =&gt;
-</span>84 <span style=''></span><span style='background: #F0ADAD'>          createPomJsonFiles(s, p))</span><span style='background: #AEF1AE'> }
-</span>85 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
-</span>86 <span style=''>  }
-</span>87 <span style=''>
-</span>88 <span style=''>  /**
-</span>89 <span style=''>    * Recurses down a multi-module Maven project converting XML
-</span>90 <span style=''>    * POM files into Hocon or Json
-</span>91 <span style=''>    * @param s the path where to look for POM files
-</span>92 <span style=''>    * @param createFile a function to converts XML POM files into something
-</span>93 <span style=''>    * else and writing those new files to disk in the directory specified by s
-</span>94 <span style=''>    */
-</span>95 <span style=''>  def recurseXml(s: String, createFile: (String, Project) =&gt; Unit): Unit = {
-</span>96 <span style=''>
-</span>97 <span style=''>    val xml = </span><span style='background: #AEF1AE'>new File(s + xmlFileName)</span><span style=''>
-</span>98 <span style=''>
-</span>99 <span style=''>    if (</span><span style='background: #AEF1AE'>xml.exists()</span><span style=''>) </span><span style='background: #AEF1AE'>{
-</span>100 <span style=''></span><span style='background: #AEF1AE'>
-</span>101 <span style=''></span><span style='background: #AEF1AE'>      val xmlIn = new FileInputStream(xml)
-</span>102 <span style=''></span><span style='background: #AEF1AE'>      try {
-</span>103 <span style=''></span><span style='background: #AEF1AE'>        val project = new Project(XML.load(xmlIn))
-</span>104 <span style=''></span><span style='background: #AEF1AE'>        createFile(s, project)
-</span>105 <span style=''></span><span style='background: #AEF1AE'>      } catch {
-</span>106 <span style=''></span><span style='background: #AEF1AE'>        case e: Exception =&gt; </span><span style='background: #F0ADAD'>e.printStackTrace()</span><span style='background: #AEF1AE'>
-</span>107 <span style=''></span><span style='background: #AEF1AE'>      } finally {
-</span>108 <span style=''></span><span style='background: #AEF1AE'>        xmlIn.close()
-</span>109 <span style=''></span><span style='background: #AEF1AE'>      }
-</span>110 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''> else {
-</span>111 <span style=''>
-</span>112 <span style=''>      </span><span style='background: #F0ADAD'>println(s&quot;no pom.json or pom.conf in ${s}&quot;)</span><span style=''>
-</span>113 <span style=''>    }
-</span>114 <span style=''>  }
-</span>115 <span style=''>
-</span>116 <span style=''>  /**
-</span>117 <span style=''>    * Converts a project at path at from XML to something else by writing a
-</span>118 <span style=''>    * new POM file in some other format
-</span>119 <span style=''>    * @param at the path where we are writing the new POM file
-</span>120 <span style=''>    * @param project the parsed form of the Project to write to disk
-</span>121 <span style=''>    * @param form the type of file to write
-</span>122 <span style=''>    */
-</span>123 <span style=''>  def createPomXmlFiles(at: String, project: Project, from: String): Unit = {
-</span>124 <span style=''>
-</span>125 <span style=''>    try {
-</span>126 <span style=''>      </span><span style='background: #AEF1AE'>project.writePOM(at + xmlFileName)
-</span>127 <span style=''></span><span style='background: #AEF1AE'>      println(s&quot;generated ${at}${xmlFileName} from ${at}${from}&quot;)</span><span style=''>
-</span>128 <span style=''>    } finally {
-</span>129 <span style=''>      </span><span style='background: #AEF1AE'>project.modules.foreach { mod =&gt; </span><span style='background: #F0ADAD'>recurse(at + File.separator + mod)</span><span style='background: #AEF1AE'> }</span><span style=''>
-</span>130 <span style=''>    }
-</span>131 <span style=''>  }
-</span>132 <span style=''>
-</span>133 <span style=''>  /**
-</span>134 <span style=''>    * Recurses down a multi-module Maven project converting Hocon or Json
-</span>135 <span style=''>    * POM files into XML.
-</span>136 <span style=''>    * @param s the path where to look for POM files
-</span>137 <span style=''>    */
-</span>138 <span style=''>  def recurse(s: String): Unit = {
-</span>139 <span style=''>
-</span>140 <span style=''>    val conf = </span><span style='background: #AEF1AE'>new File(s + hoconFileName)</span><span style=''>
-</span>141 <span style=''>    val json = </span><span style='background: #AEF1AE'>new File(s + jsonFileName)</span><span style=''>
-</span>142 <span style=''>
-</span>143 <span style=''>    if (</span><span style='background: #AEF1AE'>json.exists()</span><span style=''>) </span><span style='background: #AEF1AE'>{
-</span>144 <span style=''></span><span style='background: #AEF1AE'>
-</span>145 <span style=''></span><span style='background: #AEF1AE'>      val jsonStr = Source.fromFile(json).getLines.mkString
-</span>146 <span style=''></span><span style='background: #AEF1AE'>      val project = JsonReader.readPOM(jsonStr)
-</span>147 <span style=''></span><span style='background: #AEF1AE'>      createPomXmlFiles(s, project, jsonFileName)
-</span>148 <span style=''></span><span style='background: #AEF1AE'>
-</span>149 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''> else </span><span style='background: #AEF1AE'>if (conf.exists()) {
-</span>150 <span style=''></span><span style='background: #AEF1AE'>
-</span>151 <span style=''></span><span style='background: #AEF1AE'>      val project = HoconReader.readPOM(loadConfig(conf))
-</span>152 <span style=''></span><span style='background: #AEF1AE'>      createPomXmlFiles(s, project, hoconFileName)
-</span>153 <span style=''></span><span style='background: #AEF1AE'>
-</span>154 <span style=''></span><span style='background: #AEF1AE'>    } else {
-</span>155 <span style=''></span><span style='background: #AEF1AE'>
-</span>156 <span style=''></span><span style='background: #AEF1AE'>      </span><span style='background: #F0ADAD'>println(s&quot;no pom.json or pom.conf in ${s}&quot;)</span><span style='background: #AEF1AE'>
-</span>157 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
-</span>158 <span style=''>  }
-</span>159 <span style=''>
-</span>160 <span style=''>  /** entry point of the CLI */
-</span>161 <span style=''>  def main(args: Array[String]): Unit = {
-</span>162 <span style=''>
-</span>163 <span style=''>    // generate json or hocon files
-</span>164 <span style=''>    if (</span><span style='background: #F0ADAD'>args.forall { _.startsWith(&quot;--generate&quot;) }</span><span style=''>) </span><span style='background: #F0ADAD'>{
-</span>165 <span style=''></span><span style='background: #F0ADAD'>
-</span>166 <span style=''></span><span style='background: #F0ADAD'>      // read xml and generate json
-</span>167 <span style=''></span><span style='background: #F0ADAD'>      if (args.find(_ == &quot;--generate-json&quot;).isDefined)
-</span>168 <span style=''></span><span style='background: #F0ADAD'>        recurseXml(&quot;.&quot;, (s, p) =&gt; createPomJsonFiles(s, p))
-</span>169 <span style=''></span><span style='background: #F0ADAD'>
-</span>170 <span style=''></span><span style='background: #F0ADAD'>      // read xml and generate hocon
-</span>171 <span style=''></span><span style='background: #F0ADAD'>      if (args.find(_ == &quot;--generate-hocon&quot;).isDefined)
-</span>172 <span style=''></span><span style='background: #F0ADAD'>        recurseXml(&quot;.&quot;, (s, p) =&gt; createPomHoconFiles(s, p))
-</span>173 <span style=''></span><span style='background: #F0ADAD'>
-</span>174 <span style=''></span><span style='background: #F0ADAD'>      val unkn = args.find { s =&gt;
-</span>175 <span style=''></span><span style='background: #F0ADAD'>        s != &quot;--generate-hocon&quot; &amp;&amp; s != &quot;--generate-json&quot; }
-</span>176 <span style=''></span><span style='background: #F0ADAD'>      if (unkn.isDefined) {
-</span>177 <span style=''></span><span style='background: #F0ADAD'>        println(
-</span>178 <span style=''></span><span style='background: #F0ADAD'>          &quot;can't generate with ${unkn.get}, supported types are hocon and json&quot;)
-</span>179 <span style=''></span><span style='background: #F0ADAD'>        println(&quot;use please use --generate-hocon or --generate-json&quot;)
-</span>180 <span style=''></span><span style='background: #F0ADAD'>      }
-</span>181 <span style=''></span><span style='background: #F0ADAD'>    }</span><span style=''> else {
-</span>182 <span style=''>
-</span>183 <span style=''>      </span><span style='background: #F0ADAD'>recurse(&quot;.&quot;)</span><span style=''>
-</span>184 <span style=''>    }
-</span>185 <span style=''>  }
-</span>186 <span style=''>}
+</span>24 <span style=''>import scala.xml.Elem
+</span>25 <span style=''>import scala.xml.parsing.ConstructingParser
+</span>26 <span style=''>
+</span>27 <span style=''>import com.typesafe.config.{ ConfigFactory, ConfigRenderOptions }
+</span>28 <span style=''>
+</span>29 <span style=''>/**
+</span>30 <span style=''>  * The Maven Unbound Command Line Interface(CLI).  It converts pom.json
+</span>31 <span style=''>  * and pom.conf files to pom.xml files and visa-versa.  It reads the parsed
+</span>32 <span style=''>  * files to extract the list of sub-modules to recurse down a heirarchy
+</span>33 <span style=''>  * performing the same conversions on all necessary modules of a multi-module
+</span>34 <span style=''>  * project.  Normally this class is only used when building a command line
+</span>35 <span style=''>  * interface but can be used in other cases as well.
+</span>36 <span style=''>  */
+</span>37 <span style=''>object Cli {
+</span>38 <span style=''>
+</span>39 <span style=''>  val xmlFileName = </span><span style='background: #AEF1AE'>&quot;/pom.xml&quot;</span><span style=''>
+</span>40 <span style=''>  val hoconFileName = </span><span style='background: #AEF1AE'>&quot;/pom.conf&quot;</span><span style=''>
+</span>41 <span style=''>  val jsonFileName = </span><span style='background: #AEF1AE'>&quot;/pom.json&quot;</span><span style=''>
+</span>42 <span style=''>
+</span>43 <span style=''>  /**
+</span>44 <span style=''>    * Converts a project at path at from Hocon to XML by writing a new pom.xml
+</span>45 <span style=''>    * in at
+</span>46 <span style=''>    * @param at the path where we are writing the new pom.xml file
+</span>47 <span style=''>    * @param project the parsed form of the Project to write to disk
+</span>48 <span style=''>    */
+</span>49 <span style=''>  def createPomHoconFiles(
+</span>50 <span style=''>    at: String, comments: DocComments, project: Project): Unit = {
+</span>51 <span style=''>
+</span>52 <span style=''>    val hocon = </span><span style='background: #AEF1AE'>ConfigFactory.parseString(JsonWriter.writeConcisePOM(project))</span><span style=''>
+</span>53 <span style=''>    val hocon2 = </span><span style='background: #AEF1AE'>comments.insertConf(hocon)</span><span style=''>
+</span>54 <span style=''>    val writer = </span><span style='background: #AEF1AE'>new OutputStreamWriter(
+</span>55 <span style=''></span><span style='background: #AEF1AE'>      new FileOutputStream(new File(at + hoconFileName)), &quot;UTF-8&quot;)</span><span style=''>
+</span>56 <span style=''>    val options = </span><span style='background: #AEF1AE'>ConfigRenderOptions.defaults().setOriginComments(false)</span><span style=''>
+</span>57 <span style=''>    try {
+</span>58 <span style=''>      </span><span style='background: #AEF1AE'>writer.write(hocon2.root().render(options))
+</span>59 <span style=''></span><span style='background: #AEF1AE'>      writer.flush()
+</span>60 <span style=''></span><span style='background: #AEF1AE'>      println(s&quot;generated ${at}${hoconFileName} from ${at}${xmlFileName}&quot;)</span><span style=''>
+</span>61 <span style=''>    } finally {
+</span>62 <span style=''>      </span><span style='background: #AEF1AE'>writer.close()</span><span style=''>
+</span>63 <span style=''>    }
+</span>64 <span style=''>    </span><span style='background: #AEF1AE'>project.modules.foreach { module =&gt;
+</span>65 <span style=''></span><span style='background: #AEF1AE'>      </span><span style='background: #F0ADAD'>recurseXml(at + File.separator + module, (s, c, p) =&gt;
+</span>66 <span style=''></span><span style='background: #F0ADAD'>        createPomHoconFiles(s, c, p))</span><span style='background: #AEF1AE'> }</span><span style=''>
+</span>67 <span style=''>  }
+</span>68 <span style=''>
+</span>69 <span style=''>  /**
+</span>70 <span style=''>    * Converts a project at path at from Json to XML by writing a new pom.xml
+</span>71 <span style=''>    * in at
+</span>72 <span style=''>    * @param at the path where we are writing the new pom.xml file
+</span>73 <span style=''>    * @param project the parsed form of the Project to write to disk
+</span>74 <span style=''>    */
+</span>75 <span style=''>  def createPomJsonFiles(at: String, project: Project): Unit = {
+</span>76 <span style=''>
+</span>77 <span style=''>    val fos = </span><span style='background: #AEF1AE'>new FileOutputStream(new File(at + jsonFileName))</span><span style=''>
+</span>78 <span style=''>    try {
+</span>79 <span style=''>      </span><span style='background: #AEF1AE'>JsonWriter.writePOM(project, fos)
+</span>80 <span style=''></span><span style='background: #AEF1AE'>      fos.flush()
+</span>81 <span style=''></span><span style='background: #AEF1AE'>      println(s&quot;generated ${at}${jsonFileName} from ${at}${xmlFileName}&quot;)</span><span style=''>
+</span>82 <span style=''>    } finally </span><span style='background: #AEF1AE'>{
+</span>83 <span style=''></span><span style='background: #AEF1AE'>      fos.close()
+</span>84 <span style=''></span><span style='background: #AEF1AE'>
+</span>85 <span style=''></span><span style='background: #AEF1AE'>      project.modules.foreach { module =&gt;
+</span>86 <span style=''></span><span style='background: #AEF1AE'>        </span><span style='background: #F0ADAD'>recurseXml(at + File.separator + module, (s, _, p) =&gt;
+</span>87 <span style=''></span><span style='background: #F0ADAD'>          createPomJsonFiles(s, p))</span><span style='background: #AEF1AE'> }
+</span>88 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
+</span>89 <span style=''>  }
+</span>90 <span style=''>
+</span>91 <span style=''>  /**
+</span>92 <span style=''>    * Recurses down a multi-module Maven project converting XML
+</span>93 <span style=''>    * POM files into Hocon or Json
+</span>94 <span style=''>    * @param s the path where to look for POM files
+</span>95 <span style=''>    * @param createFile a function to converts XML POM files into something
+</span>96 <span style=''>    * else and writing those new files to disk in the directory specified by s
+</span>97 <span style=''>    */
+</span>98 <span style=''>  def recurseXml(s: String, createFile: (String, DocComments, Project) =&gt; Unit):
+</span>99 <span style=''>      Unit = {
+</span>100 <span style=''>
+</span>101 <span style=''>    val xml = </span><span style='background: #AEF1AE'>new File(s + xmlFileName)</span><span style=''>
+</span>102 <span style=''>
+</span>103 <span style=''>    if (</span><span style='background: #AEF1AE'>xml.exists()</span><span style=''>) </span><span style='background: #AEF1AE'>{
+</span>104 <span style=''></span><span style='background: #AEF1AE'>
+</span>105 <span style=''></span><span style='background: #AEF1AE'>      val xmlIn = new FileInputStream(xml)
+</span>106 <span style=''></span><span style='background: #AEF1AE'>      try {
+</span>107 <span style=''></span><span style='background: #AEF1AE'>        // val root = scala.xml.XML.load(xmlIn)
+</span>108 <span style=''></span><span style='background: #AEF1AE'>        val parser =
+</span>109 <span style=''></span><span style='background: #AEF1AE'>          ConstructingParser.fromSource(Source.fromInputStream(xmlIn), true)
+</span>110 <span style=''></span><span style='background: #AEF1AE'>        val root = parser.document.docElem.asInstanceOf[Elem]
+</span>111 <span style=''></span><span style='background: #AEF1AE'>        // extract comments from root
+</span>112 <span style=''></span><span style='background: #AEF1AE'>        val comments = CommentExtractor(root)
+</span>113 <span style=''></span><span style='background: #AEF1AE'>        val project = new Project(root)
+</span>114 <span style=''></span><span style='background: #AEF1AE'>        // pass them to createFile which can insert them back into the
+</span>115 <span style=''></span><span style='background: #AEF1AE'>        // Config object before its rendered
+</span>116 <span style=''></span><span style='background: #AEF1AE'>        createFile(s, comments, project)
+</span>117 <span style=''></span><span style='background: #AEF1AE'>      } catch {
+</span>118 <span style=''></span><span style='background: #AEF1AE'>        case e: Exception =&gt; </span><span style='background: #F0ADAD'>e.printStackTrace()</span><span style='background: #AEF1AE'>
+</span>119 <span style=''></span><span style='background: #AEF1AE'>      } finally {
+</span>120 <span style=''></span><span style='background: #AEF1AE'>        xmlIn.close()
+</span>121 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>122 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''> else {
+</span>123 <span style=''>
+</span>124 <span style=''>      </span><span style='background: #F0ADAD'>println(s&quot;no pom.json or pom.conf in ${s}&quot;)</span><span style=''>
+</span>125 <span style=''>    }
+</span>126 <span style=''>  }
+</span>127 <span style=''>
+</span>128 <span style=''>  /**
+</span>129 <span style=''>    * Converts a project at path at from XML to something else by writing a
+</span>130 <span style=''>    * new POM file in some other format
+</span>131 <span style=''>    * @param at the path where we are writing the new POM file
+</span>132 <span style=''>    * @param project the parsed form of the Project to write to disk
+</span>133 <span style=''>    * @param form the type of file to write
+</span>134 <span style=''>    */
+</span>135 <span style=''>  def createPomXmlFiles(at: String, project: Project, from: String): Unit = {
+</span>136 <span style=''>
+</span>137 <span style=''>    try {
+</span>138 <span style=''>      </span><span style='background: #AEF1AE'>project.writePOM(at + xmlFileName)
+</span>139 <span style=''></span><span style='background: #AEF1AE'>      println(s&quot;generated ${at}${xmlFileName} from ${at}${from}&quot;)</span><span style=''>
+</span>140 <span style=''>    } finally {
+</span>141 <span style=''>      </span><span style='background: #AEF1AE'>project.modules.foreach { mod =&gt; </span><span style='background: #F0ADAD'>recurse(at + File.separator + mod)</span><span style='background: #AEF1AE'> }</span><span style=''>
+</span>142 <span style=''>    }
+</span>143 <span style=''>  }
+</span>144 <span style=''>
+</span>145 <span style=''>  /**
+</span>146 <span style=''>    * Recurses down a multi-module Maven project converting Hocon or Json
+</span>147 <span style=''>    * POM files into XML.
+</span>148 <span style=''>    * @param s the path where to look for POM files
+</span>149 <span style=''>    */
+</span>150 <span style=''>  def recurse(s: String): Unit = {
+</span>151 <span style=''>
+</span>152 <span style=''>    val conf = </span><span style='background: #AEF1AE'>new File(s + hoconFileName)</span><span style=''>
+</span>153 <span style=''>    val json = </span><span style='background: #AEF1AE'>new File(s + jsonFileName)</span><span style=''>
+</span>154 <span style=''>
+</span>155 <span style=''>    if (</span><span style='background: #AEF1AE'>json.exists()</span><span style=''>) </span><span style='background: #AEF1AE'>{
+</span>156 <span style=''></span><span style='background: #AEF1AE'>
+</span>157 <span style=''></span><span style='background: #AEF1AE'>      val jsonStr = Source.fromFile(json).getLines.mkString
+</span>158 <span style=''></span><span style='background: #AEF1AE'>      val project = JsonReader.readPOM(jsonStr)
+</span>159 <span style=''></span><span style='background: #AEF1AE'>      createPomXmlFiles(s, project, jsonFileName)
+</span>160 <span style=''></span><span style='background: #AEF1AE'>
+</span>161 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''> else </span><span style='background: #AEF1AE'>if (conf.exists()) {
+</span>162 <span style=''></span><span style='background: #AEF1AE'>
+</span>163 <span style=''></span><span style='background: #AEF1AE'>      val config = loadConfig(conf)
+</span>164 <span style=''></span><span style='background: #AEF1AE'>      val project = HoconReader.readPOM(config)
+</span>165 <span style=''></span><span style='background: #AEF1AE'>      if (false) </span><span style='background: #F0ADAD'>{ // if to write comments or not
+</span>166 <span style=''></span><span style='background: #F0ADAD'>        val comments = CommentExtractor(config)
+</span>167 <span style=''></span><span style='background: #F0ADAD'>        try {
+</span>168 <span style=''></span><span style='background: #F0ADAD'>          (new Writeable {
+</span>169 <span style=''></span><span style='background: #F0ADAD'>            val xml = comments.insertXml(project.xml)
+</span>170 <span style=''></span><span style='background: #F0ADAD'>          }).writePOM(s + xmlFileName)
+</span>171 <span style=''></span><span style='background: #F0ADAD'>          println(s&quot;generated ${s}${xmlFileName} from ${s}${hoconFileName}&quot;)
+</span>172 <span style=''></span><span style='background: #F0ADAD'>        } finally {
+</span>173 <span style=''></span><span style='background: #F0ADAD'>          project.modules.foreach { mod =&gt; recurse(s + File.separator + mod) }
+</span>174 <span style=''></span><span style='background: #F0ADAD'>        }
+</span>175 <span style=''></span><span style='background: #F0ADAD'>      }</span><span style='background: #AEF1AE'> else {
+</span>176 <span style=''></span><span style='background: #AEF1AE'>        createPomXmlFiles(s, project, hoconFileName)
+</span>177 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>178 <span style=''></span><span style='background: #AEF1AE'>    } else {
+</span>179 <span style=''></span><span style='background: #AEF1AE'>
+</span>180 <span style=''></span><span style='background: #AEF1AE'>      </span><span style='background: #F0ADAD'>println(s&quot;no pom.json or pom.conf in ${s}&quot;)</span><span style='background: #AEF1AE'>
+</span>181 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
+</span>182 <span style=''>  }
+</span>183 <span style=''>
+</span>184 <span style=''>  /** entry point of the CLI */
+</span>185 <span style=''>  def main(args: Array[String]): Unit = {
+</span>186 <span style=''>
+</span>187 <span style=''>    // generate json or hocon files
+</span>188 <span style=''>    if (</span><span style='background: #F0ADAD'>args.forall { _.startsWith(&quot;--generate&quot;) }</span><span style=''>) </span><span style='background: #F0ADAD'>{
+</span>189 <span style=''></span><span style='background: #F0ADAD'>
+</span>190 <span style=''></span><span style='background: #F0ADAD'>      // read xml and generate json
+</span>191 <span style=''></span><span style='background: #F0ADAD'>      if (args.find(_ == &quot;--generate-json&quot;).isDefined)
+</span>192 <span style=''></span><span style='background: #F0ADAD'>        recurseXml(&quot;.&quot;, (s, _, p) =&gt; createPomJsonFiles(s, p))
+</span>193 <span style=''></span><span style='background: #F0ADAD'>
+</span>194 <span style=''></span><span style='background: #F0ADAD'>      // read xml and generate hocon
+</span>195 <span style=''></span><span style='background: #F0ADAD'>      if (args.find(_ == &quot;--generate-hocon&quot;).isDefined)
+</span>196 <span style=''></span><span style='background: #F0ADAD'>        recurseXml(&quot;.&quot;, (s, c, p) =&gt; createPomHoconFiles(s, c, p))
+</span>197 <span style=''></span><span style='background: #F0ADAD'>
+</span>198 <span style=''></span><span style='background: #F0ADAD'>      val unkn = args.find { s =&gt;
+</span>199 <span style=''></span><span style='background: #F0ADAD'>        s != &quot;--generate-hocon&quot; &amp;&amp; s != &quot;--generate-json&quot; }
+</span>200 <span style=''></span><span style='background: #F0ADAD'>      if (unkn.isDefined) {
+</span>201 <span style=''></span><span style='background: #F0ADAD'>        println(
+</span>202 <span style=''></span><span style='background: #F0ADAD'>          &quot;can't generate with ${unkn.get}, supported types are hocon and json&quot;)
+</span>203 <span style=''></span><span style='background: #F0ADAD'>        println(&quot;use please use --generate-hocon or --generate-json&quot;)
+</span>204 <span style=''></span><span style='background: #F0ADAD'>      }
+</span>205 <span style=''></span><span style='background: #F0ADAD'>    }</span><span style=''> else {
+</span>206 <span style=''>
+</span>207 <span style=''>      </span><span style='background: #F0ADAD'>recurse(&quot;.&quot;)</span><span style=''>
+</span>208 <span style=''>    }
+</span>209 <span style=''>  }
+</span>210 <span style=''>}
 </span></pre>
           </div>
           <div class="tab-pane" id="statementlist">
@@ -221,15 +245,15 @@
         <th>Code</th>
       </tr><tr>
         <td>
-          38
+          39
         </td>
         <td>
           506
         </td>
         <td>
-          1517
+          1562
           -
-          1527
+          1572
         </td>
         <td>
           Literal
@@ -242,15 +266,15 @@
         </td>
       </tr><tr>
         <td>
-          39
+          40
         </td>
         <td>
           507
         </td>
         <td>
-          1550
+          1595
           -
-          1561
+          1606
         </td>
         <td>
           Literal
@@ -263,15 +287,15 @@
         </td>
       </tr><tr>
         <td>
-          40
+          41
         </td>
         <td>
           508
         </td>
         <td>
-          1583
+          1628
           -
-          1594
+          1639
         </td>
         <td>
           Literal
@@ -284,15 +308,15 @@
         </td>
       </tr><tr>
         <td>
-          50
+          52
         </td>
         <td>
           510
         </td>
         <td>
-          1919
+          1992
           -
-          1981
+          2054
         </td>
         <td>
           Apply
@@ -305,15 +329,15 @@
         </td>
       </tr><tr>
         <td>
-          50
+          52
         </td>
         <td>
           509
         </td>
         <td>
-          1945
+          2018
           -
-          1980
+          2053
         </td>
         <td>
           Apply
@@ -326,15 +350,36 @@
         </td>
       </tr><tr>
         <td>
-          51
+          53
         </td>
         <td>
-          516
+          511
         </td>
         <td>
-          1999
+          2072
           -
-          2089
+          2098
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.DocComments.insertConf
+        </td>
+        <td style="background: #AEF1AE">
+          comments.insertConf(hocon)
+        </td>
+      </tr><tr>
+        <td>
+          54
+        </td>
+        <td>
+          517
+        </td>
+        <td>
+          2116
+          -
+          2206
         </td>
         <td>
           Apply
@@ -347,36 +392,15 @@
         </td>
       </tr><tr>
         <td>
-          52
+          55
         </td>
         <td>
           514
         </td>
         <td>
-          2029
+          2167
           -
-          2079
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.io.FileOutputStream.&lt;init&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          new java.io.FileOutputStream(new java.io.File(at.+(Cli.this.hoconFileName)))
-        </td>
-      </tr><tr>
-        <td>
-          52
-        </td>
-        <td>
-          513
-        </td>
-        <td>
-          2050
-          -
-          2078
+          2195
         </td>
         <td>
           Apply
@@ -389,36 +413,15 @@
         </td>
       </tr><tr>
         <td>
-          52
+          55
         </td>
         <td>
-          512
+          516
         </td>
         <td>
-          2059
+          2198
           -
-          2077
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.lang.String.+
-        </td>
-        <td style="background: #AEF1AE">
-          at.+(Cli.this.hoconFileName)
-        </td>
-      </tr><tr>
-        <td>
-          52
-        </td>
-        <td>
-          515
-        </td>
-        <td>
-          2081
-          -
-          2088
+          2205
         </td>
         <td>
           Literal
@@ -431,15 +434,36 @@
         </td>
       </tr><tr>
         <td>
-          52
+          55
         </td>
         <td>
-          511
+          513
         </td>
         <td>
-          2064
+          2176
           -
-          2077
+          2194
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.+
+        </td>
+        <td style="background: #AEF1AE">
+          at.+(Cli.this.hoconFileName)
+        </td>
+      </tr><tr>
+        <td>
+          55
+        </td>
+        <td>
+          512
+        </td>
+        <td>
+          2181
+          -
+          2194
         </td>
         <td>
           Select
@@ -452,15 +476,36 @@
         </td>
       </tr><tr>
         <td>
-          53
+          55
         </td>
         <td>
-          517
+          515
         </td>
         <td>
-          2108
+          2146
           -
-          2163
+          2196
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.FileOutputStream.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new java.io.FileOutputStream(new java.io.File(at.+(Cli.this.hoconFileName)))
+        </td>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          518
+        </td>
+        <td>
+          2225
+          -
+          2280
         </td>
         <td>
           Apply
@@ -473,15 +518,15 @@
         </td>
       </tr><tr>
         <td>
-          54
+          57
         </td>
         <td>
-          530
+          531
         </td>
         <td>
-          2180
+          2297
           -
-          2318
+          2436
         </td>
         <td>
           Block
@@ -491,43 +536,22 @@
         </td>
         <td style="background: #AEF1AE">
           {
-  writer.write(hocon.root().render(options));
+  writer.write(hocon2.root().render(options));
   writer.flush();
   scala.Predef.println(scala.StringContext.apply(&quot;generated &quot;, &quot;&quot;, &quot; from &quot;, &quot;&quot;, &quot;&quot;).s(at, Cli.this.hoconFileName, at, Cli.this.xmlFileName))
 }
         </td>
       </tr><tr>
         <td>
-          55
+          58
         </td>
         <td>
           519
         </td>
         <td>
-          2180
+          2310
           -
-          2222
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.io.Writer.write
-        </td>
-        <td style="background: #AEF1AE">
-          writer.write(hocon.root().render(options))
-        </td>
-      </tr><tr>
-        <td>
-          55
-        </td>
-        <td>
-          518
-        </td>
-        <td>
-          2193
-          -
-          2221
+          2339
         </td>
         <td>
           Apply
@@ -536,19 +560,40 @@
           com.typesafe.config.ConfigValue.render
         </td>
         <td style="background: #AEF1AE">
-          hocon.root().render(options)
+          hocon2.root().render(options)
         </td>
       </tr><tr>
         <td>
-          56
+          58
         </td>
         <td>
           520
         </td>
         <td>
-          2229
+          2297
           -
-          2243
+          2340
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.Writer.write
+        </td>
+        <td style="background: #AEF1AE">
+          writer.write(hocon2.root().render(options))
+        </td>
+      </tr><tr>
+        <td>
+          59
+        </td>
+        <td>
+          521
+        </td>
+        <td>
+          2347
+          -
+          2361
         </td>
         <td>
           Apply
@@ -561,15 +606,15 @@
         </td>
       </tr><tr>
         <td>
-          57
+          60
         </td>
         <td>
           523
         </td>
         <td>
-          2291
+          2393
           -
-          2298
+          2394
         </td>
         <td>
           Literal
@@ -578,19 +623,19 @@
           &lt;nosymbol&gt;
         </td>
         <td style="background: #AEF1AE">
-          &quot; from &quot;
+          &quot;&quot;
         </td>
       </tr><tr>
         <td>
-          57
+          60
         </td>
         <td>
           525
         </td>
         <td>
-          2316
+          2420
           -
-          2317
+          2421
         </td>
         <td>
           Literal
@@ -603,99 +648,15 @@
         </td>
       </tr><tr>
         <td>
-          57
+          60
         </td>
         <td>
           528
         </td>
         <td>
-          2258
+          2422
           -
-          2317
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.StringContext.s
-        </td>
-        <td style="background: #AEF1AE">
-          scala.StringContext.apply(&quot;generated &quot;, &quot;&quot;, &quot; from &quot;, &quot;&quot;, &quot;&quot;).s(at, Cli.this.hoconFileName, at, Cli.this.xmlFileName)
-        </td>
-      </tr><tr>
-        <td>
-          57
-        </td>
-        <td>
-          522
-        </td>
-        <td>
-          2275
-          -
-          2276
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          &quot;&quot;
-        </td>
-      </tr><tr>
-        <td>
-          57
-        </td>
-        <td>
-          521
-        </td>
-        <td>
-          2260
-          -
-          2271
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          &quot;generated &quot;
-        </td>
-      </tr><tr>
-        <td>
-          57
-        </td>
-        <td>
-          524
-        </td>
-        <td>
-          2302
-          -
-          2303
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          &quot;&quot;
-        </td>
-      </tr><tr>
-        <td>
-          57
-        </td>
-        <td>
-          527
-        </td>
-        <td>
-          2304
-          -
-          2315
+          2433
         </td>
         <td>
           Select
@@ -708,36 +669,36 @@
         </td>
       </tr><tr>
         <td>
-          57
+          60
         </td>
         <td>
-          526
+          522
         </td>
         <td>
-          2277
+          2378
           -
-          2290
+          2389
         </td>
         <td>
-          Select
+          Literal
         </td>
         <td>
-          org.apache.maven.unbound.Cli.hoconFileName
+          &lt;nosymbol&gt;
         </td>
         <td style="background: #AEF1AE">
-          Cli.this.hoconFileName
+          &quot;generated &quot;
         </td>
       </tr><tr>
         <td>
-          57
+          60
         </td>
         <td>
-          529
+          530
         </td>
         <td>
-          2250
+          2368
           -
-          2318
+          2436
         </td>
         <td>
           Apply
@@ -750,15 +711,120 @@
         </td>
       </tr><tr>
         <td>
-          59
+          60
+        </td>
+        <td>
+          524
+        </td>
+        <td>
+          2409
+          -
+          2416
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          &quot; from &quot;
+        </td>
+      </tr><tr>
+        <td>
+          60
+        </td>
+        <td>
+          527
+        </td>
+        <td>
+          2395
+          -
+          2408
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Cli.hoconFileName
+        </td>
+        <td style="background: #AEF1AE">
+          Cli.this.hoconFileName
+        </td>
+      </tr><tr>
+        <td>
+          60
+        </td>
+        <td>
+          526
+        </td>
+        <td>
+          2434
+          -
+          2435
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          &quot;&quot;
+        </td>
+      </tr><tr>
+        <td>
+          60
+        </td>
+        <td>
+          529
+        </td>
+        <td>
+          2376
+          -
+          2435
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.StringContext.s
+        </td>
+        <td style="background: #AEF1AE">
+          scala.StringContext.apply(&quot;generated &quot;, &quot;&quot;, &quot; from &quot;, &quot;&quot;, &quot;&quot;).s(at, Cli.this.hoconFileName, at, Cli.this.xmlFileName)
+        </td>
+      </tr><tr>
+        <td>
+          62
         </td>
         <td>
           532
         </td>
         <td>
-          2341
+          2459
           -
-          2355
+          2473
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.OutputStreamWriter.close
+        </td>
+        <td style="background: #AEF1AE">
+          writer.close()
+        </td>
+      </tr><tr>
+        <td>
+          62
+        </td>
+        <td>
+          533
+        </td>
+        <td>
+          2459
+          -
+          2473
         </td>
         <td>
           Block
@@ -771,36 +837,15 @@
         </td>
       </tr><tr>
         <td>
-          59
+          64
         </td>
         <td>
-          531
+          537
         </td>
         <td>
-          2341
+          2484
           -
-          2355
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.io.OutputStreamWriter.close
-        </td>
-        <td style="background: #AEF1AE">
-          writer.close()
-        </td>
-      </tr><tr>
-        <td>
-          61
-        </td>
-        <td>
-          536
-        </td>
-        <td>
-          2366
-          -
-          2495
+          2619
         </td>
         <td>
           Apply
@@ -809,19 +854,19 @@
           scala.collection.IterableLike.foreach
         </td>
         <td style="background: #AEF1AE">
-          project.modules.foreach[Unit](((module: String) =&gt; Cli.this.recurseXml(at.+(java.io.File.separator).+(module), ((s: String, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomHoconFiles(s, p)))))
+          project.modules.foreach[Unit](((module: String) =&gt; Cli.this.recurseXml(at.+(java.io.File.separator).+(module), ((s: String, c: org.apache.maven.unbound.DocComments, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomHoconFiles(s, c, p)))))
         </td>
       </tr><tr>
         <td>
-          62
+          65
         </td>
         <td>
-          533
+          534
         </td>
         <td>
-          2419
+          2537
           -
-          2447
+          2565
         </td>
         <td>
           Apply
@@ -834,15 +879,15 @@
         </td>
       </tr><tr>
         <td>
-          62
+          65
         </td>
         <td>
-          535
+          536
         </td>
         <td>
-          2408
+          2526
           -
-          2493
+          2617
         </td>
         <td>
           Apply
@@ -851,19 +896,19 @@
           org.apache.maven.unbound.Cli.recurseXml
         </td>
         <td style="background: #F0ADAD">
-          Cli.this.recurseXml(at.+(java.io.File.separator).+(module), ((s: String, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomHoconFiles(s, p)))
+          Cli.this.recurseXml(at.+(java.io.File.separator).+(module), ((s: String, c: org.apache.maven.unbound.DocComments, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomHoconFiles(s, c, p)))
         </td>
       </tr><tr>
         <td>
-          63
+          66
         </td>
         <td>
-          534
+          535
         </td>
         <td>
-          2467
+          2588
           -
-          2492
+          2616
         </td>
         <td>
           Apply
@@ -872,19 +917,19 @@
           org.apache.maven.unbound.Cli.createPomHoconFiles
         </td>
         <td style="background: #F0ADAD">
-          Cli.this.createPomHoconFiles(s, p)
+          Cli.this.createPomHoconFiles(s, c, p)
         </td>
       </tr><tr>
         <td>
-          74
+          77
         </td>
         <td>
-          540
+          541
         </td>
         <td>
-          2820
+          2944
           -
-          2869
+          2993
         </td>
         <td>
           Apply
@@ -897,36 +942,15 @@
         </td>
       </tr><tr>
         <td>
-          74
+          77
         </td>
         <td>
-          537
+          540
         </td>
         <td>
-          2855
+          2965
           -
-          2867
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          org.apache.maven.unbound.Cli.jsonFileName
-        </td>
-        <td style="background: #AEF1AE">
-          Cli.this.jsonFileName
-        </td>
-      </tr><tr>
-        <td>
-          74
-        </td>
-        <td>
-          539
-        </td>
-        <td>
-          2841
-          -
-          2868
+          2992
         </td>
         <td>
           Apply
@@ -939,15 +963,15 @@
         </td>
       </tr><tr>
         <td>
-          74
+          77
         </td>
         <td>
-          538
+          539
         </td>
         <td>
-          2850
+          2974
           -
-          2867
+          2991
         </td>
         <td>
           Apply
@@ -960,15 +984,36 @@
         </td>
       </tr><tr>
         <td>
-          75
+          77
         </td>
         <td>
-          553
+          538
         </td>
         <td>
-          2886
+          2979
           -
-          3011
+          2991
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Cli.jsonFileName
+        </td>
+        <td style="background: #AEF1AE">
+          Cli.this.jsonFileName
+        </td>
+      </tr><tr>
+        <td>
+          78
+        </td>
+        <td>
+          554
+        </td>
+        <td>
+          3010
+          -
+          3135
         </td>
         <td>
           Block
@@ -985,36 +1030,15 @@
         </td>
       </tr><tr>
         <td>
-          76
+          79
         </td>
         <td>
-          541
+          543
         </td>
         <td>
-          2897
+          3010
           -
-          2897
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          org.apache.maven.unbound.JsonWriter.writePOM$default$3
-        </td>
-        <td style="background: #AEF1AE">
-          JsonWriter.writePOM$default$3
-        </td>
-      </tr><tr>
-        <td>
-          76
-        </td>
-        <td>
-          542
-        </td>
-        <td>
-          2886
-          -
-          2919
+          3043
         </td>
         <td>
           Apply
@@ -1027,15 +1051,36 @@
         </td>
       </tr><tr>
         <td>
-          77
+          79
         </td>
         <td>
-          543
+          542
         </td>
         <td>
-          2926
+          3021
           -
-          2937
+          3021
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.JsonWriter.writePOM$default$3
+        </td>
+        <td style="background: #AEF1AE">
+          JsonWriter.writePOM$default$3
+        </td>
+      </tr><tr>
+        <td>
+          80
+        </td>
+        <td>
+          544
+        </td>
+        <td>
+          3050
+          -
+          3061
         </td>
         <td>
           Apply
@@ -1048,36 +1093,15 @@
         </td>
       </tr><tr>
         <td>
-          78
+          81
         </td>
         <td>
           550
         </td>
         <td>
-          2997
+          3095
           -
-          3008
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          org.apache.maven.unbound.Cli.xmlFileName
-        </td>
-        <td style="background: #AEF1AE">
-          Cli.this.xmlFileName
-        </td>
-      </tr><tr>
-        <td>
-          78
-        </td>
-        <td>
-          549
-        </td>
-        <td>
-          2971
-          -
-          2983
+          3107
         </td>
         <td>
           Select
@@ -1090,57 +1114,15 @@
         </td>
       </tr><tr>
         <td>
-          78
+          81
         </td>
         <td>
-          552
+          549
         </td>
         <td>
-          2944
+          3133
           -
-          3011
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.Predef.println
-        </td>
-        <td style="background: #AEF1AE">
-          scala.Predef.println(scala.StringContext.apply(&quot;generated &quot;, &quot;&quot;, &quot; from &quot;, &quot;&quot;, &quot;&quot;).s(at, Cli.this.jsonFileName, at, Cli.this.xmlFileName))
-        </td>
-      </tr><tr>
-        <td>
-          78
-        </td>
-        <td>
-          546
-        </td>
-        <td>
-          2984
-          -
-          2991
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          &quot; from &quot;
-        </td>
-      </tr><tr>
-        <td>
-          78
-        </td>
-        <td>
-          548
-        </td>
-        <td>
-          3009
-          -
-          3010
+          3134
         </td>
         <td>
           Literal
@@ -1153,15 +1135,15 @@
         </td>
       </tr><tr>
         <td>
-          78
+          81
         </td>
         <td>
-          551
+          552
         </td>
         <td>
-          2952
+          3076
           -
-          3010
+          3134
         </td>
         <td>
           Apply
@@ -1174,15 +1156,15 @@
         </td>
       </tr><tr>
         <td>
-          78
+          81
         </td>
         <td>
-          545
+          546
         </td>
         <td>
-          2969
+          3093
           -
-          2970
+          3094
         </td>
         <td>
           Literal
@@ -1195,36 +1177,15 @@
         </td>
       </tr><tr>
         <td>
-          78
+          81
         </td>
         <td>
-          544
+          548
         </td>
         <td>
-          2954
+          3119
           -
-          2965
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          &quot;generated &quot;
-        </td>
-      </tr><tr>
-        <td>
-          78
-        </td>
-        <td>
-          547
-        </td>
-        <td>
-          2995
-          -
-          2996
+          3120
         </td>
         <td>
           Literal
@@ -1237,165 +1198,15 @@
         </td>
       </tr><tr>
         <td>
-          79
+          81
         </td>
         <td>
-          559
+          551
         </td>
         <td>
-          3026
+          3121
           -
-          3191
-        </td>
-        <td>
-          Block
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          {
-  fos.close();
-  project.modules.foreach[Unit](((module: String) =&gt; Cli.this.recurseXml(at.+(java.io.File.separator).+(module), ((s: String, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomJsonFiles(s, p)))))
-}
-        </td>
-      </tr><tr>
-        <td>
-          80
-        </td>
-        <td>
-          554
-        </td>
-        <td>
-          3034
-          -
-          3045
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.io.FileOutputStream.close
-        </td>
-        <td style="background: #AEF1AE">
-          fos.close()
-        </td>
-      </tr><tr>
-        <td>
-          82
-        </td>
-        <td>
-          558
-        </td>
-        <td>
-          3053
-          -
-          3185
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.collection.IterableLike.foreach
-        </td>
-        <td style="background: #AEF1AE">
-          project.modules.foreach[Unit](((module: String) =&gt; Cli.this.recurseXml(at.+(java.io.File.separator).+(module), ((s: String, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomJsonFiles(s, p)))))
-        </td>
-      </tr><tr>
-        <td>
-          83
-        </td>
-        <td>
-          555
-        </td>
-        <td>
-          3108
-          -
-          3136
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.lang.String.+
-        </td>
-        <td style="background: #F0ADAD">
-          at.+(java.io.File.separator).+(module)
-        </td>
-      </tr><tr>
-        <td>
-          83
-        </td>
-        <td>
-          557
-        </td>
-        <td>
-          3097
-          -
-          3183
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.Cli.recurseXml
-        </td>
-        <td style="background: #F0ADAD">
-          Cli.this.recurseXml(at.+(java.io.File.separator).+(module), ((s: String, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomJsonFiles(s, p)))
-        </td>
-      </tr><tr>
-        <td>
-          84
-        </td>
-        <td>
-          556
-        </td>
-        <td>
-          3158
-          -
-          3182
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.Cli.createPomJsonFiles
-        </td>
-        <td style="background: #F0ADAD">
-          Cli.this.createPomJsonFiles(s, p)
-        </td>
-      </tr><tr>
-        <td>
-          97
-        </td>
-        <td>
-          561
-        </td>
-        <td>
-          3617
-          -
-          3632
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.lang.String.+
-        </td>
-        <td style="background: #AEF1AE">
-          s.+(Cli.this.xmlFileName)
-        </td>
-      </tr><tr>
-        <td>
-          97
-        </td>
-        <td>
-          560
-        </td>
-        <td>
-          3621
-          -
-          3632
+          3132
         </td>
         <td>
           Select
@@ -1408,15 +1219,228 @@
         </td>
       </tr><tr>
         <td>
-          97
+          81
         </td>
         <td>
-          562
+          545
         </td>
         <td>
-          3608
+          3078
           -
-          3633
+          3089
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          &quot;generated &quot;
+        </td>
+      </tr><tr>
+        <td>
+          81
+        </td>
+        <td>
+          553
+        </td>
+        <td>
+          3068
+          -
+          3135
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Predef.println
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Predef.println(scala.StringContext.apply(&quot;generated &quot;, &quot;&quot;, &quot; from &quot;, &quot;&quot;, &quot;&quot;).s(at, Cli.this.jsonFileName, at, Cli.this.xmlFileName))
+        </td>
+      </tr><tr>
+        <td>
+          81
+        </td>
+        <td>
+          547
+        </td>
+        <td>
+          3108
+          -
+          3115
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          &quot; from &quot;
+        </td>
+      </tr><tr>
+        <td>
+          82
+        </td>
+        <td>
+          560
+        </td>
+        <td>
+          3150
+          -
+          3318
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          {
+  fos.close();
+  project.modules.foreach[Unit](((module: String) =&gt; Cli.this.recurseXml(at.+(java.io.File.separator).+(module), ((s: String, x$1: org.apache.maven.unbound.DocComments, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomJsonFiles(s, p)))))
+}
+        </td>
+      </tr><tr>
+        <td>
+          83
+        </td>
+        <td>
+          555
+        </td>
+        <td>
+          3158
+          -
+          3169
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.FileOutputStream.close
+        </td>
+        <td style="background: #AEF1AE">
+          fos.close()
+        </td>
+      </tr><tr>
+        <td>
+          85
+        </td>
+        <td>
+          559
+        </td>
+        <td>
+          3177
+          -
+          3312
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          project.modules.foreach[Unit](((module: String) =&gt; Cli.this.recurseXml(at.+(java.io.File.separator).+(module), ((s: String, x$1: org.apache.maven.unbound.DocComments, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomJsonFiles(s, p)))))
+        </td>
+      </tr><tr>
+        <td>
+          86
+        </td>
+        <td>
+          558
+        </td>
+        <td>
+          3221
+          -
+          3310
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Cli.recurseXml
+        </td>
+        <td style="background: #F0ADAD">
+          Cli.this.recurseXml(at.+(java.io.File.separator).+(module), ((s: String, x$1: org.apache.maven.unbound.DocComments, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomJsonFiles(s, p)))
+        </td>
+      </tr><tr>
+        <td>
+          86
+        </td>
+        <td>
+          556
+        </td>
+        <td>
+          3232
+          -
+          3260
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.+
+        </td>
+        <td style="background: #F0ADAD">
+          at.+(java.io.File.separator).+(module)
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          557
+        </td>
+        <td>
+          3285
+          -
+          3309
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Cli.createPomJsonFiles
+        </td>
+        <td style="background: #F0ADAD">
+          Cli.this.createPomJsonFiles(s, p)
+        </td>
+      </tr><tr>
+        <td>
+          101
+        </td>
+        <td>
+          561
+        </td>
+        <td>
+          3767
+          -
+          3778
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Cli.xmlFileName
+        </td>
+        <td style="background: #AEF1AE">
+          Cli.this.xmlFileName
+        </td>
+      </tr><tr>
+        <td>
+          101
+        </td>
+        <td>
+          563
+        </td>
+        <td>
+          3754
+          -
+          3779
         </td>
         <td>
           Apply
@@ -1429,15 +1453,68 @@
         </td>
       </tr><tr>
         <td>
-          99
+          101
         </td>
         <td>
-          563
+          562
         </td>
         <td>
-          3643
+          3763
           -
-          3655
+          3778
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.+
+        </td>
+        <td style="background: #AEF1AE">
+          s.+(Cli.this.xmlFileName)
+        </td>
+      </tr><tr>
+        <td>
+          103
+        </td>
+        <td>
+          577
+        </td>
+        <td>
+          3803
+          -
+          4468
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          {
+  val xmlIn: java.io.FileInputStream = new java.io.FileInputStream(xml);
+  try {
+    val parser: scala.xml.parsing.ConstructingParser = scala.xml.parsing.ConstructingParser.fromSource(scala.io.Source.fromInputStream(xmlIn)(io.this.Codec.fallbackSystemCodec), true);
+    val root: scala.xml.Elem = parser.document().docElem.asInstanceOf[scala.xml.Elem];
+    val comments: org.apache.maven.unbound.DocComments = CommentExtractor.apply(root);
+    val project: org.apache.maven.unbound.Project = new Project(root);
+    createFile.apply(s, comments, project)
+  } catch {
+    case (e @ (_: Exception)) =&gt; e.printStackTrace()
+  } finally xmlIn.close()
+}
+        </td>
+      </tr><tr>
+        <td>
+          103
+        </td>
+        <td>
+          564
+        </td>
+        <td>
+          3789
+          -
+          3801
         </td>
         <td>
           Apply
@@ -1450,44 +1527,15 @@
         </td>
       </tr><tr>
         <td>
-          99
+          105
         </td>
         <td>
-          572
+          565
         </td>
         <td>
-          3657
+          3824
           -
-          3915
-        </td>
-        <td>
-          Block
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          {
-  val xmlIn: java.io.FileInputStream = new java.io.FileInputStream(xml);
-  try {
-    val project: org.apache.maven.unbound.Project = new Project(scala.xml.XML.load(xmlIn));
-    createFile.apply(s, project)
-  } catch {
-    case (e @ (_: Exception)) =&gt; e.printStackTrace()
-  } finally xmlIn.close()
-}
-        </td>
-      </tr><tr>
-        <td>
-          101
-        </td>
-        <td>
-          564
-        </td>
-        <td>
-          3678
-          -
-          3702
+          3848
         </td>
         <td>
           Apply
@@ -1500,15 +1548,15 @@
         </td>
       </tr><tr>
         <td>
-          102
+          106
         </td>
         <td>
-          568
+          573
         </td>
         <td>
-          3723
+          3917
           -
-          3796
+          4349
         </td>
         <td>
           Block
@@ -1518,21 +1566,129 @@
         </td>
         <td style="background: #AEF1AE">
           {
-  val project: org.apache.maven.unbound.Project = new Project(scala.xml.XML.load(xmlIn));
-  createFile.apply(s, project)
+  val parser: scala.xml.parsing.ConstructingParser = scala.xml.parsing.ConstructingParser.fromSource(scala.io.Source.fromInputStream(xmlIn)(io.this.Codec.fallbackSystemCodec), true);
+  val root: scala.xml.Elem = parser.document().docElem.asInstanceOf[scala.xml.Elem];
+  val comments: org.apache.maven.unbound.DocComments = CommentExtractor.apply(root);
+  val project: org.apache.maven.unbound.Project = new Project(root);
+  createFile.apply(s, comments, project)
 }
         </td>
       </tr><tr>
         <td>
-          103
+          109
+        </td>
+        <td>
+          568
+        </td>
+        <td>
+          3940
+          -
+          4006
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.xml.parsing.ConstructingParser.fromSource
+        </td>
+        <td style="background: #AEF1AE">
+          scala.xml.parsing.ConstructingParser.fromSource(scala.io.Source.fromInputStream(xmlIn)(io.this.Codec.fallbackSystemCodec), true)
+        </td>
+      </tr><tr>
+        <td>
+          109
+        </td>
+        <td>
+          567
+        </td>
+        <td>
+          4001
+          -
+          4005
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          true
+        </td>
+      </tr><tr>
+        <td>
+          109
         </td>
         <td>
           566
         </td>
         <td>
-          3737
+          3970
           -
-          3765
+          3999
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.io.Source.fromInputStream
+        </td>
+        <td style="background: #AEF1AE">
+          scala.io.Source.fromInputStream(xmlIn)(io.this.Codec.fallbackSystemCodec)
+        </td>
+      </tr><tr>
+        <td>
+          110
+        </td>
+        <td>
+          569
+        </td>
+        <td>
+          4026
+          -
+          4068
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.Any.asInstanceOf
+        </td>
+        <td style="background: #AEF1AE">
+          parser.document().docElem.asInstanceOf[scala.xml.Elem]
+        </td>
+      </tr><tr>
+        <td>
+          112
+        </td>
+        <td>
+          570
+        </td>
+        <td>
+          4130
+          -
+          4152
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.CommentExtractor.apply
+        </td>
+        <td style="background: #AEF1AE">
+          CommentExtractor.apply(root)
+        </td>
+      </tr><tr>
+        <td>
+          113
+        </td>
+        <td>
+          571
+        </td>
+        <td>
+          4175
+          -
+          4192
         </td>
         <td>
           Apply
@@ -1541,61 +1697,40 @@
           org.apache.maven.unbound.Project.&lt;init&gt;
         </td>
         <td style="background: #AEF1AE">
-          new Project(scala.xml.XML.load(xmlIn))
+          new Project(root)
         </td>
       </tr><tr>
         <td>
-          103
+          116
         </td>
         <td>
-          565
+          572
         </td>
         <td>
-          3749
+          4317
           -
-          3764
+          4349
         </td>
         <td>
           Apply
         </td>
         <td>
-          scala.xml.factory.XMLLoader.load
+          scala.Function3.apply
         </td>
         <td style="background: #AEF1AE">
-          scala.xml.XML.load(xmlIn)
+          createFile.apply(s, comments, project)
         </td>
       </tr><tr>
         <td>
-          104
+          118
         </td>
         <td>
-          567
+          574
         </td>
         <td>
-          3774
+          4395
           -
-          3796
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.Function2.apply
-        </td>
-        <td style="background: #AEF1AE">
-          createFile.apply(s, project)
-        </td>
-      </tr><tr>
-        <td>
-          106
-        </td>
-        <td>
-          569
-        </td>
-        <td>
-          3842
-          -
-          3861
+          4414
         </td>
         <td>
           Apply
@@ -1608,36 +1743,15 @@
         </td>
       </tr><tr>
         <td>
-          108
+          120
         </td>
         <td>
-          570
+          576
         </td>
         <td>
-          3888
+          4441
           -
-          3901
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.io.FileInputStream.close
-        </td>
-        <td style="background: #AEF1AE">
-          xmlIn.close()
-        </td>
-      </tr><tr>
-        <td>
-          108
-        </td>
-        <td>
-          571
-        </td>
-        <td>
-          3888
-          -
-          3901
+          4454
         </td>
         <td>
           Block
@@ -1650,15 +1764,57 @@
         </td>
       </tr><tr>
         <td>
-          112
+          120
         </td>
         <td>
-          573
+          575
         </td>
         <td>
-          3938
+          4441
           -
-          3972
+          4454
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.FileInputStream.close
+        </td>
+        <td style="background: #AEF1AE">
+          xmlIn.close()
+        </td>
+      </tr><tr>
+        <td>
+          124
+        </td>
+        <td>
+          579
+        </td>
+        <td>
+          4483
+          -
+          4526
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Predef.println
+        </td>
+        <td style="background: #F0ADAD">
+          scala.Predef.println(scala.StringContext.apply(&quot;no pom.json or pom.conf in &quot;, &quot;&quot;).s(s))
+        </td>
+      </tr><tr>
+        <td>
+          124
+        </td>
+        <td>
+          578
+        </td>
+        <td>
+          4491
+          -
+          4525
         </td>
         <td>
           Apply
@@ -1671,15 +1827,15 @@
         </td>
       </tr><tr>
         <td>
-          112
+          124
         </td>
         <td>
-          575
+          580
         </td>
         <td>
-          3930
+          4483
           -
-          3973
+          4526
         </td>
         <td>
           Block
@@ -1692,36 +1848,15 @@
         </td>
       </tr><tr>
         <td>
-          112
+          137
         </td>
         <td>
-          574
+          592
         </td>
         <td>
-          3930
+          4938
           -
-          3973
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.Predef.println
-        </td>
-        <td style="background: #F0ADAD">
-          scala.Predef.println(scala.StringContext.apply(&quot;no pom.json or pom.conf in &quot;, &quot;&quot;).s(s))
-        </td>
-      </tr><tr>
-        <td>
-          125
-        </td>
-        <td>
-          587
-        </td>
-        <td>
-          4385
-          -
-          4485
+          5038
         </td>
         <td>
           Block
@@ -1737,15 +1872,15 @@
         </td>
       </tr><tr>
         <td>
-          126
+          138
         </td>
         <td>
-          577
+          582
         </td>
         <td>
-          4402
+          4955
           -
-          4418
+          4971
         </td>
         <td>
           Apply
@@ -1758,15 +1893,15 @@
         </td>
       </tr><tr>
         <td>
-          126
+          138
         </td>
         <td>
-          576
+          581
         </td>
         <td>
-          4407
+          4960
           -
-          4418
+          4971
         </td>
         <td>
           Select
@@ -1779,15 +1914,15 @@
         </td>
       </tr><tr>
         <td>
-          126
+          138
         </td>
         <td>
-          578
+          583
         </td>
         <td>
-          4385
+          4938
           -
-          4419
+          4972
         </td>
         <td>
           Apply
@@ -1800,57 +1935,15 @@
         </td>
       </tr><tr>
         <td>
-          127
+          139
         </td>
         <td>
           585
         </td>
         <td>
-          4434
+          5004
           -
-          4484
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.StringContext.s
-        </td>
-        <td style="background: #AEF1AE">
-          scala.StringContext.apply(&quot;generated &quot;, &quot;&quot;, &quot; from &quot;, &quot;&quot;, &quot;&quot;).s(at, Cli.this.xmlFileName, at, from)
-        </td>
-      </tr><tr>
-        <td>
-          127
-        </td>
-        <td>
-          579
-        </td>
-        <td>
-          4436
-          -
-          4447
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          &quot;generated &quot;
-        </td>
-      </tr><tr>
-        <td>
-          127
-        </td>
-        <td>
-          582
-        </td>
-        <td>
-          4476
-          -
-          4477
+          5005
         </td>
         <td>
           Literal
@@ -1863,15 +1956,15 @@
         </td>
       </tr><tr>
         <td>
-          127
+          139
         </td>
         <td>
-          581
+          588
         </td>
         <td>
-          4465
+          5036
           -
-          4472
+          5037
         </td>
         <td>
           Literal
@@ -1880,40 +1973,19 @@
           &lt;nosymbol&gt;
         </td>
         <td style="background: #AEF1AE">
-          &quot; from &quot;
+          &quot;&quot;
         </td>
       </tr><tr>
         <td>
-          127
+          139
         </td>
         <td>
-          584
+          591
         </td>
         <td>
-          4453
+          4979
           -
-          4464
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          org.apache.maven.unbound.Cli.xmlFileName
-        </td>
-        <td style="background: #AEF1AE">
-          Cli.this.xmlFileName
-        </td>
-      </tr><tr>
-        <td>
-          127
-        </td>
-        <td>
-          586
-        </td>
-        <td>
-          4426
-          -
-          4485
+          5038
         </td>
         <td>
           Apply
@@ -1926,120 +1998,120 @@
         </td>
       </tr><tr>
         <td>
-          127
-        </td>
-        <td>
-          580
-        </td>
-        <td>
-          4451
-          -
-          4452
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          &quot;&quot;
-        </td>
-      </tr><tr>
-        <td>
-          127
-        </td>
-        <td>
-          583
-        </td>
-        <td>
-          4483
-          -
-          4484
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          &quot;&quot;
-        </td>
-      </tr><tr>
-        <td>
-          129
-        </td>
-        <td>
-          588
-        </td>
-        <td>
-          4549
-          -
-          4574
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.lang.String.+
-        </td>
-        <td style="background: #F0ADAD">
-          at.+(java.io.File.separator).+(mod)
-        </td>
-      </tr><tr>
-        <td>
-          129
-        </td>
-        <td>
-          591
-        </td>
-        <td>
-          4508
-          -
-          4577
-        </td>
-        <td>
-          Block
-        </td>
-        <td>
-          scala.collection.IterableLike.foreach
-        </td>
-        <td style="background: #AEF1AE">
-          project.modules.foreach[Unit](((mod: String) =&gt; Cli.this.recurse(at.+(java.io.File.separator).+(mod))))
-        </td>
-      </tr><tr>
-        <td>
-          129
+          139
         </td>
         <td>
           590
         </td>
         <td>
-          4508
+          4987
           -
-          4577
+          5037
         </td>
         <td>
           Apply
         </td>
         <td>
-          scala.collection.IterableLike.foreach
+          scala.StringContext.s
         </td>
         <td style="background: #AEF1AE">
-          project.modules.foreach[Unit](((mod: String) =&gt; Cli.this.recurse(at.+(java.io.File.separator).+(mod))))
+          scala.StringContext.apply(&quot;generated &quot;, &quot;&quot;, &quot; from &quot;, &quot;&quot;, &quot;&quot;).s(at, Cli.this.xmlFileName, at, from)
         </td>
       </tr><tr>
         <td>
-          129
+          139
+        </td>
+        <td>
+          584
+        </td>
+        <td>
+          4989
+          -
+          5000
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          &quot;generated &quot;
+        </td>
+      </tr><tr>
+        <td>
+          139
+        </td>
+        <td>
+          587
+        </td>
+        <td>
+          5029
+          -
+          5030
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          &quot;&quot;
+        </td>
+      </tr><tr>
+        <td>
+          139
+        </td>
+        <td>
+          586
+        </td>
+        <td>
+          5018
+          -
+          5025
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          &quot; from &quot;
+        </td>
+      </tr><tr>
+        <td>
+          139
         </td>
         <td>
           589
         </td>
         <td>
-          4541
+          5006
           -
-          4575
+          5017
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Cli.xmlFileName
+        </td>
+        <td style="background: #AEF1AE">
+          Cli.this.xmlFileName
+        </td>
+      </tr><tr>
+        <td>
+          141
+        </td>
+        <td>
+          594
+        </td>
+        <td>
+          5094
+          -
+          5128
         </td>
         <td>
           Apply
@@ -2052,36 +2124,15 @@
         </td>
       </tr><tr>
         <td>
-          140
-        </td>
-        <td>
-          594
-        </td>
-        <td>
-          4805
-          -
-          4832
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.io.File.&lt;init&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          new java.io.File(s.+(Cli.this.hoconFileName))
-        </td>
-      </tr><tr>
-        <td>
-          140
+          141
         </td>
         <td>
           593
         </td>
         <td>
-          4814
+          5102
           -
-          4831
+          5127
         </td>
         <td>
           Apply
@@ -2089,20 +2140,62 @@
         <td>
           java.lang.String.+
         </td>
-        <td style="background: #AEF1AE">
-          s.+(Cli.this.hoconFileName)
+        <td style="background: #F0ADAD">
+          at.+(java.io.File.separator).+(mod)
         </td>
       </tr><tr>
         <td>
-          140
+          141
         </td>
         <td>
-          592
+          596
         </td>
         <td>
-          4818
+          5061
           -
-          4831
+          5130
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          project.modules.foreach[Unit](((mod: String) =&gt; Cli.this.recurse(at.+(java.io.File.separator).+(mod))))
+        </td>
+      </tr><tr>
+        <td>
+          141
+        </td>
+        <td>
+          595
+        </td>
+        <td>
+          5061
+          -
+          5130
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #AEF1AE">
+          project.modules.foreach[Unit](((mod: String) =&gt; Cli.this.recurse(at.+(java.io.File.separator).+(mod))))
+        </td>
+      </tr><tr>
+        <td>
+          152
+        </td>
+        <td>
+          597
+        </td>
+        <td>
+          5371
+          -
+          5384
         </td>
         <td>
           Select
@@ -2115,15 +2208,15 @@
         </td>
       </tr><tr>
         <td>
-          141
+          152
         </td>
         <td>
-          597
+          599
         </td>
         <td>
-          4848
+          5358
           -
-          4874
+          5385
         </td>
         <td>
           Apply
@@ -2132,19 +2225,19 @@
           java.io.File.&lt;init&gt;
         </td>
         <td style="background: #AEF1AE">
-          new java.io.File(s.+(Cli.this.jsonFileName))
+          new java.io.File(s.+(Cli.this.hoconFileName))
         </td>
       </tr><tr>
         <td>
-          141
+          152
         </td>
         <td>
-          596
+          598
         </td>
         <td>
-          4857
+          5367
           -
-          4873
+          5384
         </td>
         <td>
           Apply
@@ -2153,19 +2246,19 @@
           java.lang.String.+
         </td>
         <td style="background: #AEF1AE">
-          s.+(Cli.this.jsonFileName)
+          s.+(Cli.this.hoconFileName)
         </td>
       </tr><tr>
         <td>
-          141
+          153
         </td>
         <td>
-          595
+          600
         </td>
         <td>
-          4861
+          5414
           -
-          4873
+          5426
         </td>
         <td>
           Select
@@ -2178,15 +2271,78 @@
         </td>
       </tr><tr>
         <td>
-          143
+          153
+        </td>
+        <td>
+          602
+        </td>
+        <td>
+          5401
+          -
+          5427
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.File.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new java.io.File(s.+(Cli.this.jsonFileName))
+        </td>
+      </tr><tr>
+        <td>
+          153
+        </td>
+        <td>
+          601
+        </td>
+        <td>
+          5410
+          -
+          5426
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.+
+        </td>
+        <td style="background: #AEF1AE">
+          s.+(Cli.this.jsonFileName)
+        </td>
+      </tr><tr>
+        <td>
+          155
         </td>
         <td>
           603
         </td>
         <td>
-          4899
+          5437
           -
-          5066
+          5450
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.io.File.exists
+        </td>
+        <td style="background: #AEF1AE">
+          json.exists()
+        </td>
+      </tr><tr>
+        <td>
+          155
+        </td>
+        <td>
+          608
+        </td>
+        <td>
+          5452
+          -
+          5619
         </td>
         <td>
           Block
@@ -2203,36 +2359,15 @@
         </td>
       </tr><tr>
         <td>
-          143
+          157
         </td>
         <td>
-          598
+          604
         </td>
         <td>
-          4884
+          5475
           -
-          4897
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.io.File.exists
-        </td>
-        <td style="background: #AEF1AE">
-          json.exists()
-        </td>
-      </tr><tr>
-        <td>
-          145
-        </td>
-        <td>
-          599
-        </td>
-        <td>
-          4922
-          -
-          4961
+          5514
         </td>
         <td>
           Select
@@ -2245,15 +2380,15 @@
         </td>
       </tr><tr>
         <td>
-          146
+          158
         </td>
         <td>
-          600
+          605
         </td>
         <td>
-          4982
+          5535
           -
-          5009
+          5562
         </td>
         <td>
           Apply
@@ -2266,36 +2401,15 @@
         </td>
       </tr><tr>
         <td>
-          147
+          159
         </td>
         <td>
-          602
+          606
         </td>
         <td>
-          5016
+          5599
           -
-          5059
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.Cli.createPomXmlFiles
-        </td>
-        <td style="background: #AEF1AE">
-          Cli.this.createPomXmlFiles(s, project, Cli.this.jsonFileName)
-        </td>
-      </tr><tr>
-        <td>
-          147
-        </td>
-        <td>
-          601
-        </td>
-        <td>
-          5046
-          -
-          5058
+          5611
         </td>
         <td>
           Select
@@ -2308,39 +2422,36 @@
         </td>
       </tr><tr>
         <td>
-          149
+          159
+        </td>
+        <td>
+          607
+        </td>
+        <td>
+          5569
+          -
+          5612
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Cli.createPomXmlFiles
+        </td>
+        <td style="background: #AEF1AE">
+          Cli.this.createPomXmlFiles(s, project, Cli.this.jsonFileName)
+        </td>
+      </tr><tr>
+        <td>
+          161
         </td>
         <td>
           609
         </td>
         <td>
-          5091
+          5629
           -
-          5209
-        </td>
-        <td>
-          Block
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          {
-  val project: org.apache.maven.unbound.Project = HoconReader.readPOM(unbound.this.`package`.loadConfig(conf));
-  Cli.this.createPomXmlFiles(s, project, Cli.this.hoconFileName)
-}
-        </td>
-      </tr><tr>
-        <td>
-          149
-        </td>
-        <td>
-          604
-        </td>
-        <td>
-          5076
-          -
-          5089
+          5642
         </td>
         <td>
           Apply
@@ -2353,15 +2464,15 @@
         </td>
       </tr><tr>
         <td>
-          149
+          161
         </td>
         <td>
-          613
+          641
         </td>
         <td>
-          5072
+          5625
           -
-          5273
+          6294
         </td>
         <td>
           If
@@ -2372,44 +2483,87 @@
         <td style="background: #AEF1AE">
           if (conf.exists())
   {
-    val project: org.apache.maven.unbound.Project = HoconReader.readPOM(unbound.this.`package`.loadConfig(conf));
-    Cli.this.createPomXmlFiles(s, project, Cli.this.hoconFileName)
+    val config: com.typesafe.config.Config = unbound.this.`package`.loadConfig(conf);
+    val project: org.apache.maven.unbound.Project = HoconReader.readPOM(config);
+    if (false)
+      {
+        val comments: org.apache.maven.unbound.DocComments = CommentExtractor.apply(config);
+        try {
+          {
+  final class $anon extends AnyRef with org.apache.maven.unbound.Writeable {
+    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writeable&gt; = {
+      $anon.super.&lt;init&gt;();
+      ()
+    };
+    private[this] val xml: scala.xml.Elem = comments.insertXml(project.xml);
+    &lt;stable&gt; &lt;accessor&gt; def xml: scala.xml.Elem = $anon.this.xml
+  };
+  new $anon()
+}.writePOM(s.+(Cli.this.xmlFileName));
+          scala.Predef.println(scala.StringContext.apply(&quot;generated &quot;, &quot;&quot;, &quot; from &quot;, &quot;&quot;, &quot;&quot;).s(s, Cli.this.xmlFileName, s, Cli.this.hoconFileName))
+        } finally project.modules.foreach[Unit](((mod: String) =&gt; Cli.this.recurse(s.+(java.io.File.separator).+(mod))))
+      }
+    else
+      Cli.this.createPomXmlFiles(s, project, Cli.this.hoconFileName)
   }
 else
   scala.Predef.println(scala.StringContext.apply(&quot;no pom.json or pom.conf in &quot;, &quot;&quot;).s(s))
         </td>
       </tr><tr>
         <td>
-          151
+          161
         </td>
         <td>
-          606
+          637
         </td>
         <td>
-          5114
+          5644
           -
-          5151
+          6230
         </td>
         <td>
-          Apply
+          Block
         </td>
         <td>
-          org.apache.maven.unbound.HoconProjectReader.readPOM
+          &lt;nosymbol&gt;
         </td>
         <td style="background: #AEF1AE">
-          HoconReader.readPOM(unbound.this.`package`.loadConfig(conf))
+          {
+  val config: com.typesafe.config.Config = unbound.this.`package`.loadConfig(conf);
+  val project: org.apache.maven.unbound.Project = HoconReader.readPOM(config);
+  if (false)
+    {
+      val comments: org.apache.maven.unbound.DocComments = CommentExtractor.apply(config);
+      try {
+        {
+  final class $anon extends AnyRef with org.apache.maven.unbound.Writeable {
+    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writeable&gt; = {
+      $anon.super.&lt;init&gt;();
+      ()
+    };
+    private[this] val xml: scala.xml.Elem = comments.insertXml(project.xml);
+    &lt;stable&gt; &lt;accessor&gt; def xml: scala.xml.Elem = $anon.this.xml
+  };
+  new $anon()
+}.writePOM(s.+(Cli.this.xmlFileName));
+        scala.Predef.println(scala.StringContext.apply(&quot;generated &quot;, &quot;&quot;, &quot; from &quot;, &quot;&quot;, &quot;&quot;).s(s, Cli.this.xmlFileName, s, Cli.this.hoconFileName))
+      } finally project.modules.foreach[Unit](((mod: String) =&gt; Cli.this.recurse(s.+(java.io.File.separator).+(mod))))
+    }
+  else
+    Cli.this.createPomXmlFiles(s, project, Cli.this.hoconFileName)
+}
         </td>
       </tr><tr>
         <td>
-          151
+          163
         </td>
         <td>
-          605
+          610
         </td>
         <td>
-          5134
+          5666
           -
-          5150
+          5682
         </td>
         <td>
           Apply
@@ -2422,15 +2576,558 @@ else
         </td>
       </tr><tr>
         <td>
-          152
+          164
         </td>
         <td>
-          608
+          611
         </td>
         <td>
-          5158
+          5703
           -
-          5202
+          5730
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.HoconProjectReader.readPOM
+        </td>
+        <td style="background: #AEF1AE">
+          HoconReader.readPOM(config)
+        </td>
+      </tr><tr>
+        <td>
+          165
+        </td>
+        <td>
+          612
+        </td>
+        <td>
+          5741
+          -
+          5746
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          false
+        </td>
+      </tr><tr>
+        <td>
+          165
+        </td>
+        <td>
+          633
+        </td>
+        <td>
+          5748
+          -
+          6156
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          {
+  val comments: org.apache.maven.unbound.DocComments = CommentExtractor.apply(config);
+  try {
+    {
+  final class $anon extends AnyRef with org.apache.maven.unbound.Writeable {
+    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writeable&gt; = {
+      $anon.super.&lt;init&gt;();
+      ()
+    };
+    private[this] val xml: scala.xml.Elem = comments.insertXml(project.xml);
+    &lt;stable&gt; &lt;accessor&gt; def xml: scala.xml.Elem = $anon.this.xml
+  };
+  new $anon()
+}.writePOM(s.+(Cli.this.xmlFileName));
+    scala.Predef.println(scala.StringContext.apply(&quot;generated &quot;, &quot;&quot;, &quot; from &quot;, &quot;&quot;, &quot;&quot;).s(s, Cli.this.xmlFileName, s, Cli.this.hoconFileName))
+  } finally project.modules.foreach[Unit](((mod: String) =&gt; Cli.this.recurse(s.+(java.io.File.separator).+(mod))))
+}
+        </td>
+      </tr><tr>
+        <td>
+          166
+        </td>
+        <td>
+          613
+        </td>
+        <td>
+          5804
+          -
+          5828
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.CommentExtractor.apply
+        </td>
+        <td style="background: #F0ADAD">
+          CommentExtractor.apply(config)
+        </td>
+      </tr><tr>
+        <td>
+          167
+        </td>
+        <td>
+          628
+        </td>
+        <td>
+          5854
+          -
+          6039
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          {
+  {
+  final class $anon extends AnyRef with org.apache.maven.unbound.Writeable {
+    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writeable&gt; = {
+      $anon.super.&lt;init&gt;();
+      ()
+    };
+    private[this] val xml: scala.xml.Elem = comments.insertXml(project.xml);
+    &lt;stable&gt; &lt;accessor&gt; def xml: scala.xml.Elem = $anon.this.xml
+  };
+  new $anon()
+}.writePOM(s.+(Cli.this.xmlFileName));
+  scala.Predef.println(scala.StringContext.apply(&quot;generated &quot;, &quot;&quot;, &quot; from &quot;, &quot;&quot;, &quot;&quot;).s(s, Cli.this.xmlFileName, s, Cli.this.hoconFileName))
+}
+        </td>
+      </tr><tr>
+        <td>
+          168
+        </td>
+        <td>
+          615
+        </td>
+        <td>
+          5854
+          -
+          5857
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Cli.$anon.&lt;init&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          new $anon()
+        </td>
+      </tr><tr>
+        <td>
+          169
+        </td>
+        <td>
+          614
+        </td>
+        <td>
+          5892
+          -
+          5923
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.DocComments.insertXml
+        </td>
+        <td style="background: #F0ADAD">
+          comments.insertXml(project.xml)
+        </td>
+      </tr><tr>
+        <td>
+          170
+        </td>
+        <td>
+          618
+        </td>
+        <td>
+          5854
+          -
+          5962
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Writeable.writePOM
+        </td>
+        <td style="background: #F0ADAD">
+          {
+  final class $anon extends AnyRef with org.apache.maven.unbound.Writeable {
+    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writeable&gt; = {
+      $anon.super.&lt;init&gt;();
+      ()
+    };
+    private[this] val xml: scala.xml.Elem = comments.insertXml(project.xml);
+    &lt;stable&gt; &lt;accessor&gt; def xml: scala.xml.Elem = $anon.this.xml
+  };
+  new $anon()
+}.writePOM(s.+(Cli.this.xmlFileName))
+        </td>
+      </tr><tr>
+        <td>
+          170
+        </td>
+        <td>
+          617
+        </td>
+        <td>
+          5946
+          -
+          5961
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.+
+        </td>
+        <td style="background: #F0ADAD">
+          s.+(Cli.this.xmlFileName)
+        </td>
+      </tr><tr>
+        <td>
+          170
+        </td>
+        <td>
+          616
+        </td>
+        <td>
+          5950
+          -
+          5961
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Cli.xmlFileName
+        </td>
+        <td style="background: #F0ADAD">
+          Cli.this.xmlFileName
+        </td>
+      </tr><tr>
+        <td>
+          171
+        </td>
+        <td>
+          627
+        </td>
+        <td>
+          5973
+          -
+          6039
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Predef.println
+        </td>
+        <td style="background: #F0ADAD">
+          scala.Predef.println(scala.StringContext.apply(&quot;generated &quot;, &quot;&quot;, &quot; from &quot;, &quot;&quot;, &quot;&quot;).s(s, Cli.this.xmlFileName, s, Cli.this.hoconFileName))
+        </td>
+      </tr><tr>
+        <td>
+          171
+        </td>
+        <td>
+          621
+        </td>
+        <td>
+          6011
+          -
+          6018
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          &quot; from &quot;
+        </td>
+      </tr><tr>
+        <td>
+          171
+        </td>
+        <td>
+          624
+        </td>
+        <td>
+          5999
+          -
+          6010
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Cli.xmlFileName
+        </td>
+        <td style="background: #F0ADAD">
+          Cli.this.xmlFileName
+        </td>
+      </tr><tr>
+        <td>
+          171
+        </td>
+        <td>
+          623
+        </td>
+        <td>
+          6037
+          -
+          6038
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;&quot;
+        </td>
+      </tr><tr>
+        <td>
+          171
+        </td>
+        <td>
+          626
+        </td>
+        <td>
+          5981
+          -
+          6038
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.StringContext.s
+        </td>
+        <td style="background: #F0ADAD">
+          scala.StringContext.apply(&quot;generated &quot;, &quot;&quot;, &quot; from &quot;, &quot;&quot;, &quot;&quot;).s(s, Cli.this.xmlFileName, s, Cli.this.hoconFileName)
+        </td>
+      </tr><tr>
+        <td>
+          171
+        </td>
+        <td>
+          620
+        </td>
+        <td>
+          5997
+          -
+          5998
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;&quot;
+        </td>
+      </tr><tr>
+        <td>
+          171
+        </td>
+        <td>
+          622
+        </td>
+        <td>
+          6021
+          -
+          6022
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;&quot;
+        </td>
+      </tr><tr>
+        <td>
+          171
+        </td>
+        <td>
+          625
+        </td>
+        <td>
+          6023
+          -
+          6036
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.apache.maven.unbound.Cli.hoconFileName
+        </td>
+        <td style="background: #F0ADAD">
+          Cli.this.hoconFileName
+        </td>
+      </tr><tr>
+        <td>
+          171
+        </td>
+        <td>
+          619
+        </td>
+        <td>
+          5983
+          -
+          5994
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;generated &quot;
+        </td>
+      </tr><tr>
+        <td>
+          173
+        </td>
+        <td>
+          630
+        </td>
+        <td>
+          6103
+          -
+          6136
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Cli.recurse
+        </td>
+        <td style="background: #F0ADAD">
+          Cli.this.recurse(s.+(java.io.File.separator).+(mod))
+        </td>
+      </tr><tr>
+        <td>
+          173
+        </td>
+        <td>
+          632
+        </td>
+        <td>
+          6070
+          -
+          6138
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #F0ADAD">
+          project.modules.foreach[Unit](((mod: String) =&gt; Cli.this.recurse(s.+(java.io.File.separator).+(mod))))
+        </td>
+      </tr><tr>
+        <td>
+          173
+        </td>
+        <td>
+          629
+        </td>
+        <td>
+          6111
+          -
+          6135
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.+
+        </td>
+        <td style="background: #F0ADAD">
+          s.+(java.io.File.separator).+(mod)
+        </td>
+      </tr><tr>
+        <td>
+          173
+        </td>
+        <td>
+          631
+        </td>
+        <td>
+          6070
+          -
+          6138
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableLike.foreach
+        </td>
+        <td style="background: #F0ADAD">
+          project.modules.foreach[Unit](((mod: String) =&gt; Cli.this.recurse(s.+(java.io.File.separator).+(mod))))
+        </td>
+      </tr><tr>
+        <td>
+          176
+        </td>
+        <td>
+          636
+        </td>
+        <td>
+          6172
+          -
+          6216
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.unbound.Cli.createPomXmlFiles
+        </td>
+        <td style="background: #AEF1AE">
+          Cli.this.createPomXmlFiles(s, project, Cli.this.hoconFileName)
+        </td>
+      </tr><tr>
+        <td>
+          176
+        </td>
+        <td>
+          635
+        </td>
+        <td>
+          6172
+          -
+          6216
         </td>
         <td>
           Apply
@@ -2443,15 +3140,15 @@ else
         </td>
       </tr><tr>
         <td>
-          152
+          176
         </td>
         <td>
-          607
+          634
         </td>
         <td>
-          5188
+          6202
           -
-          5201
+          6215
         </td>
         <td>
           Select
@@ -2464,36 +3161,15 @@ else
         </td>
       </tr><tr>
         <td>
-          156
+          180
         </td>
         <td>
-          612
+          639
         </td>
         <td>
-          5224
+          6245
           -
-          5267
-        </td>
-        <td>
-          Block
-        </td>
-        <td>
-          scala.Predef.println
-        </td>
-        <td style="background: #F0ADAD">
-          scala.Predef.println(scala.StringContext.apply(&quot;no pom.json or pom.conf in &quot;, &quot;&quot;).s(s))
-        </td>
-      </tr><tr>
-        <td>
-          156
-        </td>
-        <td>
-          611
-        </td>
-        <td>
-          5224
-          -
-          5267
+          6288
         </td>
         <td>
           Apply
@@ -2506,15 +3182,15 @@ else
         </td>
       </tr><tr>
         <td>
-          156
+          180
         </td>
         <td>
-          610
+          638
         </td>
         <td>
-          5232
+          6253
           -
-          5266
+          6287
         </td>
         <td>
           Apply
@@ -2527,36 +3203,57 @@ else
         </td>
       </tr><tr>
         <td>
-          164
+          180
         </td>
         <td>
-          615
+          640
         </td>
         <td>
-          5398
+          6245
           -
-          5440
+          6288
         </td>
         <td>
-          Apply
+          Block
         </td>
         <td>
-          scala.collection.IndexedSeqOptimized.forall
+          scala.Predef.println
         </td>
         <td style="background: #F0ADAD">
-          scala.Predef.refArrayOps[String](args).forall(((x$1: String) =&gt; x$1.startsWith(&quot;--generate&quot;)))
+          scala.Predef.println(scala.StringContext.apply(&quot;no pom.json or pom.conf in &quot;, &quot;&quot;).s(s))
         </td>
       </tr><tr>
         <td>
-          164
+          188
         </td>
         <td>
           642
         </td>
         <td>
-          5442
+          6433
           -
-          6055
+          6459
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.startsWith
+        </td>
+        <td style="background: #F0ADAD">
+          x$2.startsWith(&quot;--generate&quot;)
+        </td>
+      </tr><tr>
+        <td>
+          188
+        </td>
+        <td>
+          670
+        </td>
+        <td>
+          6463
+          -
+          7085
         </td>
         <td>
           Block
@@ -2566,12 +3263,12 @@ else
         </td>
         <td style="background: #F0ADAD">
           {
-  if (scala.Predef.refArrayOps[String](args).find(((x$2: String) =&gt; x$2.==(&quot;--generate-json&quot;))).isDefined)
-    Cli.this.recurseXml(&quot;.&quot;, ((s: String, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomJsonFiles(s, p)))
+  if (scala.Predef.refArrayOps[String](args).find(((x$3: String) =&gt; x$3.==(&quot;--generate-json&quot;))).isDefined)
+    Cli.this.recurseXml(&quot;.&quot;, ((s: String, x$4: org.apache.maven.unbound.DocComments, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomJsonFiles(s, p)))
   else
     ();
-  if (scala.Predef.refArrayOps[String](args).find(((x$3: String) =&gt; x$3.==(&quot;--generate-hocon&quot;))).isDefined)
-    Cli.this.recurseXml(&quot;.&quot;, ((s: String, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomHoconFiles(s, p)))
+  if (scala.Predef.refArrayOps[String](args).find(((x$5: String) =&gt; x$5.==(&quot;--generate-hocon&quot;))).isDefined)
+    Cli.this.recurseXml(&quot;.&quot;, ((s: String, c: org.apache.maven.unbound.DocComments, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomHoconFiles(s, c, p)))
   else
     ();
   val unkn: Option[String] = scala.Predef.refArrayOps[String](args).find(((s: String) =&gt; s.!=(&quot;--generate-hocon&quot;).&amp;&amp;(s.!=(&quot;--generate-json&quot;))));
@@ -2586,57 +3283,36 @@ else
         </td>
       </tr><tr>
         <td>
-          164
+          188
         </td>
         <td>
-          614
+          643
         </td>
         <td>
-          5412
+          6419
           -
-          5438
+          6461
         </td>
         <td>
           Apply
         </td>
         <td>
-          java.lang.String.startsWith
+          scala.collection.IndexedSeqOptimized.forall
         </td>
         <td style="background: #F0ADAD">
-          x$1.startsWith(&quot;--generate&quot;)
+          scala.Predef.refArrayOps[String](args).forall(((x$2: String) =&gt; x$2.startsWith(&quot;--generate&quot;)))
         </td>
       </tr><tr>
         <td>
-          167
+          191
         </td>
         <td>
-          623
+          645
         </td>
         <td>
-          5487
+          6512
           -
-          5487
-        </td>
-        <td>
-          Block
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #F0ADAD">
-          ()
-        </td>
-      </tr><tr>
-        <td>
-          167
-        </td>
-        <td>
-          617
-        </td>
-        <td>
-          5491
-          -
-          5534
+          6555
         </td>
         <td>
           Select
@@ -2645,19 +3321,40 @@ else
           scala.Option.isDefined
         </td>
         <td style="background: #F0ADAD">
-          scala.Predef.refArrayOps[String](args).find(((x$2: String) =&gt; x$2.==(&quot;--generate-json&quot;))).isDefined
+          scala.Predef.refArrayOps[String](args).find(((x$3: String) =&gt; x$3.==(&quot;--generate-json&quot;))).isDefined
         </td>
       </tr><tr>
         <td>
-          167
+          191
         </td>
         <td>
-          622
+          651
         </td>
         <td>
-          5487
+          6508
           -
-          5487
+          6508
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          191
+        </td>
+        <td>
+          650
+        </td>
+        <td>
+          6508
+          -
+          6508
         </td>
         <td>
           Literal
@@ -2670,15 +3367,15 @@ else
         </td>
       </tr><tr>
         <td>
-          167
+          191
         </td>
         <td>
-          616
+          644
         </td>
         <td>
-          5501
+          6522
           -
-          5523
+          6544
         </td>
         <td>
           Apply
@@ -2687,61 +3384,19 @@ else
           java.lang.Object.==
         </td>
         <td style="background: #F0ADAD">
-          x$2.==(&quot;--generate-json&quot;)
+          x$3.==(&quot;--generate-json&quot;)
         </td>
       </tr><tr>
         <td>
-          168
+          192
         </td>
         <td>
-          618
+          648
         </td>
         <td>
-          5555
+          6565
           -
-          5558
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #F0ADAD">
-          &quot;.&quot;
-        </td>
-      </tr><tr>
-        <td>
-          168
-        </td>
-        <td>
-          621
-        </td>
-        <td>
-          5544
-          -
-          5595
-        </td>
-        <td>
-          Block
-        </td>
-        <td>
-          org.apache.maven.unbound.Cli.recurseXml
-        </td>
-        <td style="background: #F0ADAD">
-          Cli.this.recurseXml(&quot;.&quot;, ((s: String, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomJsonFiles(s, p)))
-        </td>
-      </tr><tr>
-        <td>
-          168
-        </td>
-        <td>
-          620
-        </td>
-        <td>
-          5544
-          -
-          5595
+          6619
         </td>
         <td>
           Apply
@@ -2750,19 +3405,19 @@ else
           org.apache.maven.unbound.Cli.recurseXml
         </td>
         <td style="background: #F0ADAD">
-          Cli.this.recurseXml(&quot;.&quot;, ((s: String, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomJsonFiles(s, p)))
+          Cli.this.recurseXml(&quot;.&quot;, ((s: String, x$4: org.apache.maven.unbound.DocComments, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomJsonFiles(s, p)))
         </td>
       </tr><tr>
         <td>
-          168
+          192
         </td>
         <td>
-          619
+          647
         </td>
         <td>
-          5570
+          6594
           -
-          5594
+          6618
         </td>
         <td>
           Apply
@@ -2775,120 +3430,15 @@ else
         </td>
       </tr><tr>
         <td>
-          171
+          192
         </td>
         <td>
-          630
+          646
         </td>
         <td>
-          5640
+          6576
           -
-          5640
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #F0ADAD">
-          ()
-        </td>
-      </tr><tr>
-        <td>
-          171
-        </td>
-        <td>
-          624
-        </td>
-        <td>
-          5654
-          -
-          5677
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.lang.Object.==
-        </td>
-        <td style="background: #F0ADAD">
-          x$3.==(&quot;--generate-hocon&quot;)
-        </td>
-      </tr><tr>
-        <td>
-          171
-        </td>
-        <td>
-          631
-        </td>
-        <td>
-          5640
-          -
-          5640
-        </td>
-        <td>
-          Block
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #F0ADAD">
-          ()
-        </td>
-      </tr><tr>
-        <td>
-          171
-        </td>
-        <td>
-          625
-        </td>
-        <td>
-          5644
-          -
-          5688
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.Option.isDefined
-        </td>
-        <td style="background: #F0ADAD">
-          scala.Predef.refArrayOps[String](args).find(((x$3: String) =&gt; x$3.==(&quot;--generate-hocon&quot;))).isDefined
-        </td>
-      </tr><tr>
-        <td>
-          172
-        </td>
-        <td>
-          627
-        </td>
-        <td>
-          5724
-          -
-          5749
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.Cli.createPomHoconFiles
-        </td>
-        <td style="background: #F0ADAD">
-          Cli.this.createPomHoconFiles(s, p)
-        </td>
-      </tr><tr>
-        <td>
-          172
-        </td>
-        <td>
-          626
-        </td>
-        <td>
-          5709
-          -
-          5712
+          6579
         </td>
         <td>
           Literal
@@ -2901,15 +3451,15 @@ else
         </td>
       </tr><tr>
         <td>
-          172
+          192
         </td>
         <td>
-          629
+          649
         </td>
         <td>
-          5698
+          6565
           -
-          5750
+          6619
         </td>
         <td>
           Block
@@ -2918,19 +3468,145 @@ else
           org.apache.maven.unbound.Cli.recurseXml
         </td>
         <td style="background: #F0ADAD">
-          Cli.this.recurseXml(&quot;.&quot;, ((s: String, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomHoconFiles(s, p)))
+          Cli.this.recurseXml(&quot;.&quot;, ((s: String, x$4: org.apache.maven.unbound.DocComments, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomJsonFiles(s, p)))
         </td>
       </tr><tr>
         <td>
-          172
+          195
         </td>
         <td>
-          628
+          659
         </td>
         <td>
-          5698
+          6664
           -
-          5750
+          6664
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          195
+        </td>
+        <td>
+          653
+        </td>
+        <td>
+          6668
+          -
+          6712
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.Option.isDefined
+        </td>
+        <td style="background: #F0ADAD">
+          scala.Predef.refArrayOps[String](args).find(((x$5: String) =&gt; x$5.==(&quot;--generate-hocon&quot;))).isDefined
+        </td>
+      </tr><tr>
+        <td>
+          195
+        </td>
+        <td>
+          658
+        </td>
+        <td>
+          6664
+          -
+          6664
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          195
+        </td>
+        <td>
+          652
+        </td>
+        <td>
+          6678
+          -
+          6701
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #F0ADAD">
+          x$5.==(&quot;--generate-hocon&quot;)
+        </td>
+      </tr><tr>
+        <td>
+          196
+        </td>
+        <td>
+          654
+        </td>
+        <td>
+          6733
+          -
+          6736
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;.&quot;
+        </td>
+      </tr><tr>
+        <td>
+          196
+        </td>
+        <td>
+          657
+        </td>
+        <td>
+          6722
+          -
+          6780
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.unbound.Cli.recurseXml
+        </td>
+        <td style="background: #F0ADAD">
+          Cli.this.recurseXml(&quot;.&quot;, ((s: String, c: org.apache.maven.unbound.DocComments, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomHoconFiles(s, c, p)))
+        </td>
+      </tr><tr>
+        <td>
+          196
+        </td>
+        <td>
+          656
+        </td>
+        <td>
+          6722
+          -
+          6780
         </td>
         <td>
           Apply
@@ -2939,19 +3615,40 @@ else
           org.apache.maven.unbound.Cli.recurseXml
         </td>
         <td style="background: #F0ADAD">
-          Cli.this.recurseXml(&quot;.&quot;, ((s: String, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomHoconFiles(s, p)))
+          Cli.this.recurseXml(&quot;.&quot;, ((s: String, c: org.apache.maven.unbound.DocComments, p: org.apache.maven.unbound.Project) =&gt; Cli.this.createPomHoconFiles(s, c, p)))
         </td>
       </tr><tr>
         <td>
-          174
+          196
         </td>
         <td>
-          635
+          655
         </td>
         <td>
-          5769
+          6751
           -
-          5845
+          6779
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Cli.createPomHoconFiles
+        </td>
+        <td style="background: #F0ADAD">
+          Cli.this.createPomHoconFiles(s, c, p)
+        </td>
+      </tr><tr>
+        <td>
+          198
+        </td>
+        <td>
+          663
+        </td>
+        <td>
+          6799
+          -
+          6875
         </td>
         <td>
           Apply
@@ -2964,36 +3661,15 @@ else
         </td>
       </tr><tr>
         <td>
-          175
+          199
         </td>
         <td>
-          633
+          660
         </td>
         <td>
-          5821
+          6829
           -
-          5843
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.lang.Object.!=
-        </td>
-        <td style="background: #F0ADAD">
-          s.!=(&quot;--generate-json&quot;)
-        </td>
-      </tr><tr>
-        <td>
-          175
-        </td>
-        <td>
-          632
-        </td>
-        <td>
-          5799
-          -
-          5817
+          6847
         </td>
         <td>
           Literal
@@ -3006,15 +3682,15 @@ else
         </td>
       </tr><tr>
         <td>
-          175
+          199
         </td>
         <td>
-          634
+          662
         </td>
         <td>
-          5794
+          6824
           -
-          5843
+          6873
         </td>
         <td>
           Apply
@@ -3027,15 +3703,78 @@ else
         </td>
       </tr><tr>
         <td>
-          176
+          199
         </td>
         <td>
-          636
+          661
         </td>
         <td>
-          5856
+          6851
           -
-          5870
+          6873
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #F0ADAD">
+          s.!=(&quot;--generate-json&quot;)
+        </td>
+      </tr><tr>
+        <td>
+          200
+        </td>
+        <td>
+          669
+        </td>
+        <td>
+          6882
+          -
+          6882
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          200
+        </td>
+        <td>
+          668
+        </td>
+        <td>
+          6882
+          -
+          6882
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          200
+        </td>
+        <td>
+          664
+        </td>
+        <td>
+          6886
+          -
+          6900
         </td>
         <td>
           Select
@@ -3048,15 +3787,15 @@ else
         </td>
       </tr><tr>
         <td>
-          176
+          200
         </td>
         <td>
-          639
+          667
         </td>
         <td>
-          5872
+          6902
           -
-          6049
+          7079
         </td>
         <td>
           Block
@@ -3072,57 +3811,15 @@ else
         </td>
       </tr><tr>
         <td>
-          176
+          201
         </td>
         <td>
-          641
+          665
         </td>
         <td>
-          5852
+          6912
           -
-          5852
-        </td>
-        <td>
-          Block
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #F0ADAD">
-          ()
-        </td>
-      </tr><tr>
-        <td>
-          176
-        </td>
-        <td>
-          640
-        </td>
-        <td>
-          5852
-          -
-          5852
-        </td>
-        <td>
-          Literal
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #F0ADAD">
-          ()
-        </td>
-      </tr><tr>
-        <td>
-          177
-        </td>
-        <td>
-          637
-        </td>
-        <td>
-          5882
-          -
-          5971
+          7001
         </td>
         <td>
           Apply
@@ -3135,15 +3832,15 @@ else
         </td>
       </tr><tr>
         <td>
-          179
+          203
         </td>
         <td>
-          638
+          666
         </td>
         <td>
-          5980
+          7010
           -
-          6041
+          7071
         </td>
         <td>
           Apply
@@ -3156,15 +3853,15 @@ else
         </td>
       </tr><tr>
         <td>
-          183
+          207
         </td>
         <td>
-          644
+          672
         </td>
         <td>
-          6070
+          7100
           -
-          6082
+          7112
         </td>
         <td>
           Block
@@ -3177,15 +3874,15 @@ else
         </td>
       </tr><tr>
         <td>
-          183
+          207
         </td>
         <td>
-          643
+          671
         </td>
         <td>
-          6070
+          7100
           -
-          6082
+          7112
         </td>
         <td>
           Apply

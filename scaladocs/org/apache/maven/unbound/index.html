@@ -174,6 +174,18 @@ for translating POM files as XML to and from Json and Hocon formats.
                         <a href="Cli$.html" title="The Maven Unbound Command Line Interface(CLI).">Cli</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
+                        <a class="object" href="CommentExtractor$.html" title=""></a>
+                        <a href="CommentExtractor$.html" title="">CommentExtractor</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="class" href="CommentPath.html" title=""></a>
+                        <a href="CommentPath.html" title="">CommentPath</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="class" href="Comments.html" title=""></a>
+                        <a href="Comments.html" title="">Comments</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
                         <a class="trait" href="CommonJsonReader.html" title="Conversion code that translates Json4s objects to and from Project case class instances."></a>
                         <a href="CommonJsonReader.html" title="Conversion code that translates Json4s objects to and from Project case class instances.">CommonJsonReader</a>
                       </li><li class="current-entities indented4">
@@ -196,6 +208,14 @@ for translating POM files as XML to and from Json and Hocon formats.
                         <a class="object" href="DistributionManagement$.html" title=""></a>
                         <a class="class" href="DistributionManagement.html" title=""></a>
                         <a href="DistributionManagement.html" title="">DistributionManagement</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="class" href="DocComments.html" title=""></a>
+                        <a href="DocComments.html" title="">DocComments</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="class" href="ElementLabel.html" title=""></a>
+                        <a href="ElementLabel.html" title="">ElementLabel</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
                         <a class="class" href="Exclude.html" title=""></a>
@@ -261,6 +281,10 @@ for translating POM files as XML to and from Json and Hocon formats.
                         <a class="class" href="License.html" title=""></a>
                         <a href="License.html" title="">License</a>
                       </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="class" href="ListIndex.html" title=""></a>
+                        <a href="ListIndex.html" title="">ListIndex</a>
+                      </li><li class="current-entities indented4">
                         <a class="object" href="MailingList$.html" title=""></a>
                         <a class="class" href="MailingList.html" title=""></a>
                         <a href="MailingList.html" title="">MailingList</a>
@@ -296,6 +320,10 @@ for translating POM files as XML to and from Json and Hocon formats.
                         <a class="object" href="Parent$.html" title=""></a>
                         <a class="class" href="Parent.html" title=""></a>
                         <a href="Parent.html" title="">Parent</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="trait" href="PathElement.html" title=""></a>
+                        <a href="PathElement.html" title="">PathElement</a>
                       </li><li class="current-entities indented4">
                         <a class="object" href="Plugin$.html" title=""></a>
                         <a class="class" href="Plugin.html" title=""></a>
@@ -580,6 +608,38 @@ more details</p></span></dd></dl></div>
       </span>
       
       
+    </li><li name="org.apache.maven.unbound.CommentPath" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CommentPathextendsProductwithSerializable"></a><a id="CommentPath:CommentPath"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/index.html#CommentPathextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="CommentPath.html"><span class="name">CommentPath</span></a><span class="params">(<span name="elems">elems: <a href="PathElement.html" class="extype" name="org.apache.maven.unbound.PathElement">PathElement</a>*</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="org.apache.maven.unbound.Comments" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CommentsextendsProductwithSerializable"></a><a id="Comments:Comments"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/index.html#CommentsextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="Comments.html"><span class="name">Comments</span></a><span class="params">(<span name="s">s: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="path">path: <a href="CommentPath.html" class="extype" name="org.apache.maven.unbound.CommentPath">CommentPath</a></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
     </li><li name="org.apache.maven.unbound.CommonJsonReader" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="CommonJsonReaderextendsLabels"></a><a id="CommonJsonReader:CommonJsonReader"></a>
       <span class="permalink">
@@ -680,6 +740,38 @@ utility code needed to read/write Json4s objects
       </span>
       <span class="symbol">
         <a title="" href="DistributionManagement.html"><span class="name">DistributionManagement</span></a><span class="params">(<span name="repository">repository: <a href="DeploymentRepository.html" class="extype" name="org.apache.maven.unbound.DeploymentRepository">DeploymentRepository</a> = <span class="symbol">null</span></span>, <span name="snapshotRepository">snapshotRepository: <a href="DeploymentRepository.html" class="extype" name="org.apache.maven.unbound.DeploymentRepository">DeploymentRepository</a> = <span class="symbol">null</span></span>, <span name="site">site: <a href="Site.html" class="extype" name="org.apache.maven.unbound.Site">Site</a> = <span class="symbol">null</span></span>, <span name="downloadUrl">downloadUrl: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="relocation">relocation: <a href="Relocation.html" class="extype" name="org.apache.maven.unbound.Relocation">Relocation</a> = <span class="symbol">null</span></span>, <span name="status">status: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="DistributionManagement$.html">DistributionManagement.None</a></span></span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="org.apache.maven.unbound.DocComments" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="DocCommentsextendsProductwithSerializable"></a><a id="DocComments:DocComments"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/index.html#DocCommentsextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="DocComments.html"><span class="name">DocComments</span></a><span class="params">(<span name="comments">comments: <span class="extype" name="scala.Seq">Seq</span>[<a href="Comments.html" class="extype" name="org.apache.maven.unbound.Comments">Comments</a>]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="org.apache.maven.unbound.ElementLabel" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ElementLabelextendsPathElementwithProductwithSerializable"></a><a id="ElementLabel:ElementLabel"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/index.html#ElementLabelextendsPathElementwithProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="ElementLabel.html"><span class="name">ElementLabel</span></a><span class="params">(<span name="label">label: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="PathElement.html" class="extype" name="org.apache.maven.unbound.PathElement">PathElement</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       
       
@@ -899,6 +991,22 @@ objects that can be converted to Strings when in scope.
       </span>
       
       
+    </li><li name="org.apache.maven.unbound.ListIndex" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ListIndexextendsPathElementwithProductwithSerializable"></a><a id="ListIndex:ListIndex"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/index.html#ListIndexextendsPathElementwithProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="ListIndex.html"><span class="name">ListIndex</span></a><span class="params">(<span name="idx">idx: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result"> extends <a href="PathElement.html" class="extype" name="org.apache.maven.unbound.PathElement">PathElement</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
     </li><li name="org.apache.maven.unbound.MailingList" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="MailingListextendsProductwithSerializable"></a><a id="MailingList:MailingList"></a>
       <span class="permalink">
@@ -1040,6 +1148,22 @@ objects that can be converted to Strings when in scope.
       </span>
       <span class="symbol">
         <a title="" href="Parent.html"><span class="name">Parent</span></a><span class="params">(<span name="groupId">groupId: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="artifactId">artifactId: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="relativePath">relativePath: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="Parent$.html">Parent.DefRelativePath</a></span></span></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="org.apache.maven.unbound.PathElement" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="PathElementextendsAnyRef"></a><a id="PathElement:PathElement"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/index.html#PathElementextendsAnyRef" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="PathElement.html"><span class="name">PathElement</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
       
       
@@ -1660,6 +1784,22 @@ performing the same conversions on all necessary modules of a multi-module
 project.  Normally this class is only used when building a command line
 interface but can be used in other cases as well.
 </p></div></div>
+    </li><li name="org.apache.maven.unbound.CommentExtractor" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CommentExtractor"></a><a id="CommentExtractor:CommentExtractor"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/index.html#CommentExtractor" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="CommentExtractor$.html"><span class="name">CommentExtractor</span></a>
+      </span>
+      
+      
     </li><li name="org.apache.maven.unbound.Contributor" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Contributor"></a><a id="Contributor:Contributor"></a>
       <span class="permalink">
