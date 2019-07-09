@@ -76,198 +76,222 @@
 </span>52 <span style=''>
 </span>53 <span style=''>  def matchConf(parent: ConfigValue, key: String, n: ConfigValue): Boolean =
 </span>54 <span style=''>    parent match {
-</span>55 <span style=''>      case l: ConfigList =&gt; if (</span><span style='background: #AEF1AE'>l.size &gt; idx</span><span style=''>) </span><span style='background: #AEF1AE'>l.get(idx) == n</span><span style=''> else </span><span style='background: #AEF1AE'>false</span><span style=''>
+</span>55 <span style=''>      case l: ConfigList =&gt; if (</span><span style='background: #AEF1AE'>l.size &gt; idx</span><span style=''>) </span><span style='background: #AEF1AE'>l.get(idx) == n</span><span style=''> else </span><span style='background: #F0ADAD'>false</span><span style=''>
 </span>56 <span style=''>      case o: ConfigObject =&gt;
 </span>57 <span style=''>        val keys = </span><span style='background: #AEF1AE'>o.asScala.keys</span><span style=''>
-</span>58 <span style=''>        if (</span><span style='background: #AEF1AE'>keys.size &gt; idx</span><span style=''>) </span><span style='background: #AEF1AE'>keys.toSeq(idx) == n</span><span style=''>
-</span>59 <span style=''>        else </span><span style='background: #AEF1AE'>false</span><span style=''>
-</span>60 <span style=''>    }
-</span>61 <span style=''>}
-</span>62 <span style=''>
-</span>63 <span style=''>case class CommentPath(elems: PathElement*) {
-</span>64 <span style=''>
-</span>65 <span style=''>  def insertConf(s: Seq[String], conf: Config): Config = {
-</span>66 <span style=''>    import scala.collection.JavaConverters._
-</span>67 <span style=''>
-</span>68 <span style=''>    def findNext(
-</span>69 <span style=''>      it: Iterator[PathElement], cv: ConfigValue): Seq[ConfigValue] =
-</span>70 <span style=''>      if (</span><span style='background: #AEF1AE'>it.hasNext</span><span style=''>) </span><span style='background: #AEF1AE'>{
-</span>71 <span style=''></span><span style='background: #AEF1AE'>        val pe = it.next
-</span>72 <span style=''></span><span style='background: #AEF1AE'>        cv match {
-</span>73 <span style=''></span><span style='background: #AEF1AE'>          case cur: ConfigObject =&gt;
-</span>74 <span style=''></span><span style='background: #AEF1AE'>            cur.asScala.find { case(k, v) =&gt; pe.matchConf(cur, k, v) } match {
-</span>75 <span style=''></span><span style='background: #AEF1AE'>              case Some((_, c)) =&gt; findNext(it, c) :+ cur
-</span>76 <span style=''></span><span style='background: #AEF1AE'>              case None =&gt; Seq()
-</span>77 <span style=''></span><span style='background: #AEF1AE'>            }
-</span>78 <span style=''></span><span style='background: #AEF1AE'>          case cl: ConfigList =&gt;
-</span>79 <span style=''></span><span style='background: #AEF1AE'>            cl.asScala.find { v =&gt; pe.matchConf(cl, &quot;&quot;, v) } match {
-</span>80 <span style=''></span><span style='background: #AEF1AE'>              case Some(c) =&gt; findNext(it, c) :+ cl
-</span>81 <span style=''></span><span style='background: #AEF1AE'>              case None =&gt; Seq()
-</span>82 <span style=''></span><span style='background: #AEF1AE'>            }
-</span>83 <span style=''></span><span style='background: #AEF1AE'>        }
-</span>84 <span style=''></span><span style='background: #AEF1AE'>      }</span><span style=''> else </span><span style='background: #AEF1AE'>Seq(cv)</span><span style=''>
-</span>85 <span style=''>
-</span>86 <span style=''>    val path = </span><span style='background: #AEF1AE'>findNext(elems.toIterator, conf.root())</span><span style=''>
-</span>87 <span style=''>    if (</span><span style='background: #AEF1AE'>!path.isEmpty</span><span style=''>) </span><span style='background: #AEF1AE'>{
-</span>88 <span style=''></span><span style='background: #AEF1AE'>      val relems = elems.reverse.toIterator
-</span>89 <span style=''></span><span style='background: #AEF1AE'>      // add comments to path.head
-</span>90 <span style=''></span><span style='background: #AEF1AE'>      val origin = path.head.origin().withComments(s.asJava)
-</span>91 <span style=''></span><span style='background: #AEF1AE'>      path.tail.foldLeft(path.head.withOrigin(origin)) { case(ch, par) =&gt;
-</span>92 <span style=''></span><span style='background: #AEF1AE'>        par match {
-</span>93 <span style=''></span><span style='background: #AEF1AE'>          case cur: ConfigObject =&gt; relems.next match {
-</span>94 <span style=''></span><span style='background: #AEF1AE'>            case ElementLabel(label) =&gt; cur.withValue(label, ch)
-</span>95 <span style=''></span><span style='background: #AEF1AE'>            case ListIndex(idx) =&gt; cur.withValue(s&quot;[$idx]&quot;, ch)
-</span>96 <span style=''></span><span style='background: #AEF1AE'>          }
-</span>97 <span style=''></span><span style='background: #AEF1AE'>          case cl: ConfigList =&gt;
-</span>98 <span style=''></span><span style='background: #AEF1AE'>            val idx = relems.next.asInstanceOf[ListIndex].idx
-</span>99 <span style=''></span><span style='background: #AEF1AE'>            val lst = new java.util.ArrayList[ConfigValue](cl)
-</span>100 <span style=''></span><span style='background: #AEF1AE'>            lst.set(idx, ch)
-</span>101 <span style=''></span><span style='background: #AEF1AE'>            ConfigValueFactory.fromIterable(lst)
-</span>102 <span style=''></span><span style='background: #AEF1AE'>        }}.asInstanceOf[ConfigObject].toConfig
-</span>103 <span style=''></span><span style='background: #AEF1AE'>
-</span>104 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''> else </span><span style='background: #F0ADAD'>conf</span><span style=''>
-</span>105 <span style=''>  }
-</span>106 <span style=''>
-</span>107 <span style=''>  def insertXml(s: Seq[String], root: Elem): Elem = {
-</span>108 <span style=''>    import scala.collection.JavaConverters._
-</span>109 <span style=''>
-</span>110 <span style=''>    def findNext(it: Iterator[PathElement], cur: Elem): Seq[Elem] =
-</span>111 <span style=''>      if (</span><span style='background: #AEF1AE'>it.hasNext</span><span style=''>) {
-</span>112 <span style=''>        </span><span style='background: #AEF1AE'>it.next match {
-</span>113 <span style=''></span><span style='background: #AEF1AE'>          case ElementLabel(label) =&gt;
-</span>114 <span style=''></span><span style='background: #AEF1AE'>            cur.child.find {
-</span>115 <span style=''></span><span style='background: #AEF1AE'>              case ch: Elem =&gt; ch.label == label
-</span>116 <span style=''></span><span style='background: #AEF1AE'>              case _ =&gt; false
-</span>117 <span style=''></span><span style='background: #AEF1AE'>            } match {
-</span>118 <span style=''></span><span style='background: #AEF1AE'>              case Some(ch: Elem) =&gt; findNext(it, ch) :+ cur
-</span>119 <span style=''></span><span style='background: #AEF1AE'>              case _ =&gt; </span><span style='background: #F0ADAD'>Seq()</span><span style='background: #AEF1AE'>
-</span>120 <span style=''></span><span style='background: #AEF1AE'>            }
-</span>121 <span style=''></span><span style='background: #AEF1AE'>          case ListIndex(idx) =&gt;
-</span>122 <span style=''></span><span style='background: #AEF1AE'>            </span><span style='background: #F0ADAD'>findNext(
-</span>123 <span style=''></span><span style='background: #F0ADAD'>              it,
-</span>124 <span style=''></span><span style='background: #F0ADAD'>              cur.child.filter { _.isInstanceOf[Elem]
-</span>125 <span style=''></span><span style='background: #F0ADAD'>              }(idx).asInstanceOf[Elem]) :+
-</span>126 <span style=''></span><span style='background: #F0ADAD'>            cur</span><span style='background: #AEF1AE'>
-</span>127 <span style=''></span><span style='background: #AEF1AE'>        }</span><span style=''>
-</span>128 <span style=''>      } else </span><span style='background: #AEF1AE'>Seq(cur)</span><span style=''>
-</span>129 <span style=''>
-</span>130 <span style=''>    val it = </span><span style='background: #AEF1AE'>elems.tail.toIterator</span><span style=''> // skip project
-</span>131 <span style=''>    val path = </span><span style='background: #AEF1AE'>findNext(it, root)</span><span style=''>
-</span>132 <span style=''>
-</span>133 <span style=''>    if (</span><span style='background: #AEF1AE'>!path.isEmpty</span><span style=''>) </span><span style='background: #AEF1AE'>{
-</span>134 <span style=''></span><span style='background: #AEF1AE'>
-</span>135 <span style=''></span><span style='background: #AEF1AE'>      val relems = elems.tail.reverse.toIterator
-</span>136 <span style=''></span><span style='background: #AEF1AE'>      val newChildren: Seq[Node] =
-</span>137 <span style=''></span><span style='background: #AEF1AE'>        s.map { XmlComment(_) } ++ path.head.child.toSeq
-</span>138 <span style=''></span><span style='background: #AEF1AE'>      val oldLeaf = path.head
-</span>139 <span style=''></span><span style='background: #AEF1AE'>      val newLeaf = new Elem(
-</span>140 <span style=''></span><span style='background: #AEF1AE'>        oldLeaf.prefix, oldLeaf.label, oldLeaf.attributes, oldLeaf.scope,
-</span>141 <span style=''></span><span style='background: #AEF1AE'>        newChildren: _*)
-</span>142 <span style=''></span><span style='background: #AEF1AE'>
-</span>143 <span style=''></span><span style='background: #AEF1AE'>      path.tail.foldLeft((newLeaf, oldLeaf)) { case((ch, oldCh), par) =&gt;
-</span>144 <span style=''></span><span style='background: #AEF1AE'>        val newChildren = par.child.updated(par.child.indexOf(oldCh), ch)
-</span>145 <span style=''></span><span style='background: #AEF1AE'>        (new Elem(
-</span>146 <span style=''></span><span style='background: #AEF1AE'>          par.prefix, par.label, par.attributes, par.scope, newChildren: _*),
-</span>147 <span style=''></span><span style='background: #AEF1AE'>         par)
-</span>148 <span style=''></span><span style='background: #AEF1AE'>      }._1
-</span>149 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''> else </span><span style='background: #F0ADAD'>root</span><span style=''>
-</span>150 <span style=''>  }
-</span>151 <span style=''>}
-</span>152 <span style=''>
-</span>153 <span style=''>case class Comments(s: Seq[String], path: CommentPath) {
-</span>154 <span style=''>
-</span>155 <span style=''>  def insertConf(conf: Config): Config = </span><span style='background: #AEF1AE'>path.insertConf(s, conf)</span><span style=''>
-</span>156 <span style=''>
-</span>157 <span style=''>  def insertXml(conf: Elem): Elem = </span><span style='background: #AEF1AE'>path.insertXml(s, conf)</span><span style=''>
-</span>158 <span style=''>}
-</span>159 <span style=''>
-</span>160 <span style=''>case class DocComments(comments: Seq[Comments]) {
-</span>161 <span style=''>
-</span>162 <span style=''>  def insertConf(conf: Config): Config =
-</span>163 <span style=''>    </span><span style='background: #AEF1AE'>comments.foldLeft(conf) { case(c, comment) =&gt; comment.insertConf(c) }</span><span style=''>
-</span>164 <span style=''>
-</span>165 <span style=''>  def insertXml(root: Elem): Elem =
-</span>166 <span style=''>    </span><span style='background: #AEF1AE'>comments.foldLeft(root) { case(r, comment) =&gt; comment.insertXml(r) }</span><span style=''>
+</span>58 <span style=''>        if (</span><span style='background: #AEF1AE'>keys.size &gt; idx</span><span style=''>) {
+</span>59 <span style=''>          </span><span style='background: #AEF1AE'>o.get(keys.toSeq(idx)) == n</span><span style=''>
+</span>60 <span style=''>        } else </span><span style='background: #F0ADAD'>false</span><span style=''>
+</span>61 <span style=''>    }
+</span>62 <span style=''>}
+</span>63 <span style=''>
+</span>64 <span style=''>case class CommentPath(elems: PathElement*) {
+</span>65 <span style=''>
+</span>66 <span style=''>  def insertConf(s: Seq[String], conf: Config): Config = {
+</span>67 <span style=''>    import scala.collection.JavaConverters._
+</span>68 <span style=''>
+</span>69 <span style=''>    def findNext(
+</span>70 <span style=''>      it: Iterator[PathElement], cv: ConfigValue): Seq[ConfigValue] =
+</span>71 <span style=''>      if (</span><span style='background: #AEF1AE'>it.hasNext</span><span style=''>) </span><span style='background: #AEF1AE'>{
+</span>72 <span style=''></span><span style='background: #AEF1AE'>        val pe = it.next
+</span>73 <span style=''></span><span style='background: #AEF1AE'>        cv match {
+</span>74 <span style=''></span><span style='background: #AEF1AE'>          case cur: ConfigObject =&gt;
+</span>75 <span style=''></span><span style='background: #AEF1AE'>            cur.asScala.find { case(k, v) =&gt; pe.matchConf(cur, k, v) } match {
+</span>76 <span style=''></span><span style='background: #AEF1AE'>              case Some((_, c)) =&gt; findNext(it, c) :+ cur
+</span>77 <span style=''></span><span style='background: #AEF1AE'>              case None =&gt; </span><span style='background: #F0ADAD'>println(&quot;no match &quot; + cur)</span><span style='background: #AEF1AE'>; </span><span style='background: #F0ADAD'>Seq()</span><span style='background: #AEF1AE'>
+</span>78 <span style=''></span><span style='background: #AEF1AE'>            }
+</span>79 <span style=''></span><span style='background: #AEF1AE'>          case cl: ConfigList =&gt;
+</span>80 <span style=''></span><span style='background: #AEF1AE'>            cl.asScala.find { v =&gt; pe.matchConf(cl, &quot;&quot;, v) } match {
+</span>81 <span style=''></span><span style='background: #AEF1AE'>              case Some(c) =&gt; findNext(it, c) :+ cl
+</span>82 <span style=''></span><span style='background: #AEF1AE'>              case None =&gt;
+</span>83 <span style=''></span><span style='background: #AEF1AE'>                </span><span style='background: #F0ADAD'>println(&quot;no match list &quot; + cl + &quot; looking for &quot; + pe)</span><span style='background: #AEF1AE'>
+</span>84 <span style=''></span><span style='background: #AEF1AE'>                </span><span style='background: #F0ADAD'>Seq()</span><span style='background: #AEF1AE'>
+</span>85 <span style=''></span><span style='background: #AEF1AE'>            }
+</span>86 <span style=''></span><span style='background: #AEF1AE'>        }
+</span>87 <span style=''></span><span style='background: #AEF1AE'>      }</span><span style=''> else </span><span style='background: #AEF1AE'>Seq(cv)</span><span style=''>
+</span>88 <span style=''>
+</span>89 <span style=''>    val it = </span><span style='background: #AEF1AE'>elems.toIterator</span><span style=''>
+</span>90 <span style=''>    val path = </span><span style='background: #AEF1AE'>findNext(it, conf.root())</span><span style=''>
+</span>91 <span style=''>    if (</span><span style='background: #AEF1AE'>!path.isEmpty &amp;&amp; elems.size &lt;= path.size</span><span style=''>) </span><span style='background: #AEF1AE'>{
+</span>92 <span style=''></span><span style='background: #AEF1AE'>      val relems = elems.reverse.toIterator
+</span>93 <span style=''></span><span style='background: #AEF1AE'>      // add comments to path.head
+</span>94 <span style=''></span><span style='background: #AEF1AE'>      val origin = path.head.origin().withComments(s.asJava)
+</span>95 <span style=''></span><span style='background: #AEF1AE'>      path.tail.foldLeft(path.head.withOrigin(origin)) { case(ch, par) =&gt;
+</span>96 <span style=''></span><span style='background: #AEF1AE'>        par match {
+</span>97 <span style=''></span><span style='background: #AEF1AE'>          case cur: ConfigObject =&gt; relems.next match {
+</span>98 <span style=''></span><span style='background: #AEF1AE'>            case ElementLabel(label) =&gt; cur.withValue(label, ch)
+</span>99 <span style=''></span><span style='background: #AEF1AE'>            case ListIndex(idx) =&gt;
+</span>100 <span style=''></span><span style='background: #AEF1AE'>              val keys = cur.asScala.keys.toSeq
+</span>101 <span style=''></span><span style='background: #AEF1AE'>              if (keys.size &gt; idx) {
+</span>102 <span style=''></span><span style='background: #AEF1AE'>                val k = keys(idx)
+</span>103 <span style=''></span><span style='background: #AEF1AE'>                cur.withValue(k, ch)
+</span>104 <span style=''></span><span style='background: #AEF1AE'>              } else {
+</span>105 <span style=''></span><span style='background: #AEF1AE'>                println(&quot;mismatch &quot; + cur + &quot; @ listidx=&quot; + idx)
+</span>106 <span style=''></span><span style='background: #AEF1AE'>                cur
+</span>107 <span style=''></span><span style='background: #AEF1AE'>              }
+</span>108 <span style=''></span><span style='background: #AEF1AE'>          }
+</span>109 <span style=''></span><span style='background: #AEF1AE'>          case cl: ConfigList =&gt; relems.next match {
+</span>110 <span style=''></span><span style='background: #AEF1AE'>            case ListIndex(idx) =&gt;
+</span>111 <span style=''></span><span style='background: #AEF1AE'>              val lst = new java.util.ArrayList[ConfigValue](cl)
+</span>112 <span style=''></span><span style='background: #AEF1AE'>              lst.set(idx, ch)
+</span>113 <span style=''></span><span style='background: #AEF1AE'>              ConfigValueFactory.fromIterable(lst)
+</span>114 <span style=''></span><span style='background: #AEF1AE'>            case ElementLabel(label) =&gt;
+</span>115 <span style=''></span><span style='background: #AEF1AE'>              println(&quot;mismatch &quot; + label + &quot; in &quot; + cl)
+</span>116 <span style=''></span><span style='background: #AEF1AE'>              cl
+</span>117 <span style=''></span><span style='background: #AEF1AE'>          }
+</span>118 <span style=''></span><span style='background: #AEF1AE'>        }}.asInstanceOf[ConfigObject].toConfig
+</span>119 <span style=''></span><span style='background: #AEF1AE'>
+</span>120 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''> else </span><span style='background: #F0ADAD'>conf</span><span style=''>
+</span>121 <span style=''>  }
+</span>122 <span style=''>
+</span>123 <span style=''>  def insertXml(s: Seq[String], root: Elem): Elem = {
+</span>124 <span style=''>    import scala.collection.JavaConverters._
+</span>125 <span style=''>
+</span>126 <span style=''>    def findNext(it: Iterator[PathElement], cur: Elem): Seq[Elem] =
+</span>127 <span style=''>      if (</span><span style='background: #AEF1AE'>it.hasNext</span><span style=''>) {
+</span>128 <span style=''>        </span><span style='background: #AEF1AE'>it.next match {
+</span>129 <span style=''></span><span style='background: #AEF1AE'>          case ElementLabel(label) =&gt;
+</span>130 <span style=''></span><span style='background: #AEF1AE'>            cur.child.find {
+</span>131 <span style=''></span><span style='background: #AEF1AE'>              case ch: Elem =&gt; ch.label == label
+</span>132 <span style=''></span><span style='background: #AEF1AE'>              case _ =&gt; false
+</span>133 <span style=''></span><span style='background: #AEF1AE'>            } match {
+</span>134 <span style=''></span><span style='background: #AEF1AE'>              case Some(ch: Elem) =&gt; findNext(it, ch) :+ cur
+</span>135 <span style=''></span><span style='background: #AEF1AE'>              case _ =&gt; </span><span style='background: #F0ADAD'>Seq()</span><span style='background: #AEF1AE'>
+</span>136 <span style=''></span><span style='background: #AEF1AE'>            }
+</span>137 <span style=''></span><span style='background: #AEF1AE'>          case ListIndex(idx) =&gt;
+</span>138 <span style=''></span><span style='background: #AEF1AE'>            </span><span style='background: #F0ADAD'>findNext(
+</span>139 <span style=''></span><span style='background: #F0ADAD'>              it,
+</span>140 <span style=''></span><span style='background: #F0ADAD'>              cur.child.filter { _.isInstanceOf[Elem]
+</span>141 <span style=''></span><span style='background: #F0ADAD'>              }(idx).asInstanceOf[Elem]) :+
+</span>142 <span style=''></span><span style='background: #F0ADAD'>            cur</span><span style='background: #AEF1AE'>
+</span>143 <span style=''></span><span style='background: #AEF1AE'>        }</span><span style=''>
+</span>144 <span style=''>      } else </span><span style='background: #AEF1AE'>Seq(cur)</span><span style=''>
+</span>145 <span style=''>
+</span>146 <span style=''>    val it = </span><span style='background: #AEF1AE'>elems.tail.toIterator</span><span style=''> // skip project
+</span>147 <span style=''>    val path = </span><span style='background: #AEF1AE'>findNext(it, root)</span><span style=''>
+</span>148 <span style=''>
+</span>149 <span style=''>    if (</span><span style='background: #AEF1AE'>!path.isEmpty</span><span style=''>) </span><span style='background: #AEF1AE'>{
+</span>150 <span style=''></span><span style='background: #AEF1AE'>
+</span>151 <span style=''></span><span style='background: #AEF1AE'>      val relems = elems.tail.reverse.toIterator
+</span>152 <span style=''></span><span style='background: #AEF1AE'>      val newChildren: Seq[Node] =
+</span>153 <span style=''></span><span style='background: #AEF1AE'>        s.map { XmlComment(_) } ++ path.head.child.toSeq
+</span>154 <span style=''></span><span style='background: #AEF1AE'>      val oldLeaf = path.head
+</span>155 <span style=''></span><span style='background: #AEF1AE'>      val newLeaf = new Elem(
+</span>156 <span style=''></span><span style='background: #AEF1AE'>        oldLeaf.prefix, oldLeaf.label, oldLeaf.attributes, oldLeaf.scope,
+</span>157 <span style=''></span><span style='background: #AEF1AE'>        newChildren: _*)
+</span>158 <span style=''></span><span style='background: #AEF1AE'>
+</span>159 <span style=''></span><span style='background: #AEF1AE'>      path.tail.foldLeft((newLeaf, oldLeaf)) { case((ch, oldCh), par) =&gt;
+</span>160 <span style=''></span><span style='background: #AEF1AE'>        val newChildren = par.child.updated(par.child.indexOf(oldCh), ch)
+</span>161 <span style=''></span><span style='background: #AEF1AE'>        (new Elem(
+</span>162 <span style=''></span><span style='background: #AEF1AE'>          par.prefix, par.label, par.attributes, par.scope, newChildren: _*),
+</span>163 <span style=''></span><span style='background: #AEF1AE'>         par)
+</span>164 <span style=''></span><span style='background: #AEF1AE'>      }._1
+</span>165 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''> else </span><span style='background: #F0ADAD'>root</span><span style=''>
+</span>166 <span style=''>  }
 </span>167 <span style=''>}
 </span>168 <span style=''>
-</span>169 <span style=''>object CommentExtractor {
+</span>169 <span style=''>case class Comments(s: Seq[String], path: CommentPath) {
 </span>170 <span style=''>
-</span>171 <span style=''>  def apply(conf: Config): DocComments = {
-</span>172 <span style=''>    import scala.collection.JavaConverters._
-</span>173 <span style=''>
-</span>174 <span style=''>    def traverse(curr: ConfigValue, key: Any, path: List[PathElement]):
-</span>175 <span style=''>        Seq[Comments] = {
-</span>176 <span style=''>
-</span>177 <span style=''>      val newPath = </span><span style='background: #AEF1AE'>path :+ (key match {
-</span>178 <span style=''></span><span style='background: #AEF1AE'>        case s: String =&gt; ElementLabel(s)
-</span>179 <span style=''></span><span style='background: #AEF1AE'>        case i: Int =&gt; ListIndex(i)
-</span>180 <span style=''></span><span style='background: #AEF1AE'>      })</span><span style=''>
-</span>181 <span style=''>
-</span>182 <span style=''>      val comments = </span><span style='background: #AEF1AE'>curr.origin().comments().asScala.toSeq</span><span style=''>
-</span>183 <span style=''>      val thisComments =
-</span>184 <span style=''>        if (</span><span style='background: #AEF1AE'>comments.isEmpty</span><span style=''>) </span><span style='background: #AEF1AE'>Seq()</span><span style=''>
-</span>185 <span style=''>        else </span><span style='background: #AEF1AE'>Seq(Comments(comments, CommentPath(newPath: _*)))</span><span style=''>
-</span>186 <span style=''>      val childComments: Seq[Comments] = curr match {
-</span>187 <span style=''>        case cur: ConfigObject =&gt;
-</span>188 <span style=''>          </span><span style='background: #AEF1AE'>cur.asScala.flatMap { case(k, v) =&gt; traverse(v, k, newPath) }.toSeq</span><span style=''>
-</span>189 <span style=''>        case cl: ConfigList =&gt;
-</span>190 <span style=''>          </span><span style='background: #AEF1AE'>cl.asScala.zipWithIndex.flatMap { case(v, idx) =&gt;
-</span>191 <span style=''></span><span style='background: #AEF1AE'>            traverse(v, idx, newPath) }</span><span style=''>
-</span>192 <span style=''>        case _ =&gt; </span><span style='background: #AEF1AE'>Seq()</span><span style=''>
-</span>193 <span style=''>      }
-</span>194 <span style=''>      </span><span style='background: #AEF1AE'>thisComments ++ childComments</span><span style=''>
-</span>195 <span style=''>    }
-</span>196 <span style=''>
-</span>197 <span style=''>    val root = </span><span style='background: #AEF1AE'>conf.root()</span><span style=''>
-</span>198 <span style=''>    val buf = </span><span style='background: #AEF1AE'>List()</span><span style=''>
-</span>199 <span style=''>    </span><span style='background: #AEF1AE'>DocComments(
-</span>200 <span style=''></span><span style='background: #AEF1AE'>      root.asScala.flatMap { case(k, v) =&gt; traverse(v, k, buf) }.toSeq)</span><span style=''>
-</span>201 <span style=''>  }
-</span>202 <span style=''>
-</span>203 <span style=''>  protected[unbound] def isListElem(cur: Elem): Boolean = {
-</span>204 <span style=''>    val head = </span><span style='background: #AEF1AE'>cur.child.filter(_.isInstanceOf[Elem]).head</span><span style=''>
-</span>205 <span style=''>    </span><span style='background: #AEF1AE'>!cur.child.isEmpty &amp;&amp; cur.child.tail.forall { _ match {
-</span>206 <span style=''></span><span style='background: #AEF1AE'>      case e: Elem =&gt; e.label == head.label
-</span>207 <span style=''></span><span style='background: #AEF1AE'>      case t: Text =&gt; t.text.trim.isEmpty
-</span>208 <span style=''></span><span style='background: #AEF1AE'>      case c: XmlComment =&gt; true
-</span>209 <span style=''></span><span style='background: #AEF1AE'>      case _ =&gt; </span><span style='background: #F0ADAD'>false</span><span style='background: #AEF1AE'>
-</span>210 <span style=''></span><span style='background: #AEF1AE'>    }}</span><span style=''>
-</span>211 <span style=''>  }
+</span>171 <span style=''>  def insertConf(conf: Config): Config = </span><span style='background: #AEF1AE'>path.insertConf(s, conf)</span><span style=''>
+</span>172 <span style=''>
+</span>173 <span style=''>  def insertXml(conf: Elem): Elem = </span><span style='background: #AEF1AE'>path.insertXml(s, conf)</span><span style=''>
+</span>174 <span style=''>}
+</span>175 <span style=''>
+</span>176 <span style=''>case class DocComments(comments: Seq[Comments]) {
+</span>177 <span style=''>
+</span>178 <span style=''>  def insertConf(conf: Config): Config =
+</span>179 <span style=''>    </span><span style='background: #AEF1AE'>comments.foldLeft(conf) { case(c, comment) =&gt; comment.insertConf(c) }</span><span style=''>
+</span>180 <span style=''>
+</span>181 <span style=''>  def insertXml(root: Elem): Elem =
+</span>182 <span style=''>    </span><span style='background: #AEF1AE'>comments.foldLeft(root) { case(r, comment) =&gt; comment.insertXml(r) }</span><span style=''>
+</span>183 <span style=''>}
+</span>184 <span style=''>
+</span>185 <span style=''>object CommentExtractor {
+</span>186 <span style=''>
+</span>187 <span style=''>  def apply(conf: Config): DocComments = {
+</span>188 <span style=''>    import scala.collection.JavaConverters._
+</span>189 <span style=''>
+</span>190 <span style=''>    def traverse(curr: ConfigValue, key: Any, path: List[PathElement]):
+</span>191 <span style=''>        Seq[Comments] = {
+</span>192 <span style=''>
+</span>193 <span style=''>      val newPath = </span><span style='background: #AEF1AE'>path :+ (key match {
+</span>194 <span style=''></span><span style='background: #AEF1AE'>        case s: String =&gt; ElementLabel(s)
+</span>195 <span style=''></span><span style='background: #AEF1AE'>        case i: Int =&gt; ListIndex(i)
+</span>196 <span style=''></span><span style='background: #AEF1AE'>      })</span><span style=''>
+</span>197 <span style=''>
+</span>198 <span style=''>      val comments = </span><span style='background: #AEF1AE'>curr.origin().comments().asScala.toSeq</span><span style=''>
+</span>199 <span style=''>      val thisComments =
+</span>200 <span style=''>        if (</span><span style='background: #AEF1AE'>comments.isEmpty</span><span style=''>) </span><span style='background: #AEF1AE'>Seq()</span><span style=''>
+</span>201 <span style=''>        else </span><span style='background: #AEF1AE'>Seq(Comments(comments, CommentPath(newPath: _*)))</span><span style=''>
+</span>202 <span style=''>      val childComments: Seq[Comments] = curr match {
+</span>203 <span style=''>        case cur: ConfigObject =&gt;
+</span>204 <span style=''>          </span><span style='background: #AEF1AE'>cur.asScala.flatMap { case(k, v) =&gt; traverse(v, k, newPath) }.toSeq</span><span style=''>
+</span>205 <span style=''>        case cl: ConfigList =&gt;
+</span>206 <span style=''>          </span><span style='background: #AEF1AE'>cl.asScala.zipWithIndex.flatMap { case(v, idx) =&gt;
+</span>207 <span style=''></span><span style='background: #AEF1AE'>            traverse(v, idx, newPath) }</span><span style=''>
+</span>208 <span style=''>        case _ =&gt; </span><span style='background: #AEF1AE'>Seq()</span><span style=''>
+</span>209 <span style=''>      }
+</span>210 <span style=''>      </span><span style='background: #AEF1AE'>thisComments ++ childComments</span><span style=''>
+</span>211 <span style=''>    }
 </span>212 <span style=''>
-</span>213 <span style=''>  def apply(root: Elem): DocComments = {
-</span>214 <span style=''>
-</span>215 <span style=''>    def traverse(cur: Elem, path: List[Elem]): Seq[Comments] = {
-</span>216 <span style=''>      val newPath = </span><span style='background: #AEF1AE'>path :+ cur</span><span style=''>
-</span>217 <span style=''>      </span><span style='background: #AEF1AE'>cur.child.zipWithIndex.flatMap { case(n, idx) =&gt; n match {
-</span>218 <span style=''></span><span style='background: #AEF1AE'>        case e: Elem =&gt; traverse(e, newPath)
-</span>219 <span style=''></span><span style='background: #AEF1AE'>        case c: XmlComment =&gt;
-</span>220 <span style=''></span><span style='background: #AEF1AE'>          val newPathElems = elemPathToPath(newPath)
-</span>221 <span style=''></span><span style='background: #AEF1AE'>          Seq(Comments(
-</span>222 <span style=''></span><span style='background: #AEF1AE'>            Seq(c.commentText),
-</span>223 <span style=''></span><span style='background: #AEF1AE'>            CommentPath((newPathElems ++ Seq(ListIndex(idx))): _*)))
-</span>224 <span style=''></span><span style='background: #AEF1AE'>        case _ =&gt; Seq()
-</span>225 <span style=''></span><span style='background: #AEF1AE'>      }}</span><span style=''>
-</span>226 <span style=''>    }
-</span>227 <span style=''>
-</span>228 <span style=''>    def elemPathToPath(path: List[Elem]): Seq[PathElement] = path match {
-</span>229 <span style=''>      case h :: h2 :: rest =&gt;
-</span>230 <span style=''>        if (</span><span style='background: #AEF1AE'>isListElem(h)</span><span style=''>)
-</span>231 <span style=''>          </span><span style='background: #AEF1AE'>Seq(
-</span>232 <span style=''></span><span style='background: #AEF1AE'>            ElementLabel(h.label),
-</span>233 <span style=''></span><span style='background: #AEF1AE'>            ListIndex(h.child.filter(_.isInstanceOf[Elem]).indexOf(h2))) ++
-</span>234 <span style=''></span><span style='background: #AEF1AE'>            elemPathToPath(rest)</span><span style=''>
-</span>235 <span style=''>        else </span><span style='background: #AEF1AE'>Seq(ElementLabel(h.label)) ++ elemPathToPath(h2 :: rest)</span><span style=''>
-</span>236 <span style=''>      case h :: Nil =&gt; </span><span style='background: #AEF1AE'>Seq(ElementLabel(h.label))</span><span style=''>
-</span>237 <span style=''>      case Nil =&gt; </span><span style='background: #AEF1AE'>Seq()</span><span style=''>
-</span>238 <span style=''>    }
-</span>239 <span style=''>
-</span>240 <span style=''>    val buf = </span><span style='background: #AEF1AE'>List(root)</span><span style=''>
-</span>241 <span style=''>    </span><span style='background: #AEF1AE'>DocComments(root.child.flatMap { _ match {
-</span>242 <span style=''></span><span style='background: #AEF1AE'>      case e: Elem =&gt; traverse(e, buf)
-</span>243 <span style=''></span><span style='background: #AEF1AE'>      case _ =&gt; Seq()
-</span>244 <span style=''></span><span style='background: #AEF1AE'>    }})</span><span style=''>
-</span>245 <span style=''>  }
-</span>246 <span style=''>}
+</span>213 <span style=''>    val root = </span><span style='background: #AEF1AE'>conf.root()</span><span style=''>
+</span>214 <span style=''>    val buf = </span><span style='background: #AEF1AE'>List()</span><span style=''>
+</span>215 <span style=''>    </span><span style='background: #AEF1AE'>DocComments(
+</span>216 <span style=''></span><span style='background: #AEF1AE'>      root.asScala.flatMap { case(k, v) =&gt; traverse(v, k, buf) }.toSeq)</span><span style=''>
+</span>217 <span style=''>  }
+</span>218 <span style=''>
+</span>219 <span style=''>  protected[unbound] def isListElem(cur: Elem): Boolean = {
+</span>220 <span style=''>    val elemChildren = </span><span style='background: #AEF1AE'>cur.child.filter(_.isInstanceOf[Elem])</span><span style=''>
+</span>221 <span style=''>    if (</span><span style='background: #AEF1AE'>elemChildren.size &gt; 1 ||
+</span>222 <span style=''></span><span style='background: #AEF1AE'>      (1 == elemChildren.size &amp;&amp;
+</span>223 <span style=''></span><span style='background: #AEF1AE'>        singular(cur.label) == elemChildren(0).label)</span><span style=''>) </span><span style='background: #AEF1AE'>{
+</span>224 <span style=''></span><span style='background: #AEF1AE'>      val head = elemChildren.head
+</span>225 <span style=''></span><span style='background: #AEF1AE'>      elemChildren.tail.forall { _ match {
+</span>226 <span style=''></span><span style='background: #AEF1AE'>        case e: Elem =&gt; e.label == head.label
+</span>227 <span style=''></span><span style='background: #AEF1AE'>        case t: Text =&gt; </span><span style='background: #F0ADAD'>t.text.trim.isEmpty</span><span style='background: #AEF1AE'>
+</span>228 <span style=''></span><span style='background: #AEF1AE'>        case c: XmlComment =&gt; </span><span style='background: #F0ADAD'>true</span><span style='background: #AEF1AE'>
+</span>229 <span style=''></span><span style='background: #AEF1AE'>        case _ =&gt; </span><span style='background: #F0ADAD'>false</span><span style='background: #AEF1AE'>
+</span>230 <span style=''></span><span style='background: #AEF1AE'>      }}
+</span>231 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''> else {
+</span>232 <span style=''>      </span><span style='background: #AEF1AE'>false</span><span style=''>
+</span>233 <span style=''>    }
+</span>234 <span style=''>  }
+</span>235 <span style=''>
+</span>236 <span style=''>  def apply(root: Elem): DocComments = {
+</span>237 <span style=''>
+</span>238 <span style=''>    def traverse(cur: Elem, path: List[Elem]): Seq[Comments] = {
+</span>239 <span style=''>      val newPath = </span><span style='background: #AEF1AE'>path :+ cur</span><span style=''>
+</span>240 <span style=''>      var elemIdx = </span><span style='background: #AEF1AE'>0</span><span style=''>
+</span>241 <span style=''>      </span><span style='background: #AEF1AE'>cur.child.flatMap { n =&gt; n match {
+</span>242 <span style=''></span><span style='background: #AEF1AE'>        case e: Elem =&gt; elemIdx = elemIdx + 1; traverse(e, newPath)
+</span>243 <span style=''></span><span style='background: #AEF1AE'>        case c: XmlComment =&gt;
+</span>244 <span style=''></span><span style='background: #AEF1AE'>          val newPathElems = elemPathToPath(newPath)
+</span>245 <span style=''></span><span style='background: #AEF1AE'>          Seq(Comments(
+</span>246 <span style=''></span><span style='background: #AEF1AE'>            Seq(c.commentText),
+</span>247 <span style=''></span><span style='background: #AEF1AE'>            CommentPath((newPathElems ++ Seq(ListIndex(elemIdx))): _*)))
+</span>248 <span style=''></span><span style='background: #AEF1AE'>        case _ =&gt; Seq()
+</span>249 <span style=''></span><span style='background: #AEF1AE'>      }}</span><span style=''>
+</span>250 <span style=''>    }
+</span>251 <span style=''>
+</span>252 <span style=''>    def elemPathToPath(path: List[Elem]): Seq[PathElement] = path match {
+</span>253 <span style=''>      case h :: h2 :: rest =&gt;
+</span>254 <span style=''>        if (</span><span style='background: #AEF1AE'>isListElem(h)</span><span style=''>)
+</span>255 <span style=''>          </span><span style='background: #AEF1AE'>Seq(
+</span>256 <span style=''></span><span style='background: #AEF1AE'>            ElementLabel(h.label),
+</span>257 <span style=''></span><span style='background: #AEF1AE'>            ListIndex(h.child.filter(_.isInstanceOf[Elem]).indexOf(h2))) ++
+</span>258 <span style=''></span><span style='background: #AEF1AE'>            elemPathToPath(rest)</span><span style=''>
+</span>259 <span style=''>        else </span><span style='background: #AEF1AE'>Seq(ElementLabel(h.label)) ++ elemPathToPath(h2 :: rest)</span><span style=''>
+</span>260 <span style=''>      case h :: Nil =&gt; </span><span style='background: #AEF1AE'>Seq(ElementLabel(h.label))</span><span style=''>
+</span>261 <span style=''>      case Nil =&gt; </span><span style='background: #F0ADAD'>Seq()</span><span style=''>
+</span>262 <span style=''>    }
+</span>263 <span style=''>
+</span>264 <span style=''>    val buf = </span><span style='background: #AEF1AE'>List(root)</span><span style=''>
+</span>265 <span style=''>    </span><span style='background: #AEF1AE'>DocComments(root.child.flatMap { _ match {
+</span>266 <span style=''></span><span style='background: #AEF1AE'>      case e: Elem =&gt; traverse(e, buf)
+</span>267 <span style=''></span><span style='background: #AEF1AE'>      case _ =&gt; Seq()
+</span>268 <span style=''></span><span style='background: #AEF1AE'>    }})</span><span style=''>
+</span>269 <span style=''>  }
+</span>270 <span style=''>}
 </span></pre>
           </div>
           <div class="tab-pane" id="statementlist">
@@ -486,7 +510,7 @@
         <td>
           &lt;nosymbol&gt;
         </td>
-        <td style="background: #AEF1AE">
+        <td style="background: #F0ADAD">
           false
         </td>
       </tr><tr>
@@ -549,7 +573,7 @@
         <td>
           &lt;nosymbol&gt;
         </td>
-        <td style="background: #AEF1AE">
+        <td style="background: #F0ADAD">
           false
         </td>
       </tr><tr>
@@ -641,27 +665,6 @@
           58
         </td>
         <td>
-          692
-        </td>
-        <td>
-          1987
-          -
-          2007
-        </td>
-        <td>
-          Block
-        </td>
-        <td>
-          java.lang.Object.==
-        </td>
-        <td style="background: #AEF1AE">
-          keys.toSeq.apply(ListIndex.this.idx).==(n)
-        </td>
-      </tr><tr>
-        <td>
-          58
-        </td>
-        <td>
           689
         </td>
         <td>
@@ -680,15 +683,36 @@
         </td>
       </tr><tr>
         <td>
-          58
+          59
+        </td>
+        <td>
+          692
+        </td>
+        <td>
+          1999
+          -
+          2026
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          o.get(keys.toSeq.apply(ListIndex.this.idx)).==(n)
+        </td>
+      </tr><tr>
+        <td>
+          59
         </td>
         <td>
           691
         </td>
         <td>
-          1987
+          1999
           -
-          2007
+          2026
         </td>
         <td>
           Apply
@@ -697,19 +721,19 @@
           java.lang.Object.==
         </td>
         <td style="background: #AEF1AE">
-          keys.toSeq.apply(ListIndex.this.idx).==(n)
+          o.get(keys.toSeq.apply(ListIndex.this.idx)).==(n)
         </td>
       </tr><tr>
         <td>
-          59
+          60
         </td>
         <td>
           693
         </td>
         <td>
-          2021
+          2042
           -
-          2026
+          2047
         </td>
         <td>
           Literal
@@ -717,20 +741,20 @@
         <td>
           &lt;nosymbol&gt;
         </td>
-        <td style="background: #AEF1AE">
+        <td style="background: #F0ADAD">
           false
         </td>
       </tr><tr>
         <td>
-          59
+          60
         </td>
         <td>
           694
         </td>
         <td>
-          2021
+          2042
           -
-          2026
+          2047
         </td>
         <td>
           Block
@@ -738,41 +762,20 @@
         <td>
           &lt;nosymbol&gt;
         </td>
-        <td style="background: #AEF1AE">
+        <td style="background: #F0ADAD">
           false
         </td>
       </tr><tr>
         <td>
-          70
+          71
         </td>
         <td>
-          695
+          711
         </td>
         <td>
-          2286
+          2319
           -
-          2296
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.collection.Iterator.hasNext
-        </td>
-        <td style="background: #AEF1AE">
-          it.hasNext
-        </td>
-      </tr><tr>
-        <td>
-          70
-        </td>
-        <td>
-          707
-        </td>
-        <td>
-          2298
-          -
-          2782
+          2917
         </td>
         <td>
           Block
@@ -788,11 +791,17 @@
       case (_1: String, _2: com.typesafe.config.ConfigValue)(String, com.typesafe.config.ConfigValue)((k @ _), (v @ _)) =&gt; pe.matchConf(cur, k, v)
     })) match {
       case (value: (String, com.typesafe.config.ConfigValue))Some[(String, com.typesafe.config.ConfigValue)]((_1: String, _2: com.typesafe.config.ConfigValue)(String, com.typesafe.config.ConfigValue)(_, (c @ _))) =&gt; findNext(it, c).:+[com.typesafe.config.ConfigValue, Seq[com.typesafe.config.ConfigValue]](cur)(collection.this.Seq.canBuildFrom[com.typesafe.config.ConfigValue])
-      case scala.None =&gt; scala.collection.Seq.apply[Nothing]()
+      case scala.None =&gt; {
+        scala.Predef.println(&quot;no match &quot;.+(cur));
+        scala.collection.Seq.apply[Nothing]()
+      }
     }
     case (cl @ (_: com.typesafe.config.ConfigList)) =&gt; scala.collection.JavaConverters.asScalaBufferConverter[com.typesafe.config.ConfigValue](cl).asScala.find(((v: com.typesafe.config.ConfigValue) =&gt; pe.matchConf(cl, &quot;&quot;, v))) match {
       case (value: com.typesafe.config.ConfigValue)Some[com.typesafe.config.ConfigValue]((c @ _)) =&gt; findNext(it, c).:+[com.typesafe.config.ConfigValue, Seq[com.typesafe.config.ConfigValue]](cl)(collection.this.Seq.canBuildFrom[com.typesafe.config.ConfigValue])
-      case scala.None =&gt; scala.collection.Seq.apply[Nothing]()
+      case scala.None =&gt; {
+        scala.Predef.println(&quot;no match list &quot;.+(cl).+(&quot; looking for &quot;).+(pe));
+        scala.collection.Seq.apply[Nothing]()
+      }
     }
   }
 }
@@ -802,12 +811,33 @@
           71
         </td>
         <td>
+          695
+        </td>
+        <td>
+          2307
+          -
+          2317
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.collection.Iterator.hasNext
+        </td>
+        <td style="background: #AEF1AE">
+          it.hasNext
+        </td>
+      </tr><tr>
+        <td>
+          72
+        </td>
+        <td>
           696
         </td>
         <td>
-          2317
+          2338
           -
-          2324
+          2345
         </td>
         <td>
           Apply
@@ -820,15 +850,15 @@
         </td>
       </tr><tr>
         <td>
-          74
+          75
         </td>
         <td>
           698
         </td>
         <td>
-          2392
+          2413
           -
-          2450
+          2471
         </td>
         <td>
           Apply
@@ -843,15 +873,15 @@
         </td>
       </tr><tr>
         <td>
-          74
+          75
         </td>
         <td>
           697
         </td>
         <td>
-          2425
+          2446
           -
-          2448
+          2469
         </td>
         <td>
           Apply
@@ -864,15 +894,15 @@
         </td>
       </tr><tr>
         <td>
-          75
+          76
         </td>
         <td>
           699
         </td>
         <td>
-          2510
+          2531
           -
-          2510
+          2531
         </td>
         <td>
           TypeApply
@@ -885,15 +915,15 @@
         </td>
       </tr><tr>
         <td>
-          75
+          76
         </td>
         <td>
           700
         </td>
         <td>
-          2494
+          2515
           -
-          2516
+          2537
         </td>
         <td>
           ApplyToImplicitArgs
@@ -906,15 +936,57 @@
         </td>
       </tr><tr>
         <td>
-          76
+          77
+        </td>
+        <td>
+          702
+        </td>
+        <td>
+          2565
+          -
+          2591
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Predef.println
+        </td>
+        <td style="background: #F0ADAD">
+          scala.Predef.println(&quot;no match &quot;.+(cur))
+        </td>
+      </tr><tr>
+        <td>
+          77
         </td>
         <td>
           701
         </td>
         <td>
-          2544
+          2573
           -
-          2549
+          2590
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.+
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;no match &quot;.+(cur)
+        </td>
+      </tr><tr>
+        <td>
+          77
+        </td>
+        <td>
+          703
+        </td>
+        <td>
+          2593
+          -
+          2598
         </td>
         <td>
           Apply
@@ -922,41 +994,20 @@
         <td>
           scala.collection.generic.GenericCompanion.apply
         </td>
-        <td style="background: #AEF1AE">
+        <td style="background: #F0ADAD">
           scala.collection.Seq.apply[Nothing]()
         </td>
       </tr><tr>
         <td>
-          79
+          80
         </td>
         <td>
-          702
+          705
         </td>
         <td>
-          2632
+          2658
           -
-          2655
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.PathElement.matchConf
-        </td>
-        <td style="background: #AEF1AE">
-          pe.matchConf(cl, &quot;&quot;, v)
-        </td>
-      </tr><tr>
-        <td>
-          79
-        </td>
-        <td>
-          703
-        </td>
-        <td>
-          2609
-          -
-          2657
+          2706
         </td>
         <td>
           Apply
@@ -972,12 +1023,33 @@
           80
         </td>
         <td>
-          705
+          704
         </td>
         <td>
-          2696
+          2681
           -
-          2717
+          2704
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.PathElement.matchConf
+        </td>
+        <td style="background: #AEF1AE">
+          pe.matchConf(cl, &quot;&quot;, v)
+        </td>
+      </tr><tr>
+        <td>
+          81
+        </td>
+        <td>
+          707
+        </td>
+        <td>
+          2745
+          -
+          2766
         </td>
         <td>
           ApplyToImplicitArgs
@@ -990,15 +1062,15 @@
         </td>
       </tr><tr>
         <td>
-          80
+          81
         </td>
         <td>
-          704
+          706
         </td>
         <td>
-          2712
+          2761
           -
-          2712
+          2761
         </td>
         <td>
           TypeApply
@@ -1011,36 +1083,57 @@
         </td>
       </tr><tr>
         <td>
-          81
-        </td>
-        <td>
-          706
-        </td>
-        <td>
-          2745
-          -
-          2750
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.collection.generic.GenericCompanion.apply
-        </td>
-        <td style="background: #AEF1AE">
-          scala.collection.Seq.apply[Nothing]()
-        </td>
-      </tr><tr>
-        <td>
-          84
+          83
         </td>
         <td>
           708
         </td>
         <td>
-          2788
+          2818
           -
-          2795
+          2862
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.+
+        </td>
+        <td style="background: #F0ADAD">
+          &quot;no match list &quot;.+(cl).+(&quot; looking for &quot;).+(pe)
+        </td>
+      </tr><tr>
+        <td>
+          83
+        </td>
+        <td>
+          709
+        </td>
+        <td>
+          2810
+          -
+          2863
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Predef.println
+        </td>
+        <td style="background: #F0ADAD">
+          scala.Predef.println(&quot;no match list &quot;.+(cl).+(&quot; looking for &quot;).+(pe))
+        </td>
+      </tr><tr>
+        <td>
+          84
+        </td>
+        <td>
+          710
+        </td>
+        <td>
+          2880
+          -
+          2885
         </td>
         <td>
           Apply
@@ -1048,20 +1141,20 @@
         <td>
           scala.collection.generic.GenericCompanion.apply
         </td>
-        <td style="background: #AEF1AE">
-          scala.collection.Seq.apply[com.typesafe.config.ConfigValue](cv)
+        <td style="background: #F0ADAD">
+          scala.collection.Seq.apply[Nothing]()
         </td>
       </tr><tr>
         <td>
-          84
+          87
         </td>
         <td>
-          709
+          713
         </td>
         <td>
-          2788
+          2923
           -
-          2795
+          2930
         </td>
         <td>
           Block
@@ -1074,36 +1167,36 @@
         </td>
       </tr><tr>
         <td>
-          86
+          87
         </td>
         <td>
-          711
+          712
         </td>
         <td>
-          2839
+          2923
           -
-          2850
+          2930
         </td>
         <td>
           Apply
         </td>
         <td>
-          com.typesafe.config.Config.root
+          scala.collection.generic.GenericCompanion.apply
         </td>
         <td style="background: #AEF1AE">
-          conf.root()
+          scala.collection.Seq.apply[com.typesafe.config.ConfigValue](cv)
         </td>
       </tr><tr>
         <td>
-          86
+          89
         </td>
         <td>
-          710
+          714
         </td>
         <td>
-          2821
+          2945
           -
-          2837
+          2961
         </td>
         <td>
           Select
@@ -1116,15 +1209,15 @@
         </td>
       </tr><tr>
         <td>
-          86
+          90
         </td>
         <td>
-          712
+          716
         </td>
         <td>
-          2812
+          2977
           -
-          2851
+          3002
         </td>
         <td>
           Apply
@@ -1133,40 +1226,82 @@
           org.apache.maven.unbound.CommentPath.findNext
         </td>
         <td style="background: #AEF1AE">
-          findNext(CommentPath.this.elems.toIterator, conf.root())
+          findNext(it, conf.root())
         </td>
       </tr><tr>
         <td>
-          87
+          90
         </td>
         <td>
-          713
+          715
         </td>
         <td>
-          2860
+          2990
           -
-          2873
+          3001
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          com.typesafe.config.Config.root
+        </td>
+        <td style="background: #AEF1AE">
+          conf.root()
+        </td>
+      </tr><tr>
+        <td>
+          91
+        </td>
+        <td>
+          717
+        </td>
+        <td>
+          3042
+          -
+          3051
         </td>
         <td>
           Select
         </td>
         <td>
-          scala.Boolean.unary_!
+          scala.collection.SeqLike.size
         </td>
         <td style="background: #AEF1AE">
-          path.isEmpty.unary_!
+          path.size
         </td>
       </tr><tr>
         <td>
-          87
+          91
         </td>
         <td>
-          718
+          719
         </td>
         <td>
-          2875
+          3011
           -
-          3597
+          3051
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Boolean.&amp;&amp;
+        </td>
+        <td style="background: #AEF1AE">
+          path.isEmpty.unary_!.&amp;&amp;(CommentPath.this.elems.size.&lt;=(path.size))
+        </td>
+      </tr><tr>
+        <td>
+          91
+        </td>
+        <td>
+          724
+        </td>
+        <td>
+          3053
+          -
+          4151
         </td>
         <td>
           Block
@@ -1182,13 +1317,30 @@
   case (_1: com.typesafe.config.ConfigValue, _2: com.typesafe.config.ConfigValue)(com.typesafe.config.ConfigValue, com.typesafe.config.ConfigValue)((ch @ _), (par @ _)) =&gt; par match {
     case (cur @ (_: com.typesafe.config.ConfigObject)) =&gt; relems.next() match {
       case (label: String)org.apache.maven.unbound.ElementLabel((label @ _)) =&gt; cur.withValue(label, ch)
-      case (idx: Int)org.apache.maven.unbound.ListIndex((idx @ _)) =&gt; cur.withValue(scala.StringContext.apply(&quot;[&quot;, &quot;]&quot;).s(idx), ch)
+      case (idx: Int)org.apache.maven.unbound.ListIndex((idx @ _)) =&gt; {
+        val keys: Seq[String] = scala.collection.JavaConverters.mapAsScalaMapConverter[String, com.typesafe.config.ConfigValue](cur).asScala.keys.toSeq;
+        if (keys.size.&gt;(idx))
+          {
+            val k: String = keys.apply(idx);
+            cur.withValue(k, ch)
+          }
+        else
+          {
+            scala.Predef.println(&quot;mismatch &quot;.+(cur).+(&quot; @ listidx=&quot;).+(idx));
+            cur
+          }
+      }
     }
-    case (cl @ (_: com.typesafe.config.ConfigList)) =&gt; {
-      val idx: Int = relems.next().asInstanceOf[org.apache.maven.unbound.ListIndex].idx;
-      val lst: java.util.ArrayList[com.typesafe.config.ConfigValue] = new java.util.ArrayList[com.typesafe.config.ConfigValue](cl);
-      lst.set(idx, ch);
-      com.typesafe.config.ConfigValueFactory.fromIterable(lst)
+    case (cl @ (_: com.typesafe.config.ConfigList)) =&gt; relems.next() match {
+      case (idx: Int)org.apache.maven.unbound.ListIndex((idx @ _)) =&gt; {
+        val lst: java.util.ArrayList[com.typesafe.config.ConfigValue] = new java.util.ArrayList[com.typesafe.config.ConfigValue](cl);
+        lst.set(idx, ch);
+        com.typesafe.config.ConfigValueFactory.fromIterable(lst)
+      }
+      case (label: String)org.apache.maven.unbound.ElementLabel((label @ _)) =&gt; {
+        scala.Predef.println(&quot;mismatch &quot;.+(label).+(&quot; in &quot;).+(cl));
+        cl
+      }
     }
   }
 })).asInstanceOf[com.typesafe.config.ConfigObject].toConfig()
@@ -1196,15 +1348,36 @@
         </td>
       </tr><tr>
         <td>
-          88
+          91
         </td>
         <td>
-          714
+          718
         </td>
         <td>
-          2896
+          3028
           -
-          2920
+          3051
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Int.&lt;=
+        </td>
+        <td style="background: #AEF1AE">
+          CommentPath.this.elems.size.&lt;=(path.size)
+        </td>
+      </tr><tr>
+        <td>
+          92
+        </td>
+        <td>
+          720
+        </td>
+        <td>
+          3074
+          -
+          3098
         </td>
         <td>
           Select
@@ -1217,15 +1390,15 @@
         </td>
       </tr><tr>
         <td>
-          90
+          94
         </td>
         <td>
-          716
+          722
         </td>
         <td>
-          2975
+          3153
           -
-          3016
+          3194
         </td>
         <td>
           Apply
@@ -1238,15 +1411,15 @@
         </td>
       </tr><tr>
         <td>
-          90
+          94
         </td>
         <td>
-          715
+          721
         </td>
         <td>
-          3007
+          3185
           -
-          3015
+          3193
         </td>
         <td>
           Select
@@ -1259,15 +1432,15 @@
         </td>
       </tr><tr>
         <td>
-          102
+          118
         </td>
         <td>
-          717
+          723
         </td>
         <td>
-          3023
+          3201
           -
-          3590
+          4144
         </td>
         <td>
           Apply
@@ -1280,28 +1453,45 @@
   case (_1: com.typesafe.config.ConfigValue, _2: com.typesafe.config.ConfigValue)(com.typesafe.config.ConfigValue, com.typesafe.config.ConfigValue)((ch @ _), (par @ _)) =&gt; par match {
     case (cur @ (_: com.typesafe.config.ConfigObject)) =&gt; relems.next() match {
       case (label: String)org.apache.maven.unbound.ElementLabel((label @ _)) =&gt; cur.withValue(label, ch)
-      case (idx: Int)org.apache.maven.unbound.ListIndex((idx @ _)) =&gt; cur.withValue(scala.StringContext.apply(&quot;[&quot;, &quot;]&quot;).s(idx), ch)
+      case (idx: Int)org.apache.maven.unbound.ListIndex((idx @ _)) =&gt; {
+        val keys: Seq[String] = scala.collection.JavaConverters.mapAsScalaMapConverter[String, com.typesafe.config.ConfigValue](cur).asScala.keys.toSeq;
+        if (keys.size.&gt;(idx))
+          {
+            val k: String = keys.apply(idx);
+            cur.withValue(k, ch)
+          }
+        else
+          {
+            scala.Predef.println(&quot;mismatch &quot;.+(cur).+(&quot; @ listidx=&quot;).+(idx));
+            cur
+          }
+      }
     }
-    case (cl @ (_: com.typesafe.config.ConfigList)) =&gt; {
-      val idx: Int = relems.next().asInstanceOf[org.apache.maven.unbound.ListIndex].idx;
-      val lst: java.util.ArrayList[com.typesafe.config.ConfigValue] = new java.util.ArrayList[com.typesafe.config.ConfigValue](cl);
-      lst.set(idx, ch);
-      com.typesafe.config.ConfigValueFactory.fromIterable(lst)
+    case (cl @ (_: com.typesafe.config.ConfigList)) =&gt; relems.next() match {
+      case (idx: Int)org.apache.maven.unbound.ListIndex((idx @ _)) =&gt; {
+        val lst: java.util.ArrayList[com.typesafe.config.ConfigValue] = new java.util.ArrayList[com.typesafe.config.ConfigValue](cl);
+        lst.set(idx, ch);
+        com.typesafe.config.ConfigValueFactory.fromIterable(lst)
+      }
+      case (label: String)org.apache.maven.unbound.ElementLabel((label @ _)) =&gt; {
+        scala.Predef.println(&quot;mismatch &quot;.+(label).+(&quot; in &quot;).+(cl));
+        cl
+      }
     }
   }
 })).asInstanceOf[com.typesafe.config.ConfigObject].toConfig()
         </td>
       </tr><tr>
         <td>
-          104
+          120
         </td>
         <td>
-          719
+          725
         </td>
         <td>
-          3603
+          4157
           -
-          3607
+          4161
         </td>
         <td>
           Ident
@@ -1314,15 +1504,15 @@
         </td>
       </tr><tr>
         <td>
-          111
+          127
         </td>
         <td>
-          720
+          726
         </td>
         <td>
-          3791
+          4345
           -
-          3801
+          4355
         </td>
         <td>
           Select
@@ -1335,15 +1525,15 @@
         </td>
       </tr><tr>
         <td>
-          112
+          128
         </td>
         <td>
-          732
+          738
         </td>
         <td>
-          3813
+          4367
           -
-          4298
+          4852
         </td>
         <td>
           Match
@@ -1365,15 +1555,15 @@
         </td>
       </tr><tr>
         <td>
-          112
+          128
         </td>
         <td>
-          721
+          727
         </td>
         <td>
-          3813
+          4367
           -
-          3820
+          4374
         </td>
         <td>
           Apply
@@ -1386,15 +1576,15 @@
         </td>
       </tr><tr>
         <td>
-          114
+          130
         </td>
         <td>
-          724
+          730
         </td>
         <td>
-          3879
+          4433
           -
-          3988
+          4542
         </td>
         <td>
           Apply
@@ -1410,15 +1600,15 @@
         </td>
       </tr><tr>
         <td>
-          115
+          131
         </td>
         <td>
-          722
+          728
         </td>
         <td>
-          3927
+          4481
           -
-          3944
+          4498
         </td>
         <td>
           Apply
@@ -1431,15 +1621,15 @@
         </td>
       </tr><tr>
         <td>
-          116
+          132
         </td>
         <td>
-          723
+          729
         </td>
         <td>
-          3969
+          4523
           -
-          3974
+          4528
         </td>
         <td>
           Literal
@@ -1452,15 +1642,15 @@
         </td>
       </tr><tr>
         <td>
-          118
+          134
         </td>
         <td>
-          726
+          732
         </td>
         <td>
-          4034
+          4588
           -
-          4057
+          4611
         </td>
         <td>
           ApplyToImplicitArgs
@@ -1473,15 +1663,15 @@
         </td>
       </tr><tr>
         <td>
-          118
+          134
         </td>
         <td>
-          725
+          731
         </td>
         <td>
-          4051
+          4605
           -
-          4051
+          4605
         </td>
         <td>
           TypeApply
@@ -1494,15 +1684,15 @@
         </td>
       </tr><tr>
         <td>
-          119
+          135
         </td>
         <td>
-          727
+          733
         </td>
         <td>
-          4082
+          4636
           -
-          4087
+          4641
         </td>
         <td>
           Apply
@@ -1515,15 +1705,15 @@
         </td>
       </tr><tr>
         <td>
-          124
+          140
         </td>
         <td>
-          728
+          734
         </td>
         <td>
-          4208
+          4762
           -
-          4228
+          4782
         </td>
         <td>
           TypeApply
@@ -1536,15 +1726,15 @@
         </td>
       </tr><tr>
         <td>
-          125
+          141
         </td>
         <td>
-          729
+          735
         </td>
         <td>
-          4189
+          4743
           -
-          4268
+          4822
         </td>
         <td>
           TypeApply
@@ -1557,15 +1747,15 @@
         </td>
       </tr><tr>
         <td>
-          125
+          141
         </td>
         <td>
-          731
+          737
         </td>
         <td>
-          4147
+          4701
           -
-          4288
+          4842
         </td>
         <td>
           ApplyToImplicitArgs
@@ -1578,15 +1768,15 @@
         </td>
       </tr><tr>
         <td>
-          125
+          141
         </td>
         <td>
-          730
+          736
         </td>
         <td>
-          4270
+          4824
           -
-          4270
+          4824
         </td>
         <td>
           TypeApply
@@ -1599,15 +1789,15 @@
         </td>
       </tr><tr>
         <td>
-          128
+          144
         </td>
         <td>
-          734
+          740
         </td>
         <td>
-          4312
+          4866
           -
-          4320
+          4874
         </td>
         <td>
           Block
@@ -1620,15 +1810,15 @@
         </td>
       </tr><tr>
         <td>
-          128
+          144
         </td>
         <td>
-          733
+          739
         </td>
         <td>
-          4312
+          4866
           -
-          4320
+          4874
         </td>
         <td>
           Apply
@@ -1641,15 +1831,15 @@
         </td>
       </tr><tr>
         <td>
-          130
+          146
         </td>
         <td>
-          735
+          741
         </td>
         <td>
-          4335
+          4889
           -
-          4356
+          4910
         </td>
         <td>
           Select
@@ -1662,15 +1852,15 @@
         </td>
       </tr><tr>
         <td>
-          131
+          147
         </td>
         <td>
-          736
+          742
         </td>
         <td>
-          4388
+          4942
           -
-          4406
+          4960
         </td>
         <td>
           Apply
@@ -1683,15 +1873,36 @@
         </td>
       </tr><tr>
         <td>
-          133
+          149
         </td>
         <td>
-          761
+          743
         </td>
         <td>
-          4431
+          4970
           -
-          5009
+          4983
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.Boolean.unary_!
+        </td>
+        <td style="background: #AEF1AE">
+          path.isEmpty.unary_!
+        </td>
+      </tr><tr>
+        <td>
+          149
+        </td>
+        <td>
+          767
+        </td>
+        <td>
+          4985
+          -
+          5563
         </td>
         <td>
           Block
@@ -1715,36 +1926,15 @@
         </td>
       </tr><tr>
         <td>
-          133
+          151
         </td>
         <td>
-          737
+          744
         </td>
         <td>
-          4416
+          5007
           -
-          4429
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.Boolean.unary_!
-        </td>
-        <td style="background: #AEF1AE">
-          path.isEmpty.unary_!
-        </td>
-      </tr><tr>
-        <td>
-          135
-        </td>
-        <td>
-          738
-        </td>
-        <td>
-          4453
-          -
-          4482
+          5036
         </td>
         <td>
           Select
@@ -1757,15 +1947,15 @@
         </td>
       </tr><tr>
         <td>
-          137
+          153
         </td>
         <td>
-          741
+          747
         </td>
         <td>
-          4553
+          5107
           -
-          4574
+          5128
         </td>
         <td>
           Select
@@ -1778,36 +1968,15 @@
         </td>
       </tr><tr>
         <td>
-          137
+          153
         </td>
         <td>
-          743
+          746
         </td>
         <td>
-          4526
+          5086
           -
-          4574
-        </td>
-        <td>
-          ApplyToImplicitArgs
-        </td>
-        <td>
-          scala.collection.TraversableLike.++
-        </td>
-        <td style="background: #AEF1AE">
-          s.map[scala.xml.Comment, Seq[scala.xml.Comment]](((x$3: String) =&gt; scala.xml.Comment.apply(x$3)))(collection.this.Seq.canBuildFrom[scala.xml.Comment]).++[scala.xml.Node, Seq[scala.xml.Node]](path.head.child.toSeq)(collection.this.Seq.canBuildFrom[scala.xml.Node])
-        </td>
-      </tr><tr>
-        <td>
-          137
-        </td>
-        <td>
-          740
-        </td>
-        <td>
-          4532
-          -
-          4532
+          5086
         </td>
         <td>
           TypeApply
@@ -1820,36 +1989,36 @@
         </td>
       </tr><tr>
         <td>
-          137
+          153
         </td>
         <td>
-          742
+          749
         </td>
         <td>
-          4550
+          5080
           -
-          4550
+          5128
         </td>
         <td>
-          TypeApply
+          ApplyToImplicitArgs
         </td>
         <td>
-          scala.collection.Seq.canBuildFrom
+          scala.collection.TraversableLike.++
         </td>
         <td style="background: #AEF1AE">
-          collection.this.Seq.canBuildFrom[scala.xml.Node]
+          s.map[scala.xml.Comment, Seq[scala.xml.Comment]](((x$3: String) =&gt; scala.xml.Comment.apply(x$3)))(collection.this.Seq.canBuildFrom[scala.xml.Comment]).++[scala.xml.Node, Seq[scala.xml.Node]](path.head.child.toSeq)(collection.this.Seq.canBuildFrom[scala.xml.Node])
         </td>
       </tr><tr>
         <td>
-          137
+          153
         </td>
         <td>
-          739
+          745
         </td>
         <td>
-          4534
+          5088
           -
-          4547
+          5101
         </td>
         <td>
           Apply
@@ -1862,183 +2031,15 @@
         </td>
       </tr><tr>
         <td>
-          138
-        </td>
-        <td>
-          744
-        </td>
-        <td>
-          4595
-          -
-          4604
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.collection.IterableLike.head
-        </td>
-        <td style="background: #AEF1AE">
-          path.head
-        </td>
-      </tr><tr>
-        <td>
-          139
-        </td>
-        <td>
-          749
-        </td>
-        <td>
-          4625
-          -
-          4733
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.xml.Elem.&lt;init&gt;
-        </td>
-        <td style="background: #AEF1AE">
-          new scala.xml.Elem(oldLeaf.prefix, oldLeaf.label, oldLeaf.attributes, oldLeaf.scope, (newChildren: _*))
-        </td>
-      </tr><tr>
-        <td>
-          140
-        </td>
-        <td>
-          747
-        </td>
-        <td>
-          4674
-          -
-          4692
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.xml.Elem.attributes
-        </td>
-        <td style="background: #AEF1AE">
-          oldLeaf.attributes
-        </td>
-      </tr><tr>
-        <td>
-          140
-        </td>
-        <td>
-          746
-        </td>
-        <td>
-          4659
-          -
-          4672
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.xml.Elem.label
-        </td>
-        <td style="background: #AEF1AE">
-          oldLeaf.label
-        </td>
-      </tr><tr>
-        <td>
-          140
-        </td>
-        <td>
-          745
-        </td>
-        <td>
-          4643
-          -
-          4657
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.xml.Elem.prefix
-        </td>
-        <td style="background: #AEF1AE">
-          oldLeaf.prefix
-        </td>
-      </tr><tr>
-        <td>
-          140
+          153
         </td>
         <td>
           748
         </td>
         <td>
-          4694
+          5104
           -
-          4707
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.xml.Elem.scope
-        </td>
-        <td style="background: #AEF1AE">
-          oldLeaf.scope
-        </td>
-      </tr><tr>
-        <td>
-          143
-        </td>
-        <td>
-          750
-        </td>
-        <td>
-          4760
-          -
-          4778
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.Tuple2.apply
-        </td>
-        <td style="background: #AEF1AE">
-          scala.Tuple2.apply[scala.xml.Elem, scala.xml.Elem](newLeaf, oldLeaf)
-        </td>
-      </tr><tr>
-        <td>
-          144
-        </td>
-        <td>
-          753
-        </td>
-        <td>
-          4834
-          -
-          4881
-        </td>
-        <td>
-          ApplyToImplicitArgs
-        </td>
-        <td>
-          scala.collection.SeqLike.updated
-        </td>
-        <td style="background: #AEF1AE">
-          par.child.updated[scala.xml.Node, Seq[scala.xml.Node]](par.child.indexOf[scala.xml.Node](oldCh), ch)(collection.this.Seq.canBuildFrom[scala.xml.Node])
-        </td>
-      </tr><tr>
-        <td>
-          144
-        </td>
-        <td>
-          752
-        </td>
-        <td>
-          4851
-          -
-          4851
+          5104
         </td>
         <td>
           TypeApply
@@ -2051,15 +2052,204 @@
         </td>
       </tr><tr>
         <td>
-          144
+          154
+        </td>
+        <td>
+          750
+        </td>
+        <td>
+          5149
+          -
+          5158
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.collection.IterableLike.head
+        </td>
+        <td style="background: #AEF1AE">
+          path.head
+        </td>
+      </tr><tr>
+        <td>
+          155
+        </td>
+        <td>
+          755
+        </td>
+        <td>
+          5179
+          -
+          5287
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.xml.Elem.&lt;init&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          new scala.xml.Elem(oldLeaf.prefix, oldLeaf.label, oldLeaf.attributes, oldLeaf.scope, (newChildren: _*))
+        </td>
+      </tr><tr>
+        <td>
+          156
+        </td>
+        <td>
+          753
+        </td>
+        <td>
+          5228
+          -
+          5246
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Elem.attributes
+        </td>
+        <td style="background: #AEF1AE">
+          oldLeaf.attributes
+        </td>
+      </tr><tr>
+        <td>
+          156
+        </td>
+        <td>
+          752
+        </td>
+        <td>
+          5213
+          -
+          5226
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Elem.label
+        </td>
+        <td style="background: #AEF1AE">
+          oldLeaf.label
+        </td>
+      </tr><tr>
+        <td>
+          156
         </td>
         <td>
           751
         </td>
         <td>
-          4852
+          5197
           -
-          4876
+          5211
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Elem.prefix
+        </td>
+        <td style="background: #AEF1AE">
+          oldLeaf.prefix
+        </td>
+      </tr><tr>
+        <td>
+          156
+        </td>
+        <td>
+          754
+        </td>
+        <td>
+          5248
+          -
+          5261
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Elem.scope
+        </td>
+        <td style="background: #AEF1AE">
+          oldLeaf.scope
+        </td>
+      </tr><tr>
+        <td>
+          159
+        </td>
+        <td>
+          756
+        </td>
+        <td>
+          5314
+          -
+          5332
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Tuple2.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Tuple2.apply[scala.xml.Elem, scala.xml.Elem](newLeaf, oldLeaf)
+        </td>
+      </tr><tr>
+        <td>
+          160
+        </td>
+        <td>
+          759
+        </td>
+        <td>
+          5388
+          -
+          5435
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.SeqLike.updated
+        </td>
+        <td style="background: #AEF1AE">
+          par.child.updated[scala.xml.Node, Seq[scala.xml.Node]](par.child.indexOf[scala.xml.Node](oldCh), ch)(collection.this.Seq.canBuildFrom[scala.xml.Node])
+        </td>
+      </tr><tr>
+        <td>
+          160
+        </td>
+        <td>
+          758
+        </td>
+        <td>
+          5405
+          -
+          5405
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          collection.this.Seq.canBuildFrom[scala.xml.Node]
+        </td>
+      </tr><tr>
+        <td>
+          160
+        </td>
+        <td>
+          757
+        </td>
+        <td>
+          5406
+          -
+          5430
         </td>
         <td>
           Apply
@@ -2072,15 +2262,15 @@
         </td>
       </tr><tr>
         <td>
-          145
+          161
         </td>
         <td>
-          759
+          765
         </td>
         <td>
-          4890
+          5444
           -
-          4992
+          5546
         </td>
         <td>
           Apply
@@ -2093,15 +2283,15 @@
         </td>
       </tr><tr>
         <td>
-          145
+          161
         </td>
         <td>
-          758
+          764
         </td>
         <td>
-          4891
+          5445
           -
-          4977
+          5531
         </td>
         <td>
           Apply
@@ -2114,15 +2304,15 @@
         </td>
       </tr><tr>
         <td>
-          146
+          162
         </td>
         <td>
-          756
+          762
         </td>
         <td>
-          4934
+          5488
           -
-          4948
+          5502
         </td>
         <td>
           Select
@@ -2135,15 +2325,15 @@
         </td>
       </tr><tr>
         <td>
-          146
+          162
         </td>
         <td>
-          755
+          761
         </td>
         <td>
-          4923
+          5477
           -
-          4932
+          5486
         </td>
         <td>
           Select
@@ -2156,36 +2346,15 @@
         </td>
       </tr><tr>
         <td>
-          146
+          162
         </td>
         <td>
-          757
+          760
         </td>
         <td>
-          4950
+          5465
           -
-          4959
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.xml.Elem.scope
-        </td>
-        <td style="background: #AEF1AE">
-          par.scope
-        </td>
-      </tr><tr>
-        <td>
-          146
-        </td>
-        <td>
-          754
-        </td>
-        <td>
-          4911
-          -
-          4921
+          5475
         </td>
         <td>
           Select
@@ -2198,15 +2367,36 @@
         </td>
       </tr><tr>
         <td>
-          148
+          162
         </td>
         <td>
-          760
+          763
         </td>
         <td>
-          4741
+          5504
           -
-          5003
+          5513
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Elem.scope
+        </td>
+        <td style="background: #AEF1AE">
+          par.scope
+        </td>
+      </tr><tr>
+        <td>
+          164
+        </td>
+        <td>
+          766
+        </td>
+        <td>
+          5295
+          -
+          5557
         </td>
         <td>
           Select
@@ -2224,15 +2414,15 @@
         </td>
       </tr><tr>
         <td>
-          149
+          165
         </td>
         <td>
-          762
+          768
         </td>
         <td>
-          5015
+          5569
           -
-          5019
+          5573
         </td>
         <td>
           Ident
@@ -2245,15 +2435,15 @@
         </td>
       </tr><tr>
         <td>
-          155
+          171
         </td>
         <td>
-          764
+          770
         </td>
         <td>
-          5126
+          5680
           -
-          5150
+          5704
         </td>
         <td>
           Apply
@@ -2266,15 +2456,15 @@
         </td>
       </tr><tr>
         <td>
-          155
+          171
         </td>
         <td>
-          763
+          769
         </td>
         <td>
-          5142
+          5696
           -
-          5143
+          5697
         </td>
         <td>
           Select
@@ -2287,15 +2477,15 @@
         </td>
       </tr><tr>
         <td>
-          157
+          173
         </td>
         <td>
-          765
+          771
         </td>
         <td>
-          5203
+          5757
           -
-          5204
+          5758
         </td>
         <td>
           Select
@@ -2308,15 +2498,15 @@
         </td>
       </tr><tr>
         <td>
-          157
+          173
         </td>
         <td>
-          766
+          772
         </td>
         <td>
-          5188
+          5742
           -
-          5211
+          5765
         </td>
         <td>
           Apply
@@ -2329,15 +2519,15 @@
         </td>
       </tr><tr>
         <td>
-          163
+          179
         </td>
         <td>
-          768
+          774
         </td>
         <td>
-          5311
+          5865
           -
-          5380
+          5934
         </td>
         <td>
           Apply
@@ -2352,15 +2542,15 @@
         </td>
       </tr><tr>
         <td>
-          163
+          179
         </td>
         <td>
-          767
+          773
         </td>
         <td>
-          5357
+          5911
           -
-          5378
+          5932
         </td>
         <td>
           Apply
@@ -2373,15 +2563,15 @@
         </td>
       </tr><tr>
         <td>
-          166
+          182
         </td>
         <td>
-          770
+          776
         </td>
         <td>
-          5422
+          5976
           -
-          5490
+          6044
         </td>
         <td>
           Apply
@@ -2396,15 +2586,15 @@
         </td>
       </tr><tr>
         <td>
-          166
+          182
         </td>
         <td>
-          769
+          775
         </td>
         <td>
-          5468
+          6022
           -
-          5488
+          6042
         </td>
         <td>
           Apply
@@ -2417,15 +2607,36 @@
         </td>
       </tr><tr>
         <td>
-          177
+          193
         </td>
         <td>
-          774
+          779
         </td>
         <td>
-          5729
+          6288
           -
-          5836
+          6288
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.immutable.List.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          immutable.this.List.canBuildFrom[org.apache.maven.unbound.PathElement]
+        </td>
+      </tr><tr>
+        <td>
+          193
+        </td>
+        <td>
+          780
+        </td>
+        <td>
+          6283
+          -
+          6390
         </td>
         <td>
           ApplyToImplicitArgs
@@ -2441,36 +2652,15 @@
         </td>
       </tr><tr>
         <td>
-          177
+          194
         </td>
         <td>
-          773
+          777
         </td>
         <td>
-          5734
+          6330
           -
-          5734
-        </td>
-        <td>
-          TypeApply
-        </td>
-        <td>
-          scala.collection.immutable.List.canBuildFrom
-        </td>
-        <td style="background: #AEF1AE">
-          immutable.this.List.canBuildFrom[org.apache.maven.unbound.PathElement]
-        </td>
-      </tr><tr>
-        <td>
-          178
-        </td>
-        <td>
-          771
-        </td>
-        <td>
-          5776
-          -
-          5791
+          6345
         </td>
         <td>
           Apply
@@ -2483,15 +2673,15 @@
         </td>
       </tr><tr>
         <td>
-          179
+          195
         </td>
         <td>
-          772
+          778
         </td>
         <td>
-          5815
+          6369
           -
-          5827
+          6381
         </td>
         <td>
           Apply
@@ -2504,15 +2694,15 @@
         </td>
       </tr><tr>
         <td>
-          182
+          198
         </td>
         <td>
-          776
+          782
         </td>
         <td>
-          5859
+          6413
           -
-          5897
+          6451
         </td>
         <td>
           Select
@@ -2525,15 +2715,15 @@
         </td>
       </tr><tr>
         <td>
-          182
+          198
         </td>
         <td>
-          775
+          781
         </td>
         <td>
-          5859
+          6413
           -
-          5883
+          6437
         </td>
         <td>
           Apply
@@ -2546,15 +2736,15 @@
         </td>
       </tr><tr>
         <td>
-          184
+          200
         </td>
         <td>
-          777
+          783
         </td>
         <td>
-          5935
+          6489
           -
-          5951
+          6505
         </td>
         <td>
           Select
@@ -2567,15 +2757,15 @@
         </td>
       </tr><tr>
         <td>
-          184
+          200
         </td>
         <td>
-          779
+          785
         </td>
         <td>
-          5953
+          6507
           -
-          5958
+          6512
         </td>
         <td>
           Block
@@ -2588,15 +2778,15 @@
         </td>
       </tr><tr>
         <td>
-          184
+          200
         </td>
         <td>
-          778
+          784
         </td>
         <td>
-          5953
+          6507
           -
-          5958
+          6512
         </td>
         <td>
           Apply
@@ -2609,78 +2799,15 @@
         </td>
       </tr><tr>
         <td>
-          185
+          201
         </td>
         <td>
-          783
+          786
         </td>
         <td>
-          5972
+          6549
           -
-          6021
-        </td>
-        <td>
-          Block
-        </td>
-        <td>
-          scala.collection.generic.GenericCompanion.apply
-        </td>
-        <td style="background: #AEF1AE">
-          scala.collection.Seq.apply[org.apache.maven.unbound.Comments](Comments.apply(comments, CommentPath.apply((newPath: _*))))
-        </td>
-      </tr><tr>
-        <td>
-          185
-        </td>
-        <td>
-          782
-        </td>
-        <td>
-          5972
-          -
-          6021
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.collection.generic.GenericCompanion.apply
-        </td>
-        <td style="background: #AEF1AE">
-          scala.collection.Seq.apply[org.apache.maven.unbound.Comments](Comments.apply(comments, CommentPath.apply((newPath: _*))))
-        </td>
-      </tr><tr>
-        <td>
-          185
-        </td>
-        <td>
-          781
-        </td>
-        <td>
-          5976
-          -
-          6020
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.Comments.apply
-        </td>
-        <td style="background: #AEF1AE">
-          Comments.apply(comments, CommentPath.apply((newPath: _*)))
-        </td>
-      </tr><tr>
-        <td>
-          185
-        </td>
-        <td>
-          780
-        </td>
-        <td>
-          5995
-          -
-          6019
+          6573
         </td>
         <td>
           Apply
@@ -2693,15 +2820,78 @@
         </td>
       </tr><tr>
         <td>
-          188
+          201
         </td>
         <td>
-          786
+          788
         </td>
         <td>
-          6120
+          6526
           -
-          6187
+          6575
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.generic.GenericCompanion.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.collection.Seq.apply[org.apache.maven.unbound.Comments](Comments.apply(comments, CommentPath.apply((newPath: _*))))
+        </td>
+      </tr><tr>
+        <td>
+          201
+        </td>
+        <td>
+          787
+        </td>
+        <td>
+          6530
+          -
+          6574
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Comments.apply
+        </td>
+        <td style="background: #AEF1AE">
+          Comments.apply(comments, CommentPath.apply((newPath: _*)))
+        </td>
+      </tr><tr>
+        <td>
+          201
+        </td>
+        <td>
+          789
+        </td>
+        <td>
+          6526
+          -
+          6575
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.collection.generic.GenericCompanion.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.collection.Seq.apply[org.apache.maven.unbound.Comments](Comments.apply(comments, CommentPath.apply((newPath: _*))))
+        </td>
+      </tr><tr>
+        <td>
+          204
+        </td>
+        <td>
+          792
+        </td>
+        <td>
+          6674
+          -
+          6741
         </td>
         <td>
           Select
@@ -2716,15 +2906,15 @@
         </td>
       </tr><tr>
         <td>
-          188
+          204
         </td>
         <td>
-          785
+          791
         </td>
         <td>
-          6140
+          6694
           -
-          6140
+          6694
         </td>
         <td>
           TypeApply
@@ -2737,15 +2927,15 @@
         </td>
       </tr><tr>
         <td>
-          188
+          204
         </td>
         <td>
-          784
+          790
         </td>
         <td>
-          6156
+          6710
           -
-          6179
+          6733
         </td>
         <td>
           Apply
@@ -2758,15 +2948,36 @@
         </td>
       </tr><tr>
         <td>
-          190
+          206
         </td>
         <td>
-          787
+          795
         </td>
         <td>
-          6240
+          6815
           -
-          6240
+          6815
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.mutable.Buffer.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          mutable.this.Buffer.canBuildFrom[org.apache.maven.unbound.Comments]
+        </td>
+      </tr><tr>
+        <td>
+          206
+        </td>
+        <td>
+          793
+        </td>
+        <td>
+          6794
+          -
+          6794
         </td>
         <td>
           TypeApply
@@ -2779,15 +2990,15 @@
         </td>
       </tr><tr>
         <td>
-          190
+          206
         </td>
         <td>
-          790
+          796
         </td>
         <td>
-          6229
+          6783
           -
-          6318
+          6872
         </td>
         <td>
           ApplyToImplicitArgs
@@ -2802,36 +3013,15 @@
         </td>
       </tr><tr>
         <td>
-          190
+          207
         </td>
         <td>
-          789
+          794
         </td>
         <td>
-          6261
+          6845
           -
-          6261
-        </td>
-        <td>
-          TypeApply
-        </td>
-        <td>
-          scala.collection.mutable.Buffer.canBuildFrom
-        </td>
-        <td style="background: #AEF1AE">
-          mutable.this.Buffer.canBuildFrom[org.apache.maven.unbound.Comments]
-        </td>
-      </tr><tr>
-        <td>
-          191
-        </td>
-        <td>
-          788
-        </td>
-        <td>
-          6291
-          -
-          6316
+          6870
         </td>
         <td>
           Apply
@@ -2844,15 +3034,15 @@
         </td>
       </tr><tr>
         <td>
-          192
+          208
         </td>
         <td>
-          791
+          797
         </td>
         <td>
-          6337
+          6891
           -
-          6342
+          6896
         </td>
         <td>
           Apply
@@ -2865,36 +3055,15 @@
         </td>
       </tr><tr>
         <td>
-          194
+          210
         </td>
         <td>
-          792
+          799
         </td>
         <td>
-          6370
+          6911
           -
-          6370
-        </td>
-        <td>
-          TypeApply
-        </td>
-        <td>
-          scala.collection.Seq.canBuildFrom
-        </td>
-        <td style="background: #AEF1AE">
-          collection.this.Seq.canBuildFrom[org.apache.maven.unbound.Comments]
-        </td>
-      </tr><tr>
-        <td>
-          194
-        </td>
-        <td>
-          793
-        </td>
-        <td>
-          6357
-          -
-          6386
+          6940
         </td>
         <td>
           ApplyToImplicitArgs
@@ -2907,15 +3076,36 @@
         </td>
       </tr><tr>
         <td>
-          197
+          210
         </td>
         <td>
-          794
+          798
         </td>
         <td>
-          6409
+          6924
           -
-          6420
+          6924
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          collection.this.Seq.canBuildFrom[org.apache.maven.unbound.Comments]
+        </td>
+      </tr><tr>
+        <td>
+          213
+        </td>
+        <td>
+          800
+        </td>
+        <td>
+          6963
+          -
+          6974
         </td>
         <td>
           Apply
@@ -2928,15 +3118,15 @@
         </td>
       </tr><tr>
         <td>
-          198
+          214
         </td>
         <td>
-          795
+          801
         </td>
         <td>
-          6435
+          6989
           -
-          6441
+          6995
         </td>
         <td>
           Select
@@ -2949,15 +3139,15 @@
         </td>
       </tr><tr>
         <td>
-          199
+          215
         </td>
         <td>
-          799
+          805
         </td>
         <td>
-          6446
+          7000
           -
-          6530
+          7084
         </td>
         <td>
           Apply
@@ -2972,57 +3162,15 @@
         </td>
       </tr><tr>
         <td>
-          200
+          216
         </td>
         <td>
-          797
+          804
         </td>
         <td>
-          6486
+          7019
           -
-          6486
-        </td>
-        <td>
-          TypeApply
-        </td>
-        <td>
-          scala.collection.mutable.Iterable.canBuildFrom
-        </td>
-        <td style="background: #AEF1AE">
-          mutable.this.Iterable.canBuildFrom[org.apache.maven.unbound.Comments]
-        </td>
-      </tr><tr>
-        <td>
-          200
-        </td>
-        <td>
-          796
-        </td>
-        <td>
-          6502
-          -
-          6521
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.CommentExtractor.traverse
-        </td>
-        <td style="background: #AEF1AE">
-          traverse(v, k, buf)
-        </td>
-      </tr><tr>
-        <td>
-          200
-        </td>
-        <td>
-          798
-        </td>
-        <td>
-          6465
-          -
-          6529
+          7083
         </td>
         <td>
           Select
@@ -3037,36 +3185,57 @@
         </td>
       </tr><tr>
         <td>
-          204
+          216
         </td>
         <td>
-          801
+          803
         </td>
         <td>
-          6611
+          7040
           -
-          6654
+          7040
         </td>
         <td>
-          Select
+          TypeApply
         </td>
         <td>
-          scala.collection.IterableLike.head
+          scala.collection.mutable.Iterable.canBuildFrom
         </td>
         <td style="background: #AEF1AE">
-          cur.child.filter(((x$4: scala.xml.Node) =&gt; x$4.isInstanceOf[scala.xml.Elem])).head
+          mutable.this.Iterable.canBuildFrom[org.apache.maven.unbound.Comments]
         </td>
       </tr><tr>
         <td>
-          204
+          216
         </td>
         <td>
-          800
+          802
         </td>
         <td>
-          6628
+          7056
           -
-          6648
+          7075
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.CommentExtractor.traverse
+        </td>
+        <td style="background: #AEF1AE">
+          traverse(v, k, buf)
+        </td>
+      </tr><tr>
+        <td>
+          220
+        </td>
+        <td>
+          806
+        </td>
+        <td>
+          7190
+          -
+          7210
         </td>
         <td>
           TypeApply
@@ -3079,15 +3248,99 @@
         </td>
       </tr><tr>
         <td>
-          205
+          220
+        </td>
+        <td>
+          807
+        </td>
+        <td>
+          7173
+          -
+          7211
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.TraversableLike.filter
+        </td>
+        <td style="background: #AEF1AE">
+          cur.child.filter(((x$4: scala.xml.Node) =&gt; x$4.isInstanceOf[scala.xml.Elem]))
+        </td>
+      </tr><tr>
+        <td>
+          221
         </td>
         <td>
           808
         </td>
         <td>
-          6659
+          7240
           -
-          6862
+          7241
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          1
+        </td>
+      </tr><tr>
+        <td>
+          221
+        </td>
+        <td>
+          816
+        </td>
+        <td>
+          7220
+          -
+          7331
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Boolean.||
+        </td>
+        <td style="background: #AEF1AE">
+          elemChildren.size.&gt;(1).||(1.==(elemChildren.size).&amp;&amp;(unbound.this.`package`.singular(cur.label).==(elemChildren.apply(0).label)))
+        </td>
+      </tr><tr>
+        <td>
+          222
+        </td>
+        <td>
+          810
+        </td>
+        <td>
+          7257
+          -
+          7274
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.collection.SeqLike.size
+        </td>
+        <td style="background: #AEF1AE">
+          elemChildren.size
+        </td>
+      </tr><tr>
+        <td>
+          222
+        </td>
+        <td>
+          815
+        </td>
+        <td>
+          7252
+          -
+          7330
         </td>
         <td>
           Apply
@@ -3096,24 +3349,174 @@
           scala.Boolean.&amp;&amp;
         </td>
         <td style="background: #AEF1AE">
-          cur.child.isEmpty.unary_!.&amp;&amp;(cur.child.tail.forall(((x$5: scala.xml.Node) =&gt; x$5 match {
-  case (e @ (_: scala.xml.Elem)) =&gt; e.label.==(head.label)
-  case (t @ (_: scala.xml.Text)) =&gt; t.text.trim().isEmpty()
-  case (c @ (_: scala.xml.Comment)) =&gt; true
-  case _ =&gt; false
-})))
+          1.==(elemChildren.size).&amp;&amp;(unbound.this.`package`.singular(cur.label).==(elemChildren.apply(0).label))
         </td>
       </tr><tr>
         <td>
-          205
+          222
         </td>
         <td>
-          807
+          809
         </td>
         <td>
-          6681
+          7252
           -
-          6862
+          7253
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          1
+        </td>
+      </tr><tr>
+        <td>
+          223
+        </td>
+        <td>
+          813
+        </td>
+        <td>
+          7309
+          -
+          7330
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Node.label
+        </td>
+        <td style="background: #AEF1AE">
+          elemChildren.apply(0).label
+        </td>
+      </tr><tr>
+        <td>
+          223
+        </td>
+        <td>
+          812
+        </td>
+        <td>
+          7322
+          -
+          7323
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          0
+        </td>
+      </tr><tr>
+        <td>
+          223
+        </td>
+        <td>
+          824
+        </td>
+        <td>
+          7333
+          -
+          7576
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          {
+  val head: scala.xml.Node = elemChildren.head;
+  elemChildren.tail.forall(((x$5: scala.xml.Node) =&gt; x$5 match {
+    case (e @ (_: scala.xml.Elem)) =&gt; e.label.==(head.label)
+    case (t @ (_: scala.xml.Text)) =&gt; t.text.trim().isEmpty()
+    case (c @ (_: scala.xml.Comment)) =&gt; true
+    case _ =&gt; false
+  }))
+}
+        </td>
+      </tr><tr>
+        <td>
+          223
+        </td>
+        <td>
+          811
+        </td>
+        <td>
+          7295
+          -
+          7304
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Elem.label
+        </td>
+        <td style="background: #AEF1AE">
+          cur.label
+        </td>
+      </tr><tr>
+        <td>
+          223
+        </td>
+        <td>
+          814
+        </td>
+        <td>
+          7286
+          -
+          7330
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          unbound.this.`package`.singular(cur.label).==(elemChildren.apply(0).label)
+        </td>
+      </tr><tr>
+        <td>
+          224
+        </td>
+        <td>
+          817
+        </td>
+        <td>
+          7352
+          -
+          7369
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.collection.IterableLike.head
+        </td>
+        <td style="background: #AEF1AE">
+          elemChildren.head
+        </td>
+      </tr><tr>
+        <td>
+          225
+        </td>
+        <td>
+          823
+        </td>
+        <td>
+          7376
+          -
+          7570
         </td>
         <td>
           Apply
@@ -3122,7 +3525,7 @@
           scala.collection.IterableLike.forall
         </td>
         <td style="background: #AEF1AE">
-          cur.child.tail.forall(((x$5: scala.xml.Node) =&gt; x$5 match {
+          elemChildren.tail.forall(((x$5: scala.xml.Node) =&gt; x$5 match {
   case (e @ (_: scala.xml.Elem)) =&gt; e.label.==(head.label)
   case (t @ (_: scala.xml.Text)) =&gt; t.text.trim().isEmpty()
   case (c @ (_: scala.xml.Comment)) =&gt; true
@@ -3131,15 +3534,15 @@
         </td>
       </tr><tr>
         <td>
-          206
+          226
         </td>
         <td>
-          803
+          819
         </td>
         <td>
-          6737
+          7437
           -
-          6758
+          7458
         </td>
         <td>
           Apply
@@ -3152,15 +3555,15 @@
         </td>
       </tr><tr>
         <td>
-          206
+          226
         </td>
         <td>
-          802
+          818
         </td>
         <td>
-          6748
+          7448
           -
-          6758
+          7458
         </td>
         <td>
           Select
@@ -3173,15 +3576,15 @@
         </td>
       </tr><tr>
         <td>
-          207
+          227
         </td>
         <td>
-          804
+          820
         </td>
         <td>
-          6781
+          7483
           -
-          6800
+          7502
         </td>
         <td>
           Apply
@@ -3189,20 +3592,20 @@
         <td>
           java.lang.String.isEmpty
         </td>
-        <td style="background: #AEF1AE">
+        <td style="background: #F0ADAD">
           t.text.trim().isEmpty()
         </td>
       </tr><tr>
         <td>
-          208
+          228
         </td>
         <td>
-          805
+          821
         </td>
         <td>
-          6829
+          7533
           -
-          6833
+          7537
         </td>
         <td>
           Literal
@@ -3210,20 +3613,20 @@
         <td>
           &lt;nosymbol&gt;
         </td>
-        <td style="background: #AEF1AE">
+        <td style="background: #F0ADAD">
           true
         </td>
       </tr><tr>
         <td>
-          209
+          229
         </td>
         <td>
-          806
+          822
         </td>
         <td>
-          6850
+          7556
           -
-          6855
+          7561
         </td>
         <td>
           Literal
@@ -3236,15 +3639,57 @@
         </td>
       </tr><tr>
         <td>
-          216
+          232
         </td>
         <td>
-          810
+          826
         </td>
         <td>
-          6995
+          7590
           -
-          7006
+          7595
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          false
+        </td>
+      </tr><tr>
+        <td>
+          232
+        </td>
+        <td>
+          825
+        </td>
+        <td>
+          7590
+          -
+          7595
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          false
+        </td>
+      </tr><tr>
+        <td>
+          239
+        </td>
+        <td>
+          828
+        </td>
+        <td>
+          7734
+          -
+          7745
         </td>
         <td>
           ApplyToImplicitArgs
@@ -3257,15 +3702,15 @@
         </td>
       </tr><tr>
         <td>
-          216
+          239
         </td>
         <td>
-          809
+          827
         </td>
         <td>
-          7000
+          7739
           -
-          7000
+          7739
         </td>
         <td>
           TypeApply
@@ -3278,813 +3723,36 @@
         </td>
       </tr><tr>
         <td>
-          217
-        </td>
-        <td>
-          824
-        </td>
-        <td>
-          7044
-          -
-          7044
-        </td>
-        <td>
-          TypeApply
-        </td>
-        <td>
-          scala.collection.Seq.canBuildFrom
-        </td>
-        <td style="background: #AEF1AE">
-          collection.this.Seq.canBuildFrom[org.apache.maven.unbound.Comments]
-        </td>
-      </tr><tr>
-        <td>
-          217
-        </td>
-        <td>
-          811
-        </td>
-        <td>
-          7023
-          -
-          7023
-        </td>
-        <td>
-          TypeApply
-        </td>
-        <td>
-          scala.collection.Seq.canBuildFrom
-        </td>
-        <td style="background: #AEF1AE">
-          collection.this.Seq.canBuildFrom[(scala.xml.Node, Int)]
-        </td>
-      </tr><tr>
-        <td>
-          217
-        </td>
-        <td>
-          825
-        </td>
-        <td>
-          7013
-          -
-          7357
-        </td>
-        <td>
-          ApplyToImplicitArgs
-        </td>
-        <td>
-          scala.collection.TraversableLike.flatMap
-        </td>
-        <td style="background: #AEF1AE">
-          cur.child.zipWithIndex[scala.xml.Node, Seq[(scala.xml.Node, Int)]](collection.this.Seq.canBuildFrom[(scala.xml.Node, Int)]).flatMap[org.apache.maven.unbound.Comments, Seq[org.apache.maven.unbound.Comments]](((x0$1: (scala.xml.Node, Int)) =&gt; x0$1 match {
-  case (_1: scala.xml.Node, _2: Int)(scala.xml.Node, Int)((n @ _), (idx @ _)) =&gt; n match {
-    case (e @ (_: scala.xml.Elem)) =&gt; traverse(e, newPath)
-    case (c @ (_: scala.xml.Comment)) =&gt; {
-      val newPathElems: Seq[org.apache.maven.unbound.PathElement] = elemPathToPath(newPath);
-      scala.collection.Seq.apply[org.apache.maven.unbound.Comments](Comments.apply(scala.collection.Seq.apply[String](c.commentText), CommentPath.apply((newPathElems.++[org.apache.maven.unbound.PathElement, Seq[org.apache.maven.unbound.PathElement]](scala.collection.Seq.apply[org.apache.maven.unbound.ListIndex](ListIndex.apply(idx)))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement]): _*))))
-    }
-    case _ =&gt; scala.collection.Seq.apply[Nothing]()
-  }
-}))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.Comments])
-        </td>
-      </tr><tr>
-        <td>
-          218
-        </td>
-        <td>
-          812
-        </td>
-        <td>
-          7096
-          -
-          7116
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.CommentExtractor.traverse
-        </td>
-        <td style="background: #AEF1AE">
-          traverse(e, newPath)
-        </td>
-      </tr><tr>
-        <td>
-          220
-        </td>
-        <td>
-          813
-        </td>
-        <td>
-          7176
-          -
-          7199
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.CommentExtractor.elemPathToPath
-        </td>
-        <td style="background: #AEF1AE">
-          elemPathToPath(newPath)
-        </td>
-      </tr><tr>
-        <td>
-          221
-        </td>
-        <td>
-          822
-        </td>
-        <td>
-          7210
-          -
-          7324
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.collection.generic.GenericCompanion.apply
-        </td>
-        <td style="background: #AEF1AE">
-          scala.collection.Seq.apply[org.apache.maven.unbound.Comments](Comments.apply(scala.collection.Seq.apply[String](c.commentText), CommentPath.apply((newPathElems.++[org.apache.maven.unbound.PathElement, Seq[org.apache.maven.unbound.PathElement]](scala.collection.Seq.apply[org.apache.maven.unbound.ListIndex](ListIndex.apply(idx)))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement]): _*))))
-        </td>
-      </tr><tr>
-        <td>
-          221
-        </td>
-        <td>
-          821
-        </td>
-        <td>
-          7214
-          -
-          7323
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.Comments.apply
-        </td>
-        <td style="background: #AEF1AE">
-          Comments.apply(scala.collection.Seq.apply[String](c.commentText), CommentPath.apply((newPathElems.++[org.apache.maven.unbound.PathElement, Seq[org.apache.maven.unbound.PathElement]](scala.collection.Seq.apply[org.apache.maven.unbound.ListIndex](ListIndex.apply(idx)))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement]): _*)))
-        </td>
-      </tr><tr>
-        <td>
-          222
-        </td>
-        <td>
-          815
-        </td>
-        <td>
-          7236
-          -
-          7254
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.collection.generic.GenericCompanion.apply
-        </td>
-        <td style="background: #AEF1AE">
-          scala.collection.Seq.apply[String](c.commentText)
-        </td>
-      </tr><tr>
-        <td>
-          222
-        </td>
-        <td>
-          814
-        </td>
-        <td>
-          7240
-          -
-          7253
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.xml.Comment.commentText
-        </td>
-        <td style="background: #AEF1AE">
-          c.commentText
-        </td>
-      </tr><tr>
-        <td>
-          223
-        </td>
-        <td>
-          819
-        </td>
-        <td>
-          7281
-          -
-          7316
-        </td>
-        <td>
-          ApplyToImplicitArgs
-        </td>
-        <td>
-          scala.collection.TraversableLike.++
-        </td>
-        <td style="background: #AEF1AE">
-          newPathElems.++[org.apache.maven.unbound.PathElement, Seq[org.apache.maven.unbound.PathElement]](scala.collection.Seq.apply[org.apache.maven.unbound.ListIndex](ListIndex.apply(idx)))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement])
-        </td>
-      </tr><tr>
-        <td>
-          223
-        </td>
-        <td>
-          818
-        </td>
-        <td>
-          7294
-          -
-          7294
-        </td>
-        <td>
-          TypeApply
-        </td>
-        <td>
-          scala.collection.Seq.canBuildFrom
-        </td>
-        <td style="background: #AEF1AE">
-          collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement]
-        </td>
-      </tr><tr>
-        <td>
-          223
-        </td>
-        <td>
-          817
-        </td>
-        <td>
-          7297
-          -
-          7316
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.collection.generic.GenericCompanion.apply
-        </td>
-        <td style="background: #AEF1AE">
-          scala.collection.Seq.apply[org.apache.maven.unbound.ListIndex](ListIndex.apply(idx))
-        </td>
-      </tr><tr>
-        <td>
-          223
-        </td>
-        <td>
-          820
-        </td>
-        <td>
-          7268
-          -
-          7322
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.CommentPath.apply
-        </td>
-        <td style="background: #AEF1AE">
-          CommentPath.apply((newPathElems.++[org.apache.maven.unbound.PathElement, Seq[org.apache.maven.unbound.PathElement]](scala.collection.Seq.apply[org.apache.maven.unbound.ListIndex](ListIndex.apply(idx)))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement]): _*))
-        </td>
-      </tr><tr>
-        <td>
-          223
-        </td>
-        <td>
-          816
-        </td>
-        <td>
-          7301
-          -
-          7315
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.ListIndex.apply
-        </td>
-        <td style="background: #AEF1AE">
-          ListIndex.apply(idx)
-        </td>
-      </tr><tr>
-        <td>
-          224
-        </td>
-        <td>
-          823
-        </td>
-        <td>
-          7343
-          -
-          7348
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.collection.generic.GenericCompanion.apply
-        </td>
-        <td style="background: #AEF1AE">
-          scala.collection.Seq.apply[Nothing]()
-        </td>
-      </tr><tr>
-        <td>
-          230
-        </td>
-        <td>
-          826
-        </td>
-        <td>
-          7481
-          -
-          7494
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.CommentExtractor.isListElem
-        </td>
-        <td style="background: #AEF1AE">
-          CommentExtractor.this.isListElem(h)
-        </td>
-      </tr><tr>
-        <td>
-          232
-        </td>
-        <td>
-          828
-        </td>
-        <td>
-          7523
-          -
-          7544
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.ElementLabel.apply
-        </td>
-        <td style="background: #AEF1AE">
-          ElementLabel.apply(h.label)
-        </td>
-      </tr><tr>
-        <td>
-          232
-        </td>
-        <td>
-          827
-        </td>
-        <td>
-          7536
-          -
-          7543
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.xml.Elem.label
-        </td>
-        <td style="background: #AEF1AE">
-          h.label
-        </td>
-      </tr><tr>
-        <td>
-          233
-        </td>
-        <td>
-          830
-        </td>
-        <td>
-          7558
-          -
-          7617
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.ListIndex.apply
-        </td>
-        <td style="background: #AEF1AE">
-          ListIndex.apply(h.child.filter(((x$6: scala.xml.Node) =&gt; x$6.isInstanceOf[scala.xml.Elem])).indexOf[scala.xml.Node](h2))
-        </td>
-      </tr><tr>
-        <td>
-          233
-        </td>
-        <td>
-          833
-        </td>
-        <td>
-          7506
-          -
-          7654
-        </td>
-        <td>
-          ApplyToImplicitArgs
-        </td>
-        <td>
-          scala.collection.TraversableLike.++
-        </td>
-        <td style="background: #AEF1AE">
-          scala.collection.Seq.apply[Product with Serializable with org.apache.maven.unbound.PathElement](ElementLabel.apply(h.label), ListIndex.apply(h.child.filter(((x$6: scala.xml.Node) =&gt; x$6.isInstanceOf[scala.xml.Elem])).indexOf[scala.xml.Node](h2))).++[org.apache.maven.unbound.PathElement, Seq[org.apache.maven.unbound.PathElement]](elemPathToPath(rest))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement])
-        </td>
-      </tr><tr>
-        <td>
-          233
+          240
         </td>
         <td>
           829
         </td>
         <td>
-          7568
+          7766
           -
-          7616
+          7767
         </td>
         <td>
-          Apply
+          Literal
         </td>
         <td>
-          scala.collection.GenSeqLike.indexOf
+          &lt;nosymbol&gt;
         </td>
         <td style="background: #AEF1AE">
-          h.child.filter(((x$6: scala.xml.Node) =&gt; x$6.isInstanceOf[scala.xml.Elem])).indexOf[scala.xml.Node](h2)
+          0
         </td>
       </tr><tr>
         <td>
-          233
-        </td>
-        <td>
-          832
-        </td>
-        <td>
-          7619
-          -
-          7619
-        </td>
-        <td>
-          TypeApply
-        </td>
-        <td>
-          scala.collection.Seq.canBuildFrom
-        </td>
-        <td style="background: #AEF1AE">
-          collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement]
-        </td>
-      </tr><tr>
-        <td>
-          233
-        </td>
-        <td>
-          834
-        </td>
-        <td>
-          7506
-          -
-          7654
-        </td>
-        <td>
-          Block
-        </td>
-        <td>
-          scala.collection.TraversableLike.++
-        </td>
-        <td style="background: #AEF1AE">
-          scala.collection.Seq.apply[Product with Serializable with org.apache.maven.unbound.PathElement](ElementLabel.apply(h.label), ListIndex.apply(h.child.filter(((x$6: scala.xml.Node) =&gt; x$6.isInstanceOf[scala.xml.Elem])).indexOf[scala.xml.Node](h2))).++[org.apache.maven.unbound.PathElement, Seq[org.apache.maven.unbound.PathElement]](elemPathToPath(rest))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement])
-        </td>
-      </tr><tr>
-        <td>
-          234
-        </td>
-        <td>
-          831
-        </td>
-        <td>
-          7634
-          -
-          7654
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.CommentExtractor.elemPathToPath
-        </td>
-        <td style="background: #AEF1AE">
-          elemPathToPath(rest)
-        </td>
-      </tr><tr>
-        <td>
-          235
-        </td>
-        <td>
-          837
-        </td>
-        <td>
-          7716
-          -
-          7723
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.collection.immutable.List.::
-        </td>
-        <td style="background: #AEF1AE">
-          rest.::[scala.xml.Elem](x$7)
-        </td>
-      </tr><tr>
-        <td>
-          235
-        </td>
-        <td>
-          839
-        </td>
-        <td>
-          7695
-          -
-          7695
-        </td>
-        <td>
-          TypeApply
-        </td>
-        <td>
-          scala.collection.Seq.canBuildFrom
-        </td>
-        <td style="background: #AEF1AE">
-          collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement]
-        </td>
-      </tr><tr>
-        <td>
-          235
-        </td>
-        <td>
-          836
-        </td>
-        <td>
-          7672
-          -
-          7693
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.ElementLabel.apply
-        </td>
-        <td style="background: #AEF1AE">
-          ElementLabel.apply(h.label)
-        </td>
-      </tr><tr>
-        <td>
-          235
-        </td>
-        <td>
-          835
-        </td>
-        <td>
-          7685
-          -
-          7692
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.xml.Elem.label
-        </td>
-        <td style="background: #AEF1AE">
-          h.label
-        </td>
-      </tr><tr>
-        <td>
-          235
-        </td>
-        <td>
-          838
-        </td>
-        <td>
-          7698
-          -
-          7724
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.CommentExtractor.elemPathToPath
-        </td>
-        <td style="background: #AEF1AE">
-          elemPathToPath({
-  &lt;synthetic&gt; &lt;artifact&gt; val x$7: scala.xml.Elem = h2;
-  rest.::[scala.xml.Elem](x$7)
-})
-        </td>
-      </tr><tr>
-        <td>
-          235
-        </td>
-        <td>
-          841
-        </td>
-        <td>
-          7668
-          -
-          7724
-        </td>
-        <td>
-          Block
-        </td>
-        <td>
-          scala.collection.TraversableLike.++
-        </td>
-        <td style="background: #AEF1AE">
-          scala.collection.Seq.apply[org.apache.maven.unbound.ElementLabel](ElementLabel.apply(h.label)).++[org.apache.maven.unbound.PathElement, Seq[org.apache.maven.unbound.PathElement]](elemPathToPath({
-  &lt;synthetic&gt; &lt;artifact&gt; val x$7: scala.xml.Elem = h2;
-  rest.::[scala.xml.Elem](x$7)
-}))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement])
-        </td>
-      </tr><tr>
-        <td>
-          235
-        </td>
-        <td>
-          840
-        </td>
-        <td>
-          7668
-          -
-          7724
-        </td>
-        <td>
-          ApplyToImplicitArgs
-        </td>
-        <td>
-          scala.collection.TraversableLike.++
-        </td>
-        <td style="background: #AEF1AE">
-          scala.collection.Seq.apply[org.apache.maven.unbound.ElementLabel](ElementLabel.apply(h.label)).++[org.apache.maven.unbound.PathElement, Seq[org.apache.maven.unbound.PathElement]](elemPathToPath({
-  &lt;synthetic&gt; &lt;artifact&gt; val x$7: scala.xml.Elem = h2;
-  rest.::[scala.xml.Elem](x$7)
-}))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement])
-        </td>
-      </tr><tr>
-        <td>
-          236
-        </td>
-        <td>
-          842
-        </td>
-        <td>
-          7765
-          -
-          7772
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.xml.Elem.label
-        </td>
-        <td style="background: #AEF1AE">
-          h.label
-        </td>
-      </tr><tr>
-        <td>
-          236
+          241
         </td>
         <td>
           844
         </td>
         <td>
-          7748
-          -
           7774
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.collection.generic.GenericCompanion.apply
-        </td>
-        <td style="background: #AEF1AE">
-          scala.collection.Seq.apply[org.apache.maven.unbound.ElementLabel](ElementLabel.apply(h.label))
-        </td>
-      </tr><tr>
-        <td>
-          236
-        </td>
-        <td>
-          843
-        </td>
-        <td>
-          7752
           -
-          7773
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.ElementLabel.apply
-        </td>
-        <td style="background: #AEF1AE">
-          ElementLabel.apply(h.label)
-        </td>
-      </tr><tr>
-        <td>
-          237
-        </td>
-        <td>
-          845
-        </td>
-        <td>
-          7793
-          -
-          7798
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.collection.generic.GenericCompanion.apply
-        </td>
-        <td style="background: #AEF1AE">
-          scala.collection.Seq.apply[Nothing]()
-        </td>
-      </tr><tr>
-        <td>
-          240
-        </td>
-        <td>
-          846
-        </td>
-        <td>
-          7820
-          -
-          7830
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.collection.immutable.List.apply
-        </td>
-        <td style="background: #AEF1AE">
-          scala.collection.immutable.List.apply[scala.xml.Elem](root)
-        </td>
-      </tr><tr>
-        <td>
-          241
-        </td>
-        <td>
-          851
-        </td>
-        <td>
-          7835
-          -
-          7946
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          org.apache.maven.unbound.DocComments.apply
-        </td>
-        <td style="background: #AEF1AE">
-          DocComments.apply(root.child.flatMap[org.apache.maven.unbound.Comments, Seq[org.apache.maven.unbound.Comments]](((x$8: scala.xml.Node) =&gt; x$8 match {
-  case (e @ (_: scala.xml.Elem)) =&gt; traverse(e, buf)
-  case _ =&gt; scala.collection.Seq.apply[Nothing]()
-}))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.Comments]))
-        </td>
-      </tr><tr>
-        <td>
-          241
-        </td>
-        <td>
-          850
-        </td>
-        <td>
-          7847
-          -
-          7945
+          8121
         </td>
         <td>
           ApplyToImplicitArgs
@@ -4093,8 +3761,15 @@
           scala.collection.TraversableLike.flatMap
         </td>
         <td style="background: #AEF1AE">
-          root.child.flatMap[org.apache.maven.unbound.Comments, Seq[org.apache.maven.unbound.Comments]](((x$8: scala.xml.Node) =&gt; x$8 match {
-  case (e @ (_: scala.xml.Elem)) =&gt; traverse(e, buf)
+          cur.child.flatMap[org.apache.maven.unbound.Comments, Seq[org.apache.maven.unbound.Comments]](((n: scala.xml.Node) =&gt; n match {
+  case (e @ (_: scala.xml.Elem)) =&gt; {
+    elemIdx = elemIdx.+(1);
+    traverse(e, newPath)
+  }
+  case (c @ (_: scala.xml.Comment)) =&gt; {
+    val newPathElems: Seq[org.apache.maven.unbound.PathElement] = elemPathToPath(newPath);
+    scala.collection.Seq.apply[org.apache.maven.unbound.Comments](Comments.apply(scala.collection.Seq.apply[String](c.commentText), CommentPath.apply((newPathElems.++[org.apache.maven.unbound.PathElement, Seq[org.apache.maven.unbound.PathElement]](scala.collection.Seq.apply[org.apache.maven.unbound.ListIndex](ListIndex.apply(elemIdx)))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement]): _*))))
+  }
   case _ =&gt; scala.collection.Seq.apply[Nothing]()
 }))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.Comments])
         </td>
@@ -4103,12 +3778,12 @@
           241
         </td>
         <td>
-          849
+          843
         </td>
         <td>
-          7866
+          7792
           -
-          7866
+          7792
         </td>
         <td>
           TypeApply
@@ -4124,12 +3799,804 @@
           242
         </td>
         <td>
+          831
+        </td>
+        <td>
+          7856
+          -
+          7876
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.CommentExtractor.traverse
+        </td>
+        <td style="background: #AEF1AE">
+          traverse(e, newPath)
+        </td>
+      </tr><tr>
+        <td>
+          242
+        </td>
+        <td>
+          830
+        </td>
+        <td>
+          7843
+          -
+          7854
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Int.+
+        </td>
+        <td style="background: #AEF1AE">
+          elemIdx.+(1)
+        </td>
+      </tr><tr>
+        <td>
+          244
+        </td>
+        <td>
+          832
+        </td>
+        <td>
+          7936
+          -
+          7959
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.CommentExtractor.elemPathToPath
+        </td>
+        <td style="background: #AEF1AE">
+          elemPathToPath(newPath)
+        </td>
+      </tr><tr>
+        <td>
+          245
+        </td>
+        <td>
+          841
+        </td>
+        <td>
+          7970
+          -
+          8088
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.generic.GenericCompanion.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.collection.Seq.apply[org.apache.maven.unbound.Comments](Comments.apply(scala.collection.Seq.apply[String](c.commentText), CommentPath.apply((newPathElems.++[org.apache.maven.unbound.PathElement, Seq[org.apache.maven.unbound.PathElement]](scala.collection.Seq.apply[org.apache.maven.unbound.ListIndex](ListIndex.apply(elemIdx)))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement]): _*))))
+        </td>
+      </tr><tr>
+        <td>
+          245
+        </td>
+        <td>
+          840
+        </td>
+        <td>
+          7974
+          -
+          8087
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.Comments.apply
+        </td>
+        <td style="background: #AEF1AE">
+          Comments.apply(scala.collection.Seq.apply[String](c.commentText), CommentPath.apply((newPathElems.++[org.apache.maven.unbound.PathElement, Seq[org.apache.maven.unbound.PathElement]](scala.collection.Seq.apply[org.apache.maven.unbound.ListIndex](ListIndex.apply(elemIdx)))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement]): _*)))
+        </td>
+      </tr><tr>
+        <td>
+          246
+        </td>
+        <td>
+          833
+        </td>
+        <td>
+          8000
+          -
+          8013
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Comment.commentText
+        </td>
+        <td style="background: #AEF1AE">
+          c.commentText
+        </td>
+      </tr><tr>
+        <td>
+          246
+        </td>
+        <td>
+          834
+        </td>
+        <td>
+          7996
+          -
+          8014
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.generic.GenericCompanion.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.collection.Seq.apply[String](c.commentText)
+        </td>
+      </tr><tr>
+        <td>
+          247
+        </td>
+        <td>
+          837
+        </td>
+        <td>
+          8054
+          -
+          8054
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement]
+        </td>
+      </tr><tr>
+        <td>
+          247
+        </td>
+        <td>
+          839
+        </td>
+        <td>
+          8028
+          -
+          8086
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.CommentPath.apply
+        </td>
+        <td style="background: #AEF1AE">
+          CommentPath.apply((newPathElems.++[org.apache.maven.unbound.PathElement, Seq[org.apache.maven.unbound.PathElement]](scala.collection.Seq.apply[org.apache.maven.unbound.ListIndex](ListIndex.apply(elemIdx)))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement]): _*))
+        </td>
+      </tr><tr>
+        <td>
+          247
+        </td>
+        <td>
+          836
+        </td>
+        <td>
+          8057
+          -
+          8080
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.generic.GenericCompanion.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.collection.Seq.apply[org.apache.maven.unbound.ListIndex](ListIndex.apply(elemIdx))
+        </td>
+      </tr><tr>
+        <td>
+          247
+        </td>
+        <td>
+          835
+        </td>
+        <td>
+          8061
+          -
+          8079
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ListIndex.apply
+        </td>
+        <td style="background: #AEF1AE">
+          ListIndex.apply(elemIdx)
+        </td>
+      </tr><tr>
+        <td>
+          247
+        </td>
+        <td>
+          838
+        </td>
+        <td>
+          8041
+          -
+          8080
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.++
+        </td>
+        <td style="background: #AEF1AE">
+          newPathElems.++[org.apache.maven.unbound.PathElement, Seq[org.apache.maven.unbound.PathElement]](scala.collection.Seq.apply[org.apache.maven.unbound.ListIndex](ListIndex.apply(elemIdx)))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement])
+        </td>
+      </tr><tr>
+        <td>
+          248
+        </td>
+        <td>
+          842
+        </td>
+        <td>
+          8107
+          -
+          8112
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.generic.GenericCompanion.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.collection.Seq.apply[Nothing]()
+        </td>
+      </tr><tr>
+        <td>
+          254
+        </td>
+        <td>
+          845
+        </td>
+        <td>
+          8245
+          -
+          8258
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.CommentExtractor.isListElem
+        </td>
+        <td style="background: #AEF1AE">
+          CommentExtractor.this.isListElem(h)
+        </td>
+      </tr><tr>
+        <td>
+          256
+        </td>
+        <td>
+          846
+        </td>
+        <td>
+          8300
+          -
+          8307
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Elem.label
+        </td>
+        <td style="background: #AEF1AE">
+          h.label
+        </td>
+      </tr><tr>
+        <td>
+          256
+        </td>
+        <td>
           847
         </td>
         <td>
-          7900
+          8287
           -
-          7916
+          8308
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ElementLabel.apply
+        </td>
+        <td style="background: #AEF1AE">
+          ElementLabel.apply(h.label)
+        </td>
+      </tr><tr>
+        <td>
+          257
+        </td>
+        <td>
+          848
+        </td>
+        <td>
+          8332
+          -
+          8380
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.GenSeqLike.indexOf
+        </td>
+        <td style="background: #AEF1AE">
+          h.child.filter(((x$6: scala.xml.Node) =&gt; x$6.isInstanceOf[scala.xml.Elem])).indexOf[scala.xml.Node](h2)
+        </td>
+      </tr><tr>
+        <td>
+          257
+        </td>
+        <td>
+          851
+        </td>
+        <td>
+          8383
+          -
+          8383
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement]
+        </td>
+      </tr><tr>
+        <td>
+          257
+        </td>
+        <td>
+          853
+        </td>
+        <td>
+          8270
+          -
+          8418
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.collection.TraversableLike.++
+        </td>
+        <td style="background: #AEF1AE">
+          scala.collection.Seq.apply[Product with Serializable with org.apache.maven.unbound.PathElement](ElementLabel.apply(h.label), ListIndex.apply(h.child.filter(((x$6: scala.xml.Node) =&gt; x$6.isInstanceOf[scala.xml.Elem])).indexOf[scala.xml.Node](h2))).++[org.apache.maven.unbound.PathElement, Seq[org.apache.maven.unbound.PathElement]](elemPathToPath(rest))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement])
+        </td>
+      </tr><tr>
+        <td>
+          257
+        </td>
+        <td>
+          849
+        </td>
+        <td>
+          8322
+          -
+          8381
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ListIndex.apply
+        </td>
+        <td style="background: #AEF1AE">
+          ListIndex.apply(h.child.filter(((x$6: scala.xml.Node) =&gt; x$6.isInstanceOf[scala.xml.Elem])).indexOf[scala.xml.Node](h2))
+        </td>
+      </tr><tr>
+        <td>
+          257
+        </td>
+        <td>
+          852
+        </td>
+        <td>
+          8270
+          -
+          8418
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.++
+        </td>
+        <td style="background: #AEF1AE">
+          scala.collection.Seq.apply[Product with Serializable with org.apache.maven.unbound.PathElement](ElementLabel.apply(h.label), ListIndex.apply(h.child.filter(((x$6: scala.xml.Node) =&gt; x$6.isInstanceOf[scala.xml.Elem])).indexOf[scala.xml.Node](h2))).++[org.apache.maven.unbound.PathElement, Seq[org.apache.maven.unbound.PathElement]](elemPathToPath(rest))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement])
+        </td>
+      </tr><tr>
+        <td>
+          258
+        </td>
+        <td>
+          850
+        </td>
+        <td>
+          8398
+          -
+          8418
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.CommentExtractor.elemPathToPath
+        </td>
+        <td style="background: #AEF1AE">
+          elemPathToPath(rest)
+        </td>
+      </tr><tr>
+        <td>
+          259
+        </td>
+        <td>
+          855
+        </td>
+        <td>
+          8436
+          -
+          8457
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ElementLabel.apply
+        </td>
+        <td style="background: #AEF1AE">
+          ElementLabel.apply(h.label)
+        </td>
+      </tr><tr>
+        <td>
+          259
+        </td>
+        <td>
+          857
+        </td>
+        <td>
+          8462
+          -
+          8488
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.CommentExtractor.elemPathToPath
+        </td>
+        <td style="background: #AEF1AE">
+          elemPathToPath({
+  &lt;synthetic&gt; &lt;artifact&gt; val x$7: scala.xml.Elem = h2;
+  rest.::[scala.xml.Elem](x$7)
+})
+        </td>
+      </tr><tr>
+        <td>
+          259
+        </td>
+        <td>
+          860
+        </td>
+        <td>
+          8432
+          -
+          8488
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.collection.TraversableLike.++
+        </td>
+        <td style="background: #AEF1AE">
+          scala.collection.Seq.apply[org.apache.maven.unbound.ElementLabel](ElementLabel.apply(h.label)).++[org.apache.maven.unbound.PathElement, Seq[org.apache.maven.unbound.PathElement]](elemPathToPath({
+  &lt;synthetic&gt; &lt;artifact&gt; val x$7: scala.xml.Elem = h2;
+  rest.::[scala.xml.Elem](x$7)
+}))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement])
+        </td>
+      </tr><tr>
+        <td>
+          259
+        </td>
+        <td>
+          854
+        </td>
+        <td>
+          8449
+          -
+          8456
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Elem.label
+        </td>
+        <td style="background: #AEF1AE">
+          h.label
+        </td>
+      </tr><tr>
+        <td>
+          259
+        </td>
+        <td>
+          856
+        </td>
+        <td>
+          8480
+          -
+          8487
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.immutable.List.::
+        </td>
+        <td style="background: #AEF1AE">
+          rest.::[scala.xml.Elem](x$7)
+        </td>
+      </tr><tr>
+        <td>
+          259
+        </td>
+        <td>
+          859
+        </td>
+        <td>
+          8432
+          -
+          8488
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.++
+        </td>
+        <td style="background: #AEF1AE">
+          scala.collection.Seq.apply[org.apache.maven.unbound.ElementLabel](ElementLabel.apply(h.label)).++[org.apache.maven.unbound.PathElement, Seq[org.apache.maven.unbound.PathElement]](elemPathToPath({
+  &lt;synthetic&gt; &lt;artifact&gt; val x$7: scala.xml.Elem = h2;
+  rest.::[scala.xml.Elem](x$7)
+}))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement])
+        </td>
+      </tr><tr>
+        <td>
+          259
+        </td>
+        <td>
+          858
+        </td>
+        <td>
+          8459
+          -
+          8459
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          collection.this.Seq.canBuildFrom[org.apache.maven.unbound.PathElement]
+        </td>
+      </tr><tr>
+        <td>
+          260
+        </td>
+        <td>
+          863
+        </td>
+        <td>
+          8512
+          -
+          8538
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.generic.GenericCompanion.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.collection.Seq.apply[org.apache.maven.unbound.ElementLabel](ElementLabel.apply(h.label))
+        </td>
+      </tr><tr>
+        <td>
+          260
+        </td>
+        <td>
+          862
+        </td>
+        <td>
+          8516
+          -
+          8537
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.ElementLabel.apply
+        </td>
+        <td style="background: #AEF1AE">
+          ElementLabel.apply(h.label)
+        </td>
+      </tr><tr>
+        <td>
+          260
+        </td>
+        <td>
+          861
+        </td>
+        <td>
+          8529
+          -
+          8536
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.xml.Elem.label
+        </td>
+        <td style="background: #AEF1AE">
+          h.label
+        </td>
+      </tr><tr>
+        <td>
+          261
+        </td>
+        <td>
+          864
+        </td>
+        <td>
+          8557
+          -
+          8562
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.generic.GenericCompanion.apply
+        </td>
+        <td style="background: #F0ADAD">
+          scala.collection.Seq.apply[Nothing]()
+        </td>
+      </tr><tr>
+        <td>
+          264
+        </td>
+        <td>
+          865
+        </td>
+        <td>
+          8584
+          -
+          8594
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.immutable.List.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.collection.immutable.List.apply[scala.xml.Elem](root)
+        </td>
+      </tr><tr>
+        <td>
+          265
+        </td>
+        <td>
+          869
+        </td>
+        <td>
+          8611
+          -
+          8709
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.TraversableLike.flatMap
+        </td>
+        <td style="background: #AEF1AE">
+          root.child.flatMap[org.apache.maven.unbound.Comments, Seq[org.apache.maven.unbound.Comments]](((x$8: scala.xml.Node) =&gt; x$8 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; traverse(e, buf)
+  case _ =&gt; scala.collection.Seq.apply[Nothing]()
+}))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.Comments])
+        </td>
+      </tr><tr>
+        <td>
+          265
+        </td>
+        <td>
+          868
+        </td>
+        <td>
+          8630
+          -
+          8630
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.collection.Seq.canBuildFrom
+        </td>
+        <td style="background: #AEF1AE">
+          collection.this.Seq.canBuildFrom[org.apache.maven.unbound.Comments]
+        </td>
+      </tr><tr>
+        <td>
+          265
+        </td>
+        <td>
+          870
+        </td>
+        <td>
+          8599
+          -
+          8710
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.unbound.DocComments.apply
+        </td>
+        <td style="background: #AEF1AE">
+          DocComments.apply(root.child.flatMap[org.apache.maven.unbound.Comments, Seq[org.apache.maven.unbound.Comments]](((x$8: scala.xml.Node) =&gt; x$8 match {
+  case (e @ (_: scala.xml.Elem)) =&gt; traverse(e, buf)
+  case _ =&gt; scala.collection.Seq.apply[Nothing]()
+}))(collection.this.Seq.canBuildFrom[org.apache.maven.unbound.Comments]))
+        </td>
+      </tr><tr>
+        <td>
+          266
+        </td>
+        <td>
+          866
+        </td>
+        <td>
+          8664
+          -
+          8680
         </td>
         <td>
           Apply
@@ -4142,15 +4609,15 @@
         </td>
       </tr><tr>
         <td>
-          243
+          267
         </td>
         <td>
-          848
+          867
         </td>
         <td>
-          7933
+          8697
           -
-          7938
+          8702
         </td>
         <td>
           Apply
