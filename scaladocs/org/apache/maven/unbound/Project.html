@@ -390,8 +390,8 @@ for translating POM files as XML to and from Json and Hocon formats.
                         <a href="Site.html" title="">Site</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
-                        <a class="trait" href="Writeable.html" title="A trait case classes can extend to get the ability to write themselves as XML provided they have a field named xml of type Elem"></a>
-                        <a href="Writeable.html" title="A trait case classes can extend to get the ability to write themselves as XML provided they have a field named xml of type Elem">Writeable</a>
+                        <a class="trait" href="Writable.html" title="A trait case classes can extend to get the ability to write themselves as XML provided they have a field named xml of type Elem"></a>
+                        <a href="Writable.html" title="A trait case classes can extend to get the ability to write themselves as XML provided they have a field named xml of type Elem">Writable</a>
                       </li>
               </ul>
             </div>
@@ -417,7 +417,7 @@ for translating POM files as XML to and from Json and Hocon formats.
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">Project</span><span class="params">(<span name="childInheritUrl">childInheritUrl: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">true</span></span>, <span name="modelVersion">modelVersion: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="package$$SL$.html">SL.DefaultModelVersion</a></span></span></span>, <span name="parent">parent: <a href="Parent.html" class="extype" name="org.apache.maven.unbound.Parent">Parent</a> = <span class="symbol">null</span></span>, <span name="groupId">groupId: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="artifactId">artifactId: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="packaging">packaging: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="package$$SL$.html">SL.JarStr</a></span></span></span>, <span name="name">name: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="description">description: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="url">url: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="inceptionYear">inceptionYear: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="organization">organization: <a href="Organization.html" class="extype" name="org.apache.maven.unbound.Organization">Organization</a> = <span class="symbol">null</span></span>, <span name="licenses">licenses: <span class="extype" name="scala.Seq">Seq</span>[<a href="License.html" class="extype" name="org.apache.maven.unbound.License">License</a>] = <span class="symbol">Seq[License]()</span></span>, <span name="developers">developers: <span class="extype" name="scala.Seq">Seq</span>[<a href="Developer.html" class="extype" name="org.apache.maven.unbound.Developer">Developer</a>] = <span class="symbol">Seq[Developer]()</span></span>, <span name="contributors">contributors: <span class="extype" name="scala.Seq">Seq</span>[<a href="Contributor.html" class="extype" name="org.apache.maven.unbound.Contributor">Contributor</a>] = <span class="symbol">Seq[Contributor]()</span></span>, <span name="mailingLists">mailingLists: <span class="extype" name="scala.Seq">Seq</span>[<a href="MailingList.html" class="extype" name="org.apache.maven.unbound.MailingList">MailingList</a>] = <span class="symbol">Seq[MailingList]()</span></span>, <span name="modules">modules: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Seq[String]()</span></span>, <span name="scm">scm: <a href="Scm.html" class="extype" name="org.apache.maven.unbound.Scm">Scm</a> = <span class="symbol">null</span></span>, <span name="issueManagement">issueManagement: <a href="IssueManagement.html" class="extype" name="org.apache.maven.unbound.IssueManagement">IssueManagement</a> = <span class="symbol">null</span></span>, <span name="ciManagement">ciManagement: <a href="CIManagement.html" class="extype" name="org.apache.maven.unbound.CIManagement">CIManagement</a> = <span class="symbol">null</span></span>, <span name="distributionManagement">distributionManagement: <a href="DistributionManagement.html" class="extype" name="org.apache.maven.unbound.DistributionManagement">DistributionManagement</a> = <span class="symbol">null</span></span>, <span name="properties">properties: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Map[String, String]()</span></span>, <span name="dependencyManagement">dependencyManagement: <span class="extype" name="scala.Seq">Seq</span>[<a href="Dependency.html" class="extype" name="org.apache.maven.unbound.Dependency">Dependency</a>] = <span class="symbol">Seq[Dependency]()</span></span>, <span name="dependencies">dependencies: <span class="extype" name="scala.Seq">Seq</span>[<a href="Dependency.html" class="extype" name="org.apache.maven.unbound.Dependency">Dependency</a>] = <span class="symbol">Seq[Dependency]()</span></span>, <span name="repositories">repositories: <span class="extype" name="scala.Seq">Seq</span>[<a href="Repository.html" class="extype" name="org.apache.maven.unbound.Repository">Repository</a>] = <span class="symbol">Seq[Repository]()</span></span>, <span name="pluginRepositories">pluginRepositories: <span class="extype" name="scala.Seq">Seq</span>[<a href="Repository.html" class="extype" name="org.apache.maven.unbound.Repository">Repository</a>] = <span class="symbol">Seq[Repository]()</span></span>, <span name="build">build: <a href="Build.html" class="extype" name="org.apache.maven.unbound.Build">Build</a> = <span class="symbol">null</span></span>, <span name="reporting">reporting: <a href="Reporting.html" class="extype" name="org.apache.maven.unbound.Reporting">Reporting</a> = <span class="symbol">null</span></span>, <span name="profiles">profiles: <span class="extype" name="scala.Seq">Seq</span>[<a href="Profile.html" class="extype" name="org.apache.maven.unbound.Profile">Profile</a>] = <span class="symbol">Seq[Profile]()</span></span>)</span><span class="result"> extends <a href="Writeable.html" class="extype" name="org.apache.maven.unbound.Writeable">Writeable</a> with <a href="HoconProjectReader.html" class="extype" name="org.apache.maven.unbound.HoconProjectReader">HoconProjectReader</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <span class="name">Project</span><span class="params">(<span name="childInheritUrl">childInheritUrl: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">true</span></span>, <span name="modelVersion">modelVersion: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="package$$SL$.html">SL.DefaultModelVersion</a></span></span></span>, <span name="parent">parent: <a href="Parent.html" class="extype" name="org.apache.maven.unbound.Parent">Parent</a> = <span class="symbol">null</span></span>, <span name="groupId">groupId: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="artifactId">artifactId: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="packaging">packaging: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="package$$SL$.html">SL.JarStr</a></span></span></span>, <span name="name">name: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="description">description: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="url">url: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="inceptionYear">inceptionYear: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="organization">organization: <a href="Organization.html" class="extype" name="org.apache.maven.unbound.Organization">Organization</a> = <span class="symbol">null</span></span>, <span name="licenses">licenses: <span class="extype" name="scala.Seq">Seq</span>[<a href="License.html" class="extype" name="org.apache.maven.unbound.License">License</a>] = <span class="symbol">Seq[License]()</span></span>, <span name="developers">developers: <span class="extype" name="scala.Seq">Seq</span>[<a href="Developer.html" class="extype" name="org.apache.maven.unbound.Developer">Developer</a>] = <span class="symbol">Seq[Developer]()</span></span>, <span name="contributors">contributors: <span class="extype" name="scala.Seq">Seq</span>[<a href="Contributor.html" class="extype" name="org.apache.maven.unbound.Contributor">Contributor</a>] = <span class="symbol">Seq[Contributor]()</span></span>, <span name="mailingLists">mailingLists: <span class="extype" name="scala.Seq">Seq</span>[<a href="MailingList.html" class="extype" name="org.apache.maven.unbound.MailingList">MailingList</a>] = <span class="symbol">Seq[MailingList]()</span></span>, <span name="modules">modules: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Seq[String]()</span></span>, <span name="scm">scm: <a href="Scm.html" class="extype" name="org.apache.maven.unbound.Scm">Scm</a> = <span class="symbol">null</span></span>, <span name="issueManagement">issueManagement: <a href="IssueManagement.html" class="extype" name="org.apache.maven.unbound.IssueManagement">IssueManagement</a> = <span class="symbol">null</span></span>, <span name="ciManagement">ciManagement: <a href="CIManagement.html" class="extype" name="org.apache.maven.unbound.CIManagement">CIManagement</a> = <span class="symbol">null</span></span>, <span name="distributionManagement">distributionManagement: <a href="DistributionManagement.html" class="extype" name="org.apache.maven.unbound.DistributionManagement">DistributionManagement</a> = <span class="symbol">null</span></span>, <span name="properties">properties: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Map[String, String]()</span></span>, <span name="dependencyManagement">dependencyManagement: <span class="extype" name="scala.Seq">Seq</span>[<a href="Dependency.html" class="extype" name="org.apache.maven.unbound.Dependency">Dependency</a>] = <span class="symbol">Seq[Dependency]()</span></span>, <span name="dependencies">dependencies: <span class="extype" name="scala.Seq">Seq</span>[<a href="Dependency.html" class="extype" name="org.apache.maven.unbound.Dependency">Dependency</a>] = <span class="symbol">Seq[Dependency]()</span></span>, <span name="repositories">repositories: <span class="extype" name="scala.Seq">Seq</span>[<a href="Repository.html" class="extype" name="org.apache.maven.unbound.Repository">Repository</a>] = <span class="symbol">Seq[Repository]()</span></span>, <span name="pluginRepositories">pluginRepositories: <span class="extype" name="scala.Seq">Seq</span>[<a href="Repository.html" class="extype" name="org.apache.maven.unbound.Repository">Repository</a>] = <span class="symbol">Seq[Repository]()</span></span>, <span name="build">build: <a href="Build.html" class="extype" name="org.apache.maven.unbound.Build">Build</a> = <span class="symbol">null</span></span>, <span name="reporting">reporting: <a href="Reporting.html" class="extype" name="org.apache.maven.unbound.Reporting">Reporting</a> = <span class="symbol">null</span></span>, <span name="profiles">profiles: <span class="extype" name="scala.Seq">Seq</span>[<a href="Profile.html" class="extype" name="org.apache.maven.unbound.Profile">Profile</a>] = <span class="symbol">Seq[Profile]()</span></span>)</span><span class="result"> extends <a href="Writable.html" class="extype" name="org.apache.maven.unbound.Writable">Writable</a> with <a href="HoconProjectReader.html" class="extype" name="org.apache.maven.unbound.HoconProjectReader">HoconProjectReader</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       </h4>
 
@@ -426,7 +426,7 @@ for translating POM files as XML to and from Json and Hocon formats.
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="java.io.Serializable">Serializable</span>, <span class="extype" name="scala.Product">Product</span>, <span class="extype" name="scala.Equals">Equals</span>, <a href="HoconProjectReader.html" class="extype" name="org.apache.maven.unbound.HoconProjectReader">HoconProjectReader</a>, <a href="Writeable.html" class="extype" name="org.apache.maven.unbound.Writeable">Writeable</a>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+          <div class="superTypes hiddenContent"><span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="java.io.Serializable">Serializable</span>, <span class="extype" name="scala.Product">Product</span>, <span class="extype" name="scala.Equals">Equals</span>, <a href="HoconProjectReader.html" class="extype" name="org.apache.maven.unbound.HoconProjectReader">HoconProjectReader</a>, <a href="Writable.html" class="extype" name="org.apache.maven.unbound.Writable">Writable</a>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
         
 
@@ -452,7 +452,7 @@ for translating POM files as XML to and from Json and Hocon formats.
                   <span class="filtertype">Inherited<br />
                   </span>
                   <ol id="linearization">
-                    <li class="in" name="org.apache.maven.unbound.Project"><span>Project</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.Product"><span>Product</span></li><li class="in" name="scala.Equals"><span>Equals</span></li><li class="in" name="org.apache.maven.unbound.HoconProjectReader"><span>HoconProjectReader</span></li><li class="in" name="org.apache.maven.unbound.Writeable"><span>Writeable</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                    <li class="in" name="org.apache.maven.unbound.Project"><span>Project</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.Product"><span>Product</span></li><li class="in" name="scala.Equals"><span>Equals</span></li><li class="in" name="org.apache.maven.unbound.HoconProjectReader"><span>HoconProjectReader</span></li><li class="in" name="org.apache.maven.unbound.Writable"><span>Writable</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -500,7 +500,7 @@ for translating POM files as XML to and from Json and Hocon formats.
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">Project</span><span class="params">(<span name="childInheritUrl">childInheritUrl: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">true</span></span>, <span name="modelVersion">modelVersion: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="package$$SL$.html">SL.DefaultModelVersion</a></span></span></span>, <span name="parent">parent: <a href="Parent.html" class="extype" name="org.apache.maven.unbound.Parent">Parent</a> = <span class="symbol">null</span></span>, <span name="groupId">groupId: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="artifactId">artifactId: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="packaging">packaging: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="package$$SL$.html">SL.JarStr</a></span></span></span>, <span name="name">name: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="description">description: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="url">url: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="inceptionYear">inceptionYear: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="organization">organization: <a href="Organization.html" class="extype" name="org.apache.maven.unbound.Organization">Organization</a> = <span class="symbol">null</span></span>, <span name="licenses">licenses: <span class="extype" name="scala.Seq">Seq</span>[<a href="License.html" class="extype" name="org.apache.maven.unbound.License">License</a>] = <span class="symbol">Seq[License]()</span></span>, <span name="developers">developers: <span class="extype" name="scala.Seq">Seq</span>[<a href="Developer.html" class="extype" name="org.apache.maven.unbound.Developer">Developer</a>] = <span class="symbol">Seq[Developer]()</span></span>, <span name="contributors">contributors: <span class="extype" name="scala.Seq">Seq</span>[<a href="Contributor.html" class="extype" name="org.apache.maven.unbound.Contributor">Contributor</a>] = <span class="symbol">Seq[Contributor]()</span></span>, <span name="mailingLists">mailingLists: <span class="extype" name="scala.Seq">Seq</span>[<a href="MailingList.html" class="extype" name="org.apache.maven.unbound.MailingList">MailingList</a>] = <span class="symbol">Seq[MailingList]()</span></span>, <span name="modules">modules: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Seq[String]()</span></span>, <span name="scm">scm: <a href="Scm.html" class="extype" name="org.apache.maven.unbound.Scm">Scm</a> = <span class="symbol">null</span></span>, <span name="issueManagement">issueManagement: <a href="IssueManagement.html" class="extype" name="org.apache.maven.unbound.IssueManagement">IssueManagement</a> = <span class="symbol">null</span></span>, <span name="ciManagement">ciManagement: <a href="CIManagement.html" class="extype" name="org.apache.maven.unbound.CIManagement">CIManagement</a> = <span class="symbol">null</span></span>, <span name="distributionManagement">distributionManagement: <a href="DistributionManagement.html" class="extype" name="org.apache.maven.unbound.DistributionManagement">DistributionManagement</a> = <span class="symbol">null</span></span>, <span name="properties">properties: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Map[String, String]()</span></span>, <span name="dependencyManagement">dependencyManagement: <span class="extype" name="scala.Seq">Seq</span>[<a href="Dependency.html" class="extype" name="org.apache.maven.unbound.Dependency">Dependency</a>] = <span class="symbol">Seq[Dependency]()</span></span>, <span name="dependencies">dependencies: <span class="extype" name="scala.Seq">Seq</span>[<a href="Dependency.html" class="extype" name="org.apache.maven.unbound.Dependency">Dependency</a>] = <span class="symbol">Seq[Dependency]()</span></span>, <span name="repositories">repositories: <span class="extype" name="scala.Seq">Seq</span>[<a href="Repository.html" class="extype" name="org.apache.maven.unbound.Repository">Repository</a>] = <span class="symbol">Seq[Repository]()</span></span>, <span name="pluginRepositories">pluginRepositories: <span class="extype" name="scala.Seq">Seq</span>[<a href="Repository.html" class="extype" name="org.apache.maven.unbound.Repository">Repository</a>] = <span class="symbol">Seq[Repository]()</span></span>, <span name="build">build: <a href="Build.html" class="extype" name="org.apache.maven.unbound.Build">Build</a> = <span class="symbol">null</span></span>, <span name="reporting">reporting: <a href="Reporting.html" class="extype" name="org.apache.maven.unbound.Reporting">Reporting</a> = <span class="symbol">null</span></span>, <span name="profiles">profiles: <span class="extype" name="scala.Seq">Seq</span>[<a href="Profile.html" class="extype" name="org.apache.maven.unbound.Profile">Profile</a>] = <span class="symbol">Seq[Profile]()</span></span>)</span>
+        <span class="name">Project</span><span class="params">(<span name="childInheritUrl">childInheritUrl: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">true</span></span>, <span name="modelVersion">modelVersion: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="package$$SL$.html">SL.DefaultModelVersion</a></span></span></span>, <span name="parent">parent: <a href="Parent.html" class="extype" name="org.apache.maven.unbound.Parent">Parent</a> = <span class="symbol">null</span></span>, <span name="groupId">groupId: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="artifactId">artifactId: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="version">version: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="packaging">packaging: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol"><span class="name"><a href="package$$SL$.html">SL.JarStr</a></span></span></span>, <span name="name">name: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="description">description: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="url">url: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="inceptionYear">inceptionYear: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">null</span></span>, <span name="organization">organization: <a href="Organization.html" class="extype" name="org.apache.maven.unbound.Organization">Organization</a> = <span class="symbol">null</span></span>, <span name="licenses">licenses: <span class="extype" name="scala.Seq">Seq</span>[<a href="License.html" class="extype" name="org.apache.maven.unbound.License">License</a>] = <span class="symbol">Seq[License]()</span></span>, <span name="developers">developers: <span class="extype" name="scala.Seq">Seq</span>[<a href="Developer.html" class="extype" name="org.apache.maven.unbound.Developer">Developer</a>] = <span class="symbol">Seq[Developer]()</span></span>, <span name="contributors">contributors: <span class="extype" name="scala.Seq">Seq</span>[<a href="Contributor.html" class="extype" name="org.apache.maven.unbound.Contributor">Contributor</a>] = <span class="symbol">Seq[Contributor]()</span></span>, <span name="mailingLists">mailingLists: <span class="extype" name="scala.Seq">Seq</span>[<a href="MailingList.html" class="extype" name="org.apache.maven.unbound.MailingList">MailingList</a>] = <span class="symbol">Seq[MailingList]()</span></span>, <span name="modules">modules: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Seq[String]()</span></span>, <span name="scm">scm: <a href="Scm.html" class="extype" name="org.apache.maven.unbound.Scm">Scm</a> = <span class="symbol">null</span></span>, <span name="issueManagement">issueManagement: <a href="IssueManagement.html" class="extype" name="org.apache.maven.unbound.IssueManagement">IssueManagement</a> = <span class="symbol">null</span></span>, <span name="ciManagement">ciManagement: <a href="CIManagement.html" class="extype" name="org.apache.maven.unbound.CIManagement">CIManagement</a> = <span class="symbol">null</span></span>, <span name="distributionManagement">distributionManagement: <a href="DistributionManagement.html" class="extype" name="org.apache.maven.unbound.DistributionManagement">DistributionManagement</a> = <span class="symbol">null</span></span>, <span name="properties">properties: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Map[String, String]()</span></span>, <span name="dependencyManagement">dependencyManagement: <span class="extype" name="scala.Seq">Seq</span>[<a href="Dependency.html" class="extype" name="org.apache.maven.unbound.Dependency">Dependency</a>] = <span class="symbol">Seq[Dependency]()</span></span>, <span name="dependencies">dependencies: <span class="extype" name="scala.Seq">Seq</span>[<a href="Dependency.html" class="extype" name="org.apache.maven.unbound.Dependency">Dependency</a>] = <span class="symbol">Seq[Dependency]()</span></span>, <span name="repositories">repositories: <span class="extype" name="scala.Seq">Seq</span>[<a href="Repository.html" class="extype" name="org.apache.maven.unbound.Repository">Repository</a>] = <span class="symbol">Seq[Repository]()</span></span>, <span name="pluginRepositories">pluginRepositories: <span class="extype" name="scala.Seq">Seq</span>[<a href="Repository.html" class="extype" name="org.apache.maven.unbound.Repository">Repository</a>] = <span class="symbol">Seq[Repository]()</span></span>, <span name="build">build: <a href="Build.html" class="extype" name="org.apache.maven.unbound.Build">Build</a> = <span class="symbol">null</span></span>, <span name="reporting">reporting: <a href="Reporting.html" class="extype" name="org.apache.maven.unbound.Reporting">Reporting</a> = <span class="symbol">null</span></span>, <span name="profiles">profiles: <span class="extype" name="scala.Seq">Seq</span>[<a href="Profile.html" class="extype" name="org.apache.maven.unbound.Profile">Profile</a>] = <span class="symbol">Seq[Profile]()</span></span>)</span>
       </span>
       
       
@@ -842,6 +842,22 @@ for translating POM files as XML to and from Json and Hocon formats.
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="HoconProjectReader.html" class="extype" name="org.apache.maven.unbound.HoconProjectReader">HoconProjectReader</a></dd></dl></div>
+    </li><li name="org.apache.maven.unbound.Writable#encodeJson" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="encodeJson(s:String):String"></a><a id="encodeJson(String):String"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/Project.html#encodeJson(s:String):String" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">encodeJson</span><span class="params">(<span name="s">s: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Writable.html" class="extype" name="org.apache.maven.unbound.Writable">Writable</a></dd></dl></div>
     </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a><a id="eq(AnyRef):Boolean"></a>
       <span class="permalink">
@@ -880,6 +896,22 @@ for translating POM files as XML to and from Json and Hocon formats.
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="org.apache.maven.unbound.Project#generateConf" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="generateConf(comments:org.apache.maven.unbound.DocComments):String"></a><a id="generateConf(DocComments):String"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/Project.html#generateConf(comments:org.apache.maven.unbound.DocComments):String" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">generateConf</span><span class="params">(<span name="comments">comments: <a href="DocComments.html" class="extype" name="org.apache.maven.unbound.DocComments">DocComments</a></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      
+      
     </li><li name="scala.AnyRef#getClass" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <span class="permalink">
@@ -931,6 +963,24 @@ for translating POM files as XML to and from Json and Hocon formats.
       </span>
       
       
+    </li><li name="org.apache.maven.unbound.Writable#instanceToString" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="instanceToString[T](instance:T,cmts:org.apache.maven.unbound.DocComments)(implicitevidence$1:reflect.runtime.universe.TypeTag[T],implicitct:scala.reflect.ClassTag[T]):String"></a><a id="instanceToString[T](T,DocComments)(scala.reflect.api.JavaUniverse.TypeTag[T],ClassTag[T]):String"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/Project.html#instanceToString[T](instance:T,cmts:org.apache.maven.unbound.DocComments)(implicitevidence$1:reflect.runtime.universe.TypeTag[T],implicitct:scala.reflect.ClassTag[T]):String" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">instanceToString</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="instance">instance: <span class="extype" name="org.apache.maven.unbound.Writable.instanceToString.T">T</span></span>, <span name="cmts">cmts: <a href="DocComments.html" class="extype" name="org.apache.maven.unbound.DocComments">DocComments</a> = <span class="symbol">DocComments(Seq())</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="scala.reflect.api.TypeTags.TypeTag">scala.reflect.api.JavaUniverse.TypeTag</span>[<span class="extype" name="org.apache.maven.unbound.Writable.instanceToString.T">T</span>]</span>, <span name="ct">ct: <span class="extype" name="scala.reflect.ClassTag">ClassTag</span>[<span class="extype" name="org.apache.maven.unbound.Writable.instanceToString.T">T</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">Serializes this class to a String in the Hocon format
+</p><div class="fullcomment"><div class="comment cmt"><p>Serializes this class to a String in the Hocon format
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Writable.html" class="extype" name="org.apache.maven.unbound.Writable">Writable</a></dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <span class="permalink">
@@ -963,6 +1013,22 @@ for translating POM files as XML to and from Json and Hocon formats.
       </span>
       
       
+    </li><li name="org.apache.maven.unbound.Project#keyName" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="keyName:String"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/Project.html#keyName:String" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">keyName</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="org.apache.maven.unbound.Project">Project</a> → <a href="Writable.html" class="extype" name="org.apache.maven.unbound.Writable">Writable</a></dd></dl></div>
     </li><li name="org.apache.maven.unbound.Project#licenses" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="licenses:Seq[org.apache.maven.unbound.License]"></a><a id="licenses:Seq[License]"></a>
       <span class="permalink">
@@ -1356,6 +1422,22 @@ produce Json or XML.
       </span>
       
       
+    </li><li name="org.apache.maven.unbound.Writable#spacer" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="spacer:String"></a>
+      <span class="permalink">
+      <a href="../../../../org/apache/maven/unbound/Project.html#spacer:String" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">spacer</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Writable.html" class="extype" name="org.apache.maven.unbound.Writable">Writable</a></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">
@@ -1372,7 +1454,7 @@ produce Json or XML.
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="org.apache.maven.unbound.Writeable#toXmlString" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="org.apache.maven.unbound.Writable#toXmlString" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toXmlString:String"></a>
       <span class="permalink">
       <a href="../../../../org/apache/maven/unbound/Project.html#toXmlString:String" title="Permalink">
@@ -1391,7 +1473,7 @@ produce Json or XML.
 by the field xml
 </p><div class="fullcomment"><div class="comment cmt"><p>returns a string containing a pretty printed XML document represented
 by the field xml
-</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Writeable.html" class="extype" name="org.apache.maven.unbound.Writeable">Writeable</a></dd></dl></div>
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Writable.html" class="extype" name="org.apache.maven.unbound.Writable">Writable</a></dd></dl></div>
     </li><li name="org.apache.maven.unbound.Project#url" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="url:String"></a>
       <span class="permalink">
@@ -1492,7 +1574,7 @@ by the field xml
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="org.apache.maven.unbound.Writeable#writePOM" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="org.apache.maven.unbound.Writable#writePOM" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="writePOM(os:java.io.OutputStream,enc:String):Unit"></a><a id="writePOM(OutputStream,String):Unit"></a>
       <span class="permalink">
       <a href="../../../../org/apache/maven/unbound/Project.html#writePOM(os:java.io.OutputStream,enc:String):Unit" title="Permalink">
@@ -1507,8 +1589,8 @@ by the field xml
         <span class="name">writePOM</span><span class="params">(<span name="os">os: <span class="extype" name="java.io.OutputStream">OutputStream</span></span>, <span name="enc">enc: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       
-      <p class="shortcomment cmt">writes this object to the specified stream using the specified encoding</p><div class="fullcomment"><div class="comment cmt"><p>writes this object to the specified stream using the specified encoding</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Writeable.html" class="extype" name="org.apache.maven.unbound.Writeable">Writeable</a></dd></dl></div>
-    </li><li name="org.apache.maven.unbound.Writeable#writePOM" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <p class="shortcomment cmt">writes this object to the specified stream using the specified encoding</p><div class="fullcomment"><div class="comment cmt"><p>writes this object to the specified stream using the specified encoding</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Writable.html" class="extype" name="org.apache.maven.unbound.Writable">Writable</a></dd></dl></div>
+    </li><li name="org.apache.maven.unbound.Writable#writePOM" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="writePOM(filename:String):Unit"></a><a id="writePOM(String):Unit"></a>
       <span class="permalink">
       <a href="../../../../org/apache/maven/unbound/Project.html#writePOM(filename:String):Unit" title="Permalink">
@@ -1523,8 +1605,8 @@ by the field xml
         <span class="name">writePOM</span><span class="params">(<span name="filename">filename: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       
-      <p class="shortcomment cmt">writes this object to the specified file using UTF-8 character encoding</p><div class="fullcomment"><div class="comment cmt"><p>writes this object to the specified file using UTF-8 character encoding</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Writeable.html" class="extype" name="org.apache.maven.unbound.Writeable">Writeable</a></dd></dl></div>
-    </li><li name="org.apache.maven.unbound.Writeable#writePOM" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <p class="shortcomment cmt">writes this object to the specified file using UTF-8 character encoding</p><div class="fullcomment"><div class="comment cmt"><p>writes this object to the specified file using UTF-8 character encoding</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Writable.html" class="extype" name="org.apache.maven.unbound.Writable">Writable</a></dd></dl></div>
+    </li><li name="org.apache.maven.unbound.Writable#writePOM" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="writePOM(writer:java.io.Writer):Unit"></a><a id="writePOM(Writer):Unit"></a>
       <span class="permalink">
       <a href="../../../../org/apache/maven/unbound/Project.html#writePOM(writer:java.io.Writer):Unit" title="Permalink">
@@ -1539,7 +1621,7 @@ by the field xml
         <span class="name">writePOM</span><span class="params">(<span name="writer">writer: <span class="extype" name="java.io.Writer">Writer</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       
-      <p class="shortcomment cmt">writes this object into the provided Writer</p><div class="fullcomment"><div class="comment cmt"><p>writes this object into the provided Writer</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Writeable.html" class="extype" name="org.apache.maven.unbound.Writeable">Writeable</a></dd></dl></div>
+      <p class="shortcomment cmt">writes this object into the provided Writer</p><div class="fullcomment"><div class="comment cmt"><p>writes this object into the provided Writer</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Writable.html" class="extype" name="org.apache.maven.unbound.Writable">Writable</a></dd></dl></div>
     </li><li name="org.apache.maven.unbound.Project#xml" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="xml:scala.xml.Elem"></a><a id="xml:Elem"></a>
       <span class="permalink">
@@ -1555,7 +1637,7 @@ by the field xml
         <span class="name">xml</span><span class="result">: <span class="extype" name="scala.xml.Elem">Elem</span></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="org.apache.maven.unbound.Project">Project</a> → <a href="Writeable.html" class="extype" name="org.apache.maven.unbound.Writeable">Writeable</a></dd></dl></div>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="org.apache.maven.unbound.Project">Project</a> → <a href="Writable.html" class="extype" name="org.apache.maven.unbound.Writable">Writable</a></dd></dl></div>
     </li>
               </ol>
             </div>
@@ -1576,8 +1658,8 @@ by the field xml
               <h3>Inherited from <span class="extype" name="scala.Equals">Equals</span></h3>
             </div><div class="parent" name="org.apache.maven.unbound.HoconProjectReader">
               <h3>Inherited from <a href="HoconProjectReader.html" class="extype" name="org.apache.maven.unbound.HoconProjectReader">HoconProjectReader</a></h3>
-            </div><div class="parent" name="org.apache.maven.unbound.Writeable">
-              <h3>Inherited from <a href="Writeable.html" class="extype" name="org.apache.maven.unbound.Writeable">Writeable</a></h3>
+            </div><div class="parent" name="org.apache.maven.unbound.Writable">
+              <h3>Inherited from <a href="Writable.html" class="extype" name="org.apache.maven.unbound.Writable">Writable</a></h3>
             </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
             </div><div class="parent" name="scala.Any">

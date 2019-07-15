@@ -79,159 +79,160 @@
 </span>55 <span style=''></span><span style='background: #AEF1AE'>      new FileOutputStream(new File(at + hoconFileName)), &quot;UTF-8&quot;)</span><span style=''>
 </span>56 <span style=''>    val options = </span><span style='background: #AEF1AE'>ConfigRenderOptions.defaults().setOriginComments(false)</span><span style=''>
 </span>57 <span style=''>    try {
-</span>58 <span style=''>      </span><span style='background: #AEF1AE'>writer.write(hocon2.root().render(options))
-</span>59 <span style=''></span><span style='background: #AEF1AE'>      writer.flush()
-</span>60 <span style=''></span><span style='background: #AEF1AE'>      println(s&quot;generated ${at}${hoconFileName} from ${at}${xmlFileName}&quot;)</span><span style=''>
-</span>61 <span style=''>    } finally {
-</span>62 <span style=''>      </span><span style='background: #AEF1AE'>writer.close()</span><span style=''>
-</span>63 <span style=''>    }
-</span>64 <span style=''>    </span><span style='background: #AEF1AE'>project.modules.foreach { module =&gt;
-</span>65 <span style=''></span><span style='background: #AEF1AE'>      </span><span style='background: #F0ADAD'>recurseXml(at + File.separator + module, (s, c, p) =&gt;
-</span>66 <span style=''></span><span style='background: #F0ADAD'>        createPomHoconFiles(s, c, p))</span><span style='background: #AEF1AE'> }</span><span style=''>
-</span>67 <span style=''>  }
-</span>68 <span style=''>
-</span>69 <span style=''>  /**
-</span>70 <span style=''>    * Converts a project at path at from Json to XML by writing a new pom.xml
-</span>71 <span style=''>    * in at
-</span>72 <span style=''>    * @param at the path where we are writing the new pom.xml file
-</span>73 <span style=''>    * @param project the parsed form of the Project to write to disk
-</span>74 <span style=''>    */
-</span>75 <span style=''>  def createPomJsonFiles(at: String, project: Project): Unit = {
-</span>76 <span style=''>
-</span>77 <span style=''>    val fos = </span><span style='background: #AEF1AE'>new FileOutputStream(new File(at + jsonFileName))</span><span style=''>
-</span>78 <span style=''>    try {
-</span>79 <span style=''>      </span><span style='background: #AEF1AE'>JsonWriter.writePOM(project, fos)
-</span>80 <span style=''></span><span style='background: #AEF1AE'>      fos.flush()
-</span>81 <span style=''></span><span style='background: #AEF1AE'>      println(s&quot;generated ${at}${jsonFileName} from ${at}${xmlFileName}&quot;)</span><span style=''>
-</span>82 <span style=''>    } finally </span><span style='background: #AEF1AE'>{
-</span>83 <span style=''></span><span style='background: #AEF1AE'>      fos.close()
-</span>84 <span style=''></span><span style='background: #AEF1AE'>
-</span>85 <span style=''></span><span style='background: #AEF1AE'>      project.modules.foreach { module =&gt;
-</span>86 <span style=''></span><span style='background: #AEF1AE'>        </span><span style='background: #F0ADAD'>recurseXml(at + File.separator + module, (s, _, p) =&gt;
-</span>87 <span style=''></span><span style='background: #F0ADAD'>          createPomJsonFiles(s, p))</span><span style='background: #AEF1AE'> }
-</span>88 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
-</span>89 <span style=''>  }
-</span>90 <span style=''>
-</span>91 <span style=''>  /**
-</span>92 <span style=''>    * Recurses down a multi-module Maven project converting XML
-</span>93 <span style=''>    * POM files into Hocon or Json
-</span>94 <span style=''>    * @param s the path where to look for POM files
-</span>95 <span style=''>    * @param createFile a function to converts XML POM files into something
-</span>96 <span style=''>    * else and writing those new files to disk in the directory specified by s
-</span>97 <span style=''>    */
-</span>98 <span style=''>  def recurseXml(s: String, createFile: (String, DocComments, Project) =&gt; Unit):
-</span>99 <span style=''>      Unit = {
-</span>100 <span style=''>
-</span>101 <span style=''>    val xml = </span><span style='background: #AEF1AE'>new File(s + xmlFileName)</span><span style=''>
-</span>102 <span style=''>
-</span>103 <span style=''>    if (</span><span style='background: #AEF1AE'>xml.exists()</span><span style=''>) </span><span style='background: #AEF1AE'>{
-</span>104 <span style=''></span><span style='background: #AEF1AE'>
-</span>105 <span style=''></span><span style='background: #AEF1AE'>      val xmlIn = new FileInputStream(xml)
-</span>106 <span style=''></span><span style='background: #AEF1AE'>      try {
-</span>107 <span style=''></span><span style='background: #AEF1AE'>        // val root = scala.xml.XML.load(xmlIn)
-</span>108 <span style=''></span><span style='background: #AEF1AE'>        val parser =
-</span>109 <span style=''></span><span style='background: #AEF1AE'>          ConstructingParser.fromSource(Source.fromInputStream(xmlIn), true)
-</span>110 <span style=''></span><span style='background: #AEF1AE'>        val root = parser.document.docElem.asInstanceOf[Elem]
-</span>111 <span style=''></span><span style='background: #AEF1AE'>        // extract comments from root
-</span>112 <span style=''></span><span style='background: #AEF1AE'>        val comments = CommentExtractor(root)
-</span>113 <span style=''></span><span style='background: #AEF1AE'>        val project = new Project(root)
-</span>114 <span style=''></span><span style='background: #AEF1AE'>        // pass them to createFile which can insert them back into the
-</span>115 <span style=''></span><span style='background: #AEF1AE'>        // Config object before its rendered
-</span>116 <span style=''></span><span style='background: #AEF1AE'>        createFile(s, comments, project)
-</span>117 <span style=''></span><span style='background: #AEF1AE'>      } catch {
-</span>118 <span style=''></span><span style='background: #AEF1AE'>        case e: Exception =&gt; </span><span style='background: #F0ADAD'>e.printStackTrace()</span><span style='background: #AEF1AE'>
-</span>119 <span style=''></span><span style='background: #AEF1AE'>      } finally {
-</span>120 <span style=''></span><span style='background: #AEF1AE'>        xmlIn.close()
-</span>121 <span style=''></span><span style='background: #AEF1AE'>      }
-</span>122 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''> else {
-</span>123 <span style=''>
-</span>124 <span style=''>      </span><span style='background: #F0ADAD'>println(s&quot;no pom.json or pom.conf in ${s}&quot;)</span><span style=''>
-</span>125 <span style=''>    }
-</span>126 <span style=''>  }
-</span>127 <span style=''>
-</span>128 <span style=''>  /**
-</span>129 <span style=''>    * Converts a project at path at from XML to something else by writing a
-</span>130 <span style=''>    * new POM file in some other format
-</span>131 <span style=''>    * @param at the path where we are writing the new POM file
-</span>132 <span style=''>    * @param project the parsed form of the Project to write to disk
-</span>133 <span style=''>    * @param form the type of file to write
-</span>134 <span style=''>    */
-</span>135 <span style=''>  def createPomXmlFiles(at: String, project: Project, from: String): Unit = {
-</span>136 <span style=''>
-</span>137 <span style=''>    try {
-</span>138 <span style=''>      </span><span style='background: #AEF1AE'>project.writePOM(at + xmlFileName)
-</span>139 <span style=''></span><span style='background: #AEF1AE'>      println(s&quot;generated ${at}${xmlFileName} from ${at}${from}&quot;)</span><span style=''>
-</span>140 <span style=''>    } finally {
-</span>141 <span style=''>      </span><span style='background: #AEF1AE'>project.modules.foreach { mod =&gt; </span><span style='background: #F0ADAD'>recurse(at + File.separator + mod)</span><span style='background: #AEF1AE'> }</span><span style=''>
-</span>142 <span style=''>    }
-</span>143 <span style=''>  }
-</span>144 <span style=''>
-</span>145 <span style=''>  /**
-</span>146 <span style=''>    * Recurses down a multi-module Maven project converting Hocon or Json
-</span>147 <span style=''>    * POM files into XML.
-</span>148 <span style=''>    * @param s the path where to look for POM files
-</span>149 <span style=''>    */
-</span>150 <span style=''>  def recurse(s: String): Unit = {
-</span>151 <span style=''>
-</span>152 <span style=''>    val conf = </span><span style='background: #AEF1AE'>new File(s + hoconFileName)</span><span style=''>
-</span>153 <span style=''>    val json = </span><span style='background: #AEF1AE'>new File(s + jsonFileName)</span><span style=''>
-</span>154 <span style=''>
-</span>155 <span style=''>    if (</span><span style='background: #AEF1AE'>json.exists()</span><span style=''>) </span><span style='background: #AEF1AE'>{
-</span>156 <span style=''></span><span style='background: #AEF1AE'>
-</span>157 <span style=''></span><span style='background: #AEF1AE'>      val jsonStr = Source.fromFile(json).getLines.mkString
-</span>158 <span style=''></span><span style='background: #AEF1AE'>      val project = JsonReader.readPOM(jsonStr)
-</span>159 <span style=''></span><span style='background: #AEF1AE'>      createPomXmlFiles(s, project, jsonFileName)
-</span>160 <span style=''></span><span style='background: #AEF1AE'>
-</span>161 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''> else </span><span style='background: #AEF1AE'>if (conf.exists()) {
-</span>162 <span style=''></span><span style='background: #AEF1AE'>
-</span>163 <span style=''></span><span style='background: #AEF1AE'>      val config = loadConfig(conf)
-</span>164 <span style=''></span><span style='background: #AEF1AE'>      val project = HoconReader.readPOM(config)
-</span>165 <span style=''></span><span style='background: #AEF1AE'>      if (false) </span><span style='background: #F0ADAD'>{ // if to write comments or not
-</span>166 <span style=''></span><span style='background: #F0ADAD'>        val comments = CommentExtractor(config)
-</span>167 <span style=''></span><span style='background: #F0ADAD'>        try {
-</span>168 <span style=''></span><span style='background: #F0ADAD'>          (new Writeable {
-</span>169 <span style=''></span><span style='background: #F0ADAD'>            val xml = comments.insertXml(project.xml)
-</span>170 <span style=''></span><span style='background: #F0ADAD'>          }).writePOM(s + xmlFileName)
-</span>171 <span style=''></span><span style='background: #F0ADAD'>          println(s&quot;generated ${s}${xmlFileName} from ${s}${hoconFileName}&quot;)
-</span>172 <span style=''></span><span style='background: #F0ADAD'>        } finally {
-</span>173 <span style=''></span><span style='background: #F0ADAD'>          project.modules.foreach { mod =&gt; recurse(s + File.separator + mod) }
-</span>174 <span style=''></span><span style='background: #F0ADAD'>        }
-</span>175 <span style=''></span><span style='background: #F0ADAD'>      }</span><span style='background: #AEF1AE'> else {
-</span>176 <span style=''></span><span style='background: #AEF1AE'>        createPomXmlFiles(s, project, hoconFileName)
-</span>177 <span style=''></span><span style='background: #AEF1AE'>      }
-</span>178 <span style=''></span><span style='background: #AEF1AE'>    } else {
-</span>179 <span style=''></span><span style='background: #AEF1AE'>
-</span>180 <span style=''></span><span style='background: #AEF1AE'>      </span><span style='background: #F0ADAD'>println(s&quot;no pom.json or pom.conf in ${s}&quot;)</span><span style='background: #AEF1AE'>
-</span>181 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
-</span>182 <span style=''>  }
-</span>183 <span style=''>
-</span>184 <span style=''>  /** entry point of the CLI */
-</span>185 <span style=''>  def main(args: Array[String]): Unit = {
-</span>186 <span style=''>
-</span>187 <span style=''>    // generate json or hocon files
-</span>188 <span style=''>    if (</span><span style='background: #F0ADAD'>args.forall { _.startsWith(&quot;--generate&quot;) }</span><span style=''>) </span><span style='background: #F0ADAD'>{
-</span>189 <span style=''></span><span style='background: #F0ADAD'>
-</span>190 <span style=''></span><span style='background: #F0ADAD'>      // read xml and generate json
-</span>191 <span style=''></span><span style='background: #F0ADAD'>      if (args.find(_ == &quot;--generate-json&quot;).isDefined)
-</span>192 <span style=''></span><span style='background: #F0ADAD'>        recurseXml(&quot;.&quot;, (s, _, p) =&gt; createPomJsonFiles(s, p))
-</span>193 <span style=''></span><span style='background: #F0ADAD'>
-</span>194 <span style=''></span><span style='background: #F0ADAD'>      // read xml and generate hocon
-</span>195 <span style=''></span><span style='background: #F0ADAD'>      if (args.find(_ == &quot;--generate-hocon&quot;).isDefined)
-</span>196 <span style=''></span><span style='background: #F0ADAD'>        recurseXml(&quot;.&quot;, (s, c, p) =&gt; createPomHoconFiles(s, c, p))
-</span>197 <span style=''></span><span style='background: #F0ADAD'>
-</span>198 <span style=''></span><span style='background: #F0ADAD'>      val unkn = args.find { s =&gt;
-</span>199 <span style=''></span><span style='background: #F0ADAD'>        s != &quot;--generate-hocon&quot; &amp;&amp; s != &quot;--generate-json&quot; }
-</span>200 <span style=''></span><span style='background: #F0ADAD'>      if (unkn.isDefined) {
-</span>201 <span style=''></span><span style='background: #F0ADAD'>        println(
-</span>202 <span style=''></span><span style='background: #F0ADAD'>          &quot;can't generate with ${unkn.get}, supported types are hocon and json&quot;)
-</span>203 <span style=''></span><span style='background: #F0ADAD'>        println(&quot;use please use --generate-hocon or --generate-json&quot;)
-</span>204 <span style=''></span><span style='background: #F0ADAD'>      }
-</span>205 <span style=''></span><span style='background: #F0ADAD'>    }</span><span style=''> else {
-</span>206 <span style=''>
-</span>207 <span style=''>      </span><span style='background: #F0ADAD'>recurse(&quot;.&quot;)</span><span style=''>
-</span>208 <span style=''>    }
-</span>209 <span style=''>  }
-</span>210 <span style=''>}
+</span>58 <span style=''>      // writer.write(hocon2.root().render(options))
+</span>59 <span style=''>      </span><span style='background: #AEF1AE'>writer.write(project.generateConf(comments))
+</span>60 <span style=''></span><span style='background: #AEF1AE'>      writer.flush()
+</span>61 <span style=''></span><span style='background: #AEF1AE'>      println(s&quot;generated ${at}${hoconFileName} from ${at}${xmlFileName}&quot;)</span><span style=''>
+</span>62 <span style=''>    } finally {
+</span>63 <span style=''>      </span><span style='background: #AEF1AE'>writer.close()</span><span style=''>
+</span>64 <span style=''>    }
+</span>65 <span style=''>    </span><span style='background: #AEF1AE'>project.modules.foreach { module =&gt;
+</span>66 <span style=''></span><span style='background: #AEF1AE'>      </span><span style='background: #F0ADAD'>recurseXml(at + File.separator + module, (s, c, p) =&gt;
+</span>67 <span style=''></span><span style='background: #F0ADAD'>        createPomHoconFiles(s, c, p))</span><span style='background: #AEF1AE'> }</span><span style=''>
+</span>68 <span style=''>  }
+</span>69 <span style=''>
+</span>70 <span style=''>  /**
+</span>71 <span style=''>    * Converts a project at path at from Json to XML by writing a new pom.xml
+</span>72 <span style=''>    * in at
+</span>73 <span style=''>    * @param at the path where we are writing the new pom.xml file
+</span>74 <span style=''>    * @param project the parsed form of the Project to write to disk
+</span>75 <span style=''>    */
+</span>76 <span style=''>  def createPomJsonFiles(at: String, project: Project): Unit = {
+</span>77 <span style=''>
+</span>78 <span style=''>    val fos = </span><span style='background: #AEF1AE'>new FileOutputStream(new File(at + jsonFileName))</span><span style=''>
+</span>79 <span style=''>    try {
+</span>80 <span style=''>      </span><span style='background: #AEF1AE'>JsonWriter.writePOM(project, fos)
+</span>81 <span style=''></span><span style='background: #AEF1AE'>      fos.flush()
+</span>82 <span style=''></span><span style='background: #AEF1AE'>      println(s&quot;generated ${at}${jsonFileName} from ${at}${xmlFileName}&quot;)</span><span style=''>
+</span>83 <span style=''>    } finally </span><span style='background: #AEF1AE'>{
+</span>84 <span style=''></span><span style='background: #AEF1AE'>      fos.close()
+</span>85 <span style=''></span><span style='background: #AEF1AE'>
+</span>86 <span style=''></span><span style='background: #AEF1AE'>      project.modules.foreach { module =&gt;
+</span>87 <span style=''></span><span style='background: #AEF1AE'>        </span><span style='background: #F0ADAD'>recurseXml(at + File.separator + module, (s, _, p) =&gt;
+</span>88 <span style=''></span><span style='background: #F0ADAD'>          createPomJsonFiles(s, p))</span><span style='background: #AEF1AE'> }
+</span>89 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
+</span>90 <span style=''>  }
+</span>91 <span style=''>
+</span>92 <span style=''>  /**
+</span>93 <span style=''>    * Recurses down a multi-module Maven project converting XML
+</span>94 <span style=''>    * POM files into Hocon or Json
+</span>95 <span style=''>    * @param s the path where to look for POM files
+</span>96 <span style=''>    * @param createFile a function to converts XML POM files into something
+</span>97 <span style=''>    * else and writing those new files to disk in the directory specified by s
+</span>98 <span style=''>    */
+</span>99 <span style=''>  def recurseXml(s: String, createFile: (String, DocComments, Project) =&gt; Unit):
+</span>100 <span style=''>      Unit = {
+</span>101 <span style=''>
+</span>102 <span style=''>    val xml = </span><span style='background: #AEF1AE'>new File(s + xmlFileName)</span><span style=''>
+</span>103 <span style=''>
+</span>104 <span style=''>    if (</span><span style='background: #AEF1AE'>xml.exists()</span><span style=''>) </span><span style='background: #AEF1AE'>{
+</span>105 <span style=''></span><span style='background: #AEF1AE'>
+</span>106 <span style=''></span><span style='background: #AEF1AE'>      val xmlIn = new FileInputStream(xml)
+</span>107 <span style=''></span><span style='background: #AEF1AE'>      try {
+</span>108 <span style=''></span><span style='background: #AEF1AE'>        // val root = scala.xml.XML.load(xmlIn)
+</span>109 <span style=''></span><span style='background: #AEF1AE'>        val parser =
+</span>110 <span style=''></span><span style='background: #AEF1AE'>          ConstructingParser.fromSource(Source.fromInputStream(xmlIn), true)
+</span>111 <span style=''></span><span style='background: #AEF1AE'>        val root = parser.document.docElem.asInstanceOf[Elem]
+</span>112 <span style=''></span><span style='background: #AEF1AE'>        // extract comments from root
+</span>113 <span style=''></span><span style='background: #AEF1AE'>        val comments = CommentExtractor(root)
+</span>114 <span style=''></span><span style='background: #AEF1AE'>        val project = new Project(root)
+</span>115 <span style=''></span><span style='background: #AEF1AE'>        // pass them to createFile which can insert them back into the
+</span>116 <span style=''></span><span style='background: #AEF1AE'>        // Config object before its rendered
+</span>117 <span style=''></span><span style='background: #AEF1AE'>        createFile(s, comments, project)
+</span>118 <span style=''></span><span style='background: #AEF1AE'>      } catch {
+</span>119 <span style=''></span><span style='background: #AEF1AE'>        case e: Exception =&gt; </span><span style='background: #F0ADAD'>e.printStackTrace()</span><span style='background: #AEF1AE'>
+</span>120 <span style=''></span><span style='background: #AEF1AE'>      } finally {
+</span>121 <span style=''></span><span style='background: #AEF1AE'>        xmlIn.close()
+</span>122 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>123 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''> else {
+</span>124 <span style=''>
+</span>125 <span style=''>      </span><span style='background: #F0ADAD'>println(s&quot;no pom.json or pom.conf in ${s}&quot;)</span><span style=''>
+</span>126 <span style=''>    }
+</span>127 <span style=''>  }
+</span>128 <span style=''>
+</span>129 <span style=''>  /**
+</span>130 <span style=''>    * Converts a project at path at from XML to something else by writing a
+</span>131 <span style=''>    * new POM file in some other format
+</span>132 <span style=''>    * @param at the path where we are writing the new POM file
+</span>133 <span style=''>    * @param project the parsed form of the Project to write to disk
+</span>134 <span style=''>    * @param form the type of file to write
+</span>135 <span style=''>    */
+</span>136 <span style=''>  def createPomXmlFiles(at: String, project: Project, from: String): Unit = {
+</span>137 <span style=''>
+</span>138 <span style=''>    try {
+</span>139 <span style=''>      </span><span style='background: #AEF1AE'>project.writePOM(at + xmlFileName)
+</span>140 <span style=''></span><span style='background: #AEF1AE'>      println(s&quot;generated ${at}${xmlFileName} from ${at}${from}&quot;)</span><span style=''>
+</span>141 <span style=''>    } finally {
+</span>142 <span style=''>      </span><span style='background: #AEF1AE'>project.modules.foreach { mod =&gt; </span><span style='background: #F0ADAD'>recurse(at + File.separator + mod)</span><span style='background: #AEF1AE'> }</span><span style=''>
+</span>143 <span style=''>    }
+</span>144 <span style=''>  }
+</span>145 <span style=''>
+</span>146 <span style=''>  /**
+</span>147 <span style=''>    * Recurses down a multi-module Maven project converting Hocon or Json
+</span>148 <span style=''>    * POM files into XML.
+</span>149 <span style=''>    * @param s the path where to look for POM files
+</span>150 <span style=''>    */
+</span>151 <span style=''>  def recurse(s: String): Unit = {
+</span>152 <span style=''>
+</span>153 <span style=''>    val conf = </span><span style='background: #AEF1AE'>new File(s + hoconFileName)</span><span style=''>
+</span>154 <span style=''>    val json = </span><span style='background: #AEF1AE'>new File(s + jsonFileName)</span><span style=''>
+</span>155 <span style=''>
+</span>156 <span style=''>    if (</span><span style='background: #AEF1AE'>json.exists()</span><span style=''>) </span><span style='background: #AEF1AE'>{
+</span>157 <span style=''></span><span style='background: #AEF1AE'>
+</span>158 <span style=''></span><span style='background: #AEF1AE'>      val jsonStr = Source.fromFile(json).getLines.mkString
+</span>159 <span style=''></span><span style='background: #AEF1AE'>      val project = JsonReader.readPOM(jsonStr)
+</span>160 <span style=''></span><span style='background: #AEF1AE'>      createPomXmlFiles(s, project, jsonFileName)
+</span>161 <span style=''></span><span style='background: #AEF1AE'>
+</span>162 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''> else </span><span style='background: #AEF1AE'>if (conf.exists()) {
+</span>163 <span style=''></span><span style='background: #AEF1AE'>
+</span>164 <span style=''></span><span style='background: #AEF1AE'>      val config = loadConfig(conf)
+</span>165 <span style=''></span><span style='background: #AEF1AE'>      val project = HoconReader.readPOM(config)
+</span>166 <span style=''></span><span style='background: #AEF1AE'>      if (false) </span><span style='background: #F0ADAD'>{ // if to write comments or not
+</span>167 <span style=''></span><span style='background: #F0ADAD'>        val comments = CommentExtractor(config)
+</span>168 <span style=''></span><span style='background: #F0ADAD'>        try {
+</span>169 <span style=''></span><span style='background: #F0ADAD'>          (new Writable {
+</span>170 <span style=''></span><span style='background: #F0ADAD'>            val xml = comments.insertXml(project.xml)
+</span>171 <span style=''></span><span style='background: #F0ADAD'>          }).writePOM(s + xmlFileName)
+</span>172 <span style=''></span><span style='background: #F0ADAD'>          println(s&quot;generated ${s}${xmlFileName} from ${s}${hoconFileName}&quot;)
+</span>173 <span style=''></span><span style='background: #F0ADAD'>        } finally {
+</span>174 <span style=''></span><span style='background: #F0ADAD'>          project.modules.foreach { mod =&gt; recurse(s + File.separator + mod) }
+</span>175 <span style=''></span><span style='background: #F0ADAD'>        }
+</span>176 <span style=''></span><span style='background: #F0ADAD'>      }</span><span style='background: #AEF1AE'> else {
+</span>177 <span style=''></span><span style='background: #AEF1AE'>        createPomXmlFiles(s, project, hoconFileName)
+</span>178 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>179 <span style=''></span><span style='background: #AEF1AE'>    } else {
+</span>180 <span style=''></span><span style='background: #AEF1AE'>
+</span>181 <span style=''></span><span style='background: #AEF1AE'>      </span><span style='background: #F0ADAD'>println(s&quot;no pom.json or pom.conf in ${s}&quot;)</span><span style='background: #AEF1AE'>
+</span>182 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
+</span>183 <span style=''>  }
+</span>184 <span style=''>
+</span>185 <span style=''>  /** entry point of the CLI */
+</span>186 <span style=''>  def main(args: Array[String]): Unit = {
+</span>187 <span style=''>
+</span>188 <span style=''>    // generate json or hocon files
+</span>189 <span style=''>    if (</span><span style='background: #F0ADAD'>args.forall { _.startsWith(&quot;--generate&quot;) }</span><span style=''>) </span><span style='background: #F0ADAD'>{
+</span>190 <span style=''></span><span style='background: #F0ADAD'>
+</span>191 <span style=''></span><span style='background: #F0ADAD'>      // read xml and generate json
+</span>192 <span style=''></span><span style='background: #F0ADAD'>      if (args.find(_ == &quot;--generate-json&quot;).isDefined)
+</span>193 <span style=''></span><span style='background: #F0ADAD'>        recurseXml(&quot;.&quot;, (s, _, p) =&gt; createPomJsonFiles(s, p))
+</span>194 <span style=''></span><span style='background: #F0ADAD'>
+</span>195 <span style=''></span><span style='background: #F0ADAD'>      // read xml and generate hocon
+</span>196 <span style=''></span><span style='background: #F0ADAD'>      if (args.find(_ == &quot;--generate-hocon&quot;).isDefined)
+</span>197 <span style=''></span><span style='background: #F0ADAD'>        recurseXml(&quot;.&quot;, (s, c, p) =&gt; createPomHoconFiles(s, c, p))
+</span>198 <span style=''></span><span style='background: #F0ADAD'>
+</span>199 <span style=''></span><span style='background: #F0ADAD'>      val unkn = args.find { s =&gt;
+</span>200 <span style=''></span><span style='background: #F0ADAD'>        s != &quot;--generate-hocon&quot; &amp;&amp; s != &quot;--generate-json&quot; }
+</span>201 <span style=''></span><span style='background: #F0ADAD'>      if (unkn.isDefined) {
+</span>202 <span style=''></span><span style='background: #F0ADAD'>        println(
+</span>203 <span style=''></span><span style='background: #F0ADAD'>          &quot;can't generate with ${unkn.get}, supported types are hocon and json&quot;)
+</span>204 <span style=''></span><span style='background: #F0ADAD'>        println(&quot;use please use --generate-hocon or --generate-json&quot;)
+</span>205 <span style=''></span><span style='background: #F0ADAD'>      }
+</span>206 <span style=''></span><span style='background: #F0ADAD'>    }</span><span style=''> else {
+</span>207 <span style=''>
+</span>208 <span style=''>      </span><span style='background: #F0ADAD'>recurse(&quot;.&quot;)</span><span style=''>
+</span>209 <span style=''>    }
+</span>210 <span style=''>  }
+</span>211 <span style=''>}
 </span></pre>
           </div>
           <div class="tab-pane" id="statementlist">
@@ -524,9 +525,9 @@
           531
         </td>
         <td>
-          2297
+          2350
           -
-          2436
+          2490
         </td>
         <td>
           Block
@@ -536,43 +537,43 @@
         </td>
         <td style="background: #AEF1AE">
           {
-  writer.write(hocon2.root().render(options));
+  writer.write(project.generateConf(comments));
   writer.flush();
   scala.Predef.println(scala.StringContext.apply(&quot;generated &quot;, &quot;&quot;, &quot; from &quot;, &quot;&quot;, &quot;&quot;).s(at, Cli.this.hoconFileName, at, Cli.this.xmlFileName))
 }
         </td>
       </tr><tr>
         <td>
-          58
+          59
         </td>
         <td>
           519
         </td>
         <td>
-          2310
+          2363
           -
-          2339
+          2393
         </td>
         <td>
           Apply
         </td>
         <td>
-          com.typesafe.config.ConfigValue.render
+          org.apache.maven.unbound.Project.generateConf
         </td>
         <td style="background: #AEF1AE">
-          hocon2.root().render(options)
+          project.generateConf(comments)
         </td>
       </tr><tr>
         <td>
-          58
+          59
         </td>
         <td>
           520
         </td>
         <td>
-          2297
+          2350
           -
-          2340
+          2394
         </td>
         <td>
           Apply
@@ -581,19 +582,19 @@
           java.io.Writer.write
         </td>
         <td style="background: #AEF1AE">
-          writer.write(hocon2.root().render(options))
+          writer.write(project.generateConf(comments))
         </td>
       </tr><tr>
         <td>
-          59
+          60
         </td>
         <td>
           521
         </td>
         <td>
-          2347
+          2401
           -
-          2361
+          2415
         </td>
         <td>
           Apply
@@ -606,15 +607,15 @@
         </td>
       </tr><tr>
         <td>
-          60
+          61
         </td>
         <td>
           523
         </td>
         <td>
-          2393
+          2447
           -
-          2394
+          2448
         </td>
         <td>
           Literal
@@ -627,15 +628,15 @@
         </td>
       </tr><tr>
         <td>
-          60
+          61
         </td>
         <td>
           525
         </td>
         <td>
-          2420
+          2474
           -
-          2421
+          2475
         </td>
         <td>
           Literal
@@ -648,15 +649,15 @@
         </td>
       </tr><tr>
         <td>
-          60
+          61
         </td>
         <td>
           528
         </td>
         <td>
-          2422
+          2476
           -
-          2433
+          2487
         </td>
         <td>
           Select
@@ -669,15 +670,15 @@
         </td>
       </tr><tr>
         <td>
-          60
+          61
         </td>
         <td>
           522
         </td>
         <td>
-          2378
+          2432
           -
-          2389
+          2443
         </td>
         <td>
           Literal
@@ -690,15 +691,15 @@
         </td>
       </tr><tr>
         <td>
-          60
+          61
         </td>
         <td>
           530
         </td>
         <td>
-          2368
+          2422
           -
-          2436
+          2490
         </td>
         <td>
           Apply
@@ -711,15 +712,15 @@
         </td>
       </tr><tr>
         <td>
-          60
+          61
         </td>
         <td>
           524
         </td>
         <td>
-          2409
+          2463
           -
-          2416
+          2470
         </td>
         <td>
           Literal
@@ -732,15 +733,15 @@
         </td>
       </tr><tr>
         <td>
-          60
+          61
         </td>
         <td>
           527
         </td>
         <td>
-          2395
+          2449
           -
-          2408
+          2462
         </td>
         <td>
           Select
@@ -753,15 +754,15 @@
         </td>
       </tr><tr>
         <td>
-          60
+          61
         </td>
         <td>
           526
         </td>
         <td>
-          2434
+          2488
           -
-          2435
+          2489
         </td>
         <td>
           Literal
@@ -774,15 +775,15 @@
         </td>
       </tr><tr>
         <td>
-          60
+          61
         </td>
         <td>
           529
         </td>
         <td>
-          2376
+          2430
           -
-          2435
+          2489
         </td>
         <td>
           Apply
@@ -795,15 +796,15 @@
         </td>
       </tr><tr>
         <td>
-          62
+          63
         </td>
         <td>
           532
         </td>
         <td>
-          2459
+          2513
           -
-          2473
+          2527
         </td>
         <td>
           Apply
@@ -816,15 +817,15 @@
         </td>
       </tr><tr>
         <td>
-          62
+          63
         </td>
         <td>
           533
         </td>
         <td>
-          2459
+          2513
           -
-          2473
+          2527
         </td>
         <td>
           Block
@@ -837,15 +838,15 @@
         </td>
       </tr><tr>
         <td>
-          64
+          65
         </td>
         <td>
           537
         </td>
         <td>
-          2484
+          2538
           -
-          2619
+          2673
         </td>
         <td>
           Apply
@@ -858,15 +859,15 @@
         </td>
       </tr><tr>
         <td>
-          65
+          66
         </td>
         <td>
           534
         </td>
         <td>
-          2537
+          2591
           -
-          2565
+          2619
         </td>
         <td>
           Apply
@@ -879,15 +880,15 @@
         </td>
       </tr><tr>
         <td>
-          65
+          66
         </td>
         <td>
           536
         </td>
         <td>
-          2526
+          2580
           -
-          2617
+          2671
         </td>
         <td>
           Apply
@@ -900,15 +901,15 @@
         </td>
       </tr><tr>
         <td>
-          66
+          67
         </td>
         <td>
           535
         </td>
         <td>
-          2588
+          2642
           -
-          2616
+          2670
         </td>
         <td>
           Apply
@@ -921,15 +922,15 @@
         </td>
       </tr><tr>
         <td>
-          77
+          78
         </td>
         <td>
           541
         </td>
         <td>
-          2944
+          2998
           -
-          2993
+          3047
         </td>
         <td>
           Apply
@@ -942,15 +943,15 @@
         </td>
       </tr><tr>
         <td>
-          77
+          78
         </td>
         <td>
           540
         </td>
         <td>
-          2965
+          3019
           -
-          2992
+          3046
         </td>
         <td>
           Apply
@@ -963,15 +964,15 @@
         </td>
       </tr><tr>
         <td>
-          77
+          78
         </td>
         <td>
           539
         </td>
         <td>
-          2974
+          3028
           -
-          2991
+          3045
         </td>
         <td>
           Apply
@@ -984,15 +985,15 @@
         </td>
       </tr><tr>
         <td>
-          77
+          78
         </td>
         <td>
           538
         </td>
         <td>
-          2979
+          3033
           -
-          2991
+          3045
         </td>
         <td>
           Select
@@ -1005,15 +1006,15 @@
         </td>
       </tr><tr>
         <td>
-          78
+          79
         </td>
         <td>
           554
         </td>
         <td>
-          3010
+          3064
           -
-          3135
+          3189
         </td>
         <td>
           Block
@@ -1030,15 +1031,15 @@
         </td>
       </tr><tr>
         <td>
-          79
+          80
         </td>
         <td>
           543
         </td>
         <td>
-          3010
+          3064
           -
-          3043
+          3097
         </td>
         <td>
           Apply
@@ -1051,15 +1052,15 @@
         </td>
       </tr><tr>
         <td>
-          79
+          80
         </td>
         <td>
           542
         </td>
         <td>
-          3021
+          3075
           -
-          3021
+          3075
         </td>
         <td>
           Select
@@ -1072,15 +1073,15 @@
         </td>
       </tr><tr>
         <td>
-          80
+          81
         </td>
         <td>
           544
         </td>
         <td>
-          3050
+          3104
           -
-          3061
+          3115
         </td>
         <td>
           Apply
@@ -1093,15 +1094,15 @@
         </td>
       </tr><tr>
         <td>
-          81
+          82
         </td>
         <td>
           550
         </td>
         <td>
-          3095
+          3149
           -
-          3107
+          3161
         </td>
         <td>
           Select
@@ -1114,15 +1115,15 @@
         </td>
       </tr><tr>
         <td>
-          81
+          82
         </td>
         <td>
           549
         </td>
         <td>
-          3133
+          3187
           -
-          3134
+          3188
         </td>
         <td>
           Literal
@@ -1135,15 +1136,15 @@
         </td>
       </tr><tr>
         <td>
-          81
+          82
         </td>
         <td>
           552
         </td>
         <td>
-          3076
+          3130
           -
-          3134
+          3188
         </td>
         <td>
           Apply
@@ -1156,15 +1157,15 @@
         </td>
       </tr><tr>
         <td>
-          81
+          82
         </td>
         <td>
           546
         </td>
         <td>
-          3093
+          3147
           -
-          3094
+          3148
         </td>
         <td>
           Literal
@@ -1177,15 +1178,15 @@
         </td>
       </tr><tr>
         <td>
-          81
+          82
         </td>
         <td>
           548
         </td>
         <td>
-          3119
+          3173
           -
-          3120
+          3174
         </td>
         <td>
           Literal
@@ -1198,15 +1199,15 @@
         </td>
       </tr><tr>
         <td>
-          81
+          82
         </td>
         <td>
           551
         </td>
         <td>
-          3121
+          3175
           -
-          3132
+          3186
         </td>
         <td>
           Select
@@ -1219,15 +1220,15 @@
         </td>
       </tr><tr>
         <td>
-          81
+          82
         </td>
         <td>
           545
         </td>
         <td>
-          3078
+          3132
           -
-          3089
+          3143
         </td>
         <td>
           Literal
@@ -1240,15 +1241,15 @@
         </td>
       </tr><tr>
         <td>
-          81
+          82
         </td>
         <td>
           553
         </td>
         <td>
-          3068
+          3122
           -
-          3135
+          3189
         </td>
         <td>
           Apply
@@ -1261,15 +1262,15 @@
         </td>
       </tr><tr>
         <td>
-          81
+          82
         </td>
         <td>
           547
         </td>
         <td>
-          3108
+          3162
           -
-          3115
+          3169
         </td>
         <td>
           Literal
@@ -1282,15 +1283,15 @@
         </td>
       </tr><tr>
         <td>
-          82
+          83
         </td>
         <td>
           560
         </td>
         <td>
-          3150
+          3204
           -
-          3318
+          3372
         </td>
         <td>
           Block
@@ -1306,15 +1307,15 @@
         </td>
       </tr><tr>
         <td>
-          83
+          84
         </td>
         <td>
           555
         </td>
         <td>
-          3158
+          3212
           -
-          3169
+          3223
         </td>
         <td>
           Apply
@@ -1327,15 +1328,15 @@
         </td>
       </tr><tr>
         <td>
-          85
+          86
         </td>
         <td>
           559
         </td>
         <td>
-          3177
+          3231
           -
-          3312
+          3366
         </td>
         <td>
           Apply
@@ -1348,15 +1349,15 @@
         </td>
       </tr><tr>
         <td>
-          86
+          87
         </td>
         <td>
           558
         </td>
         <td>
-          3221
+          3275
           -
-          3310
+          3364
         </td>
         <td>
           Apply
@@ -1369,15 +1370,15 @@
         </td>
       </tr><tr>
         <td>
-          86
+          87
         </td>
         <td>
           556
         </td>
         <td>
-          3232
+          3286
           -
-          3260
+          3314
         </td>
         <td>
           Apply
@@ -1390,15 +1391,15 @@
         </td>
       </tr><tr>
         <td>
-          87
+          88
         </td>
         <td>
           557
         </td>
         <td>
-          3285
+          3339
           -
-          3309
+          3363
         </td>
         <td>
           Apply
@@ -1411,15 +1412,15 @@
         </td>
       </tr><tr>
         <td>
-          101
+          102
         </td>
         <td>
           561
         </td>
         <td>
-          3767
+          3821
           -
-          3778
+          3832
         </td>
         <td>
           Select
@@ -1432,15 +1433,15 @@
         </td>
       </tr><tr>
         <td>
-          101
+          102
         </td>
         <td>
           563
         </td>
         <td>
-          3754
+          3808
           -
-          3779
+          3833
         </td>
         <td>
           Apply
@@ -1453,15 +1454,15 @@
         </td>
       </tr><tr>
         <td>
-          101
+          102
         </td>
         <td>
           562
         </td>
         <td>
-          3763
+          3817
           -
-          3778
+          3832
         </td>
         <td>
           Apply
@@ -1474,15 +1475,15 @@
         </td>
       </tr><tr>
         <td>
-          103
+          104
         </td>
         <td>
           577
         </td>
         <td>
-          3803
+          3857
           -
-          4468
+          4522
         </td>
         <td>
           Block
@@ -1506,15 +1507,15 @@
         </td>
       </tr><tr>
         <td>
-          103
+          104
         </td>
         <td>
           564
         </td>
         <td>
-          3789
+          3843
           -
-          3801
+          3855
         </td>
         <td>
           Apply
@@ -1527,15 +1528,15 @@
         </td>
       </tr><tr>
         <td>
-          105
+          106
         </td>
         <td>
           565
         </td>
         <td>
-          3824
+          3878
           -
-          3848
+          3902
         </td>
         <td>
           Apply
@@ -1548,15 +1549,15 @@
         </td>
       </tr><tr>
         <td>
-          106
+          107
         </td>
         <td>
           573
         </td>
         <td>
-          3917
+          3971
           -
-          4349
+          4403
         </td>
         <td>
           Block
@@ -1575,15 +1576,15 @@
         </td>
       </tr><tr>
         <td>
-          109
+          110
         </td>
         <td>
           568
         </td>
         <td>
-          3940
+          3994
           -
-          4006
+          4060
         </td>
         <td>
           Apply
@@ -1596,15 +1597,15 @@
         </td>
       </tr><tr>
         <td>
-          109
+          110
         </td>
         <td>
           567
         </td>
         <td>
-          4001
+          4055
           -
-          4005
+          4059
         </td>
         <td>
           Literal
@@ -1617,15 +1618,15 @@
         </td>
       </tr><tr>
         <td>
-          109
+          110
         </td>
         <td>
           566
         </td>
         <td>
-          3970
+          4024
           -
-          3999
+          4053
         </td>
         <td>
           ApplyToImplicitArgs
@@ -1638,15 +1639,15 @@
         </td>
       </tr><tr>
         <td>
-          110
+          111
         </td>
         <td>
           569
         </td>
         <td>
-          4026
+          4080
           -
-          4068
+          4122
         </td>
         <td>
           TypeApply
@@ -1659,15 +1660,15 @@
         </td>
       </tr><tr>
         <td>
-          112
+          113
         </td>
         <td>
           570
         </td>
         <td>
-          4130
+          4184
           -
-          4152
+          4206
         </td>
         <td>
           Apply
@@ -1680,15 +1681,15 @@
         </td>
       </tr><tr>
         <td>
-          113
+          114
         </td>
         <td>
           571
         </td>
         <td>
-          4175
+          4229
           -
-          4192
+          4246
         </td>
         <td>
           Apply
@@ -1701,15 +1702,15 @@
         </td>
       </tr><tr>
         <td>
-          116
+          117
         </td>
         <td>
           572
         </td>
         <td>
-          4317
+          4371
           -
-          4349
+          4403
         </td>
         <td>
           Apply
@@ -1722,15 +1723,15 @@
         </td>
       </tr><tr>
         <td>
-          118
+          119
         </td>
         <td>
           574
         </td>
         <td>
-          4395
+          4449
           -
-          4414
+          4468
         </td>
         <td>
           Apply
@@ -1743,15 +1744,15 @@
         </td>
       </tr><tr>
         <td>
-          120
+          121
         </td>
         <td>
           576
         </td>
         <td>
-          4441
+          4495
           -
-          4454
+          4508
         </td>
         <td>
           Block
@@ -1764,15 +1765,15 @@
         </td>
       </tr><tr>
         <td>
-          120
+          121
         </td>
         <td>
           575
         </td>
         <td>
-          4441
+          4495
           -
-          4454
+          4508
         </td>
         <td>
           Apply
@@ -1785,15 +1786,15 @@
         </td>
       </tr><tr>
         <td>
-          124
+          125
         </td>
         <td>
           579
         </td>
         <td>
-          4483
+          4537
           -
-          4526
+          4580
         </td>
         <td>
           Apply
@@ -1806,15 +1807,15 @@
         </td>
       </tr><tr>
         <td>
-          124
+          125
         </td>
         <td>
           578
         </td>
         <td>
-          4491
+          4545
           -
-          4525
+          4579
         </td>
         <td>
           Apply
@@ -1827,15 +1828,15 @@
         </td>
       </tr><tr>
         <td>
-          124
+          125
         </td>
         <td>
           580
         </td>
         <td>
-          4483
+          4537
           -
-          4526
+          4580
         </td>
         <td>
           Block
@@ -1848,15 +1849,15 @@
         </td>
       </tr><tr>
         <td>
-          137
+          138
         </td>
         <td>
           592
         </td>
         <td>
-          4938
+          4992
           -
-          5038
+          5092
         </td>
         <td>
           Block
@@ -1872,15 +1873,15 @@
         </td>
       </tr><tr>
         <td>
-          138
+          139
         </td>
         <td>
           582
         </td>
         <td>
-          4955
+          5009
           -
-          4971
+          5025
         </td>
         <td>
           Apply
@@ -1893,15 +1894,15 @@
         </td>
       </tr><tr>
         <td>
-          138
+          139
         </td>
         <td>
           581
         </td>
         <td>
-          4960
+          5014
           -
-          4971
+          5025
         </td>
         <td>
           Select
@@ -1914,36 +1915,36 @@
         </td>
       </tr><tr>
         <td>
-          138
+          139
         </td>
         <td>
           583
         </td>
         <td>
-          4938
+          4992
           -
-          4972
+          5026
         </td>
         <td>
           Apply
         </td>
         <td>
-          org.apache.maven.unbound.Writeable.writePOM
+          org.apache.maven.unbound.Writable.writePOM
         </td>
         <td style="background: #AEF1AE">
           project.writePOM(at.+(Cli.this.xmlFileName))
         </td>
       </tr><tr>
         <td>
-          139
+          140
         </td>
         <td>
           585
         </td>
         <td>
-          5004
+          5058
           -
-          5005
+          5059
         </td>
         <td>
           Literal
@@ -1956,15 +1957,15 @@
         </td>
       </tr><tr>
         <td>
-          139
+          140
         </td>
         <td>
           588
         </td>
         <td>
-          5036
+          5090
           -
-          5037
+          5091
         </td>
         <td>
           Literal
@@ -1977,15 +1978,15 @@
         </td>
       </tr><tr>
         <td>
-          139
+          140
         </td>
         <td>
           591
         </td>
         <td>
-          4979
+          5033
           -
-          5038
+          5092
         </td>
         <td>
           Apply
@@ -1998,15 +1999,15 @@
         </td>
       </tr><tr>
         <td>
-          139
+          140
         </td>
         <td>
           590
         </td>
         <td>
-          4987
+          5041
           -
-          5037
+          5091
         </td>
         <td>
           Apply
@@ -2019,15 +2020,15 @@
         </td>
       </tr><tr>
         <td>
-          139
+          140
         </td>
         <td>
           584
         </td>
         <td>
-          4989
+          5043
           -
-          5000
+          5054
         </td>
         <td>
           Literal
@@ -2040,15 +2041,15 @@
         </td>
       </tr><tr>
         <td>
-          139
+          140
         </td>
         <td>
           587
         </td>
         <td>
-          5029
+          5083
           -
-          5030
+          5084
         </td>
         <td>
           Literal
@@ -2061,15 +2062,15 @@
         </td>
       </tr><tr>
         <td>
-          139
+          140
         </td>
         <td>
           586
         </td>
         <td>
-          5018
+          5072
           -
-          5025
+          5079
         </td>
         <td>
           Literal
@@ -2082,15 +2083,15 @@
         </td>
       </tr><tr>
         <td>
-          139
+          140
         </td>
         <td>
           589
         </td>
         <td>
-          5006
+          5060
           -
-          5017
+          5071
         </td>
         <td>
           Select
@@ -2103,15 +2104,15 @@
         </td>
       </tr><tr>
         <td>
-          141
+          142
         </td>
         <td>
           594
         </td>
         <td>
-          5094
+          5148
           -
-          5128
+          5182
         </td>
         <td>
           Apply
@@ -2124,15 +2125,15 @@
         </td>
       </tr><tr>
         <td>
-          141
+          142
         </td>
         <td>
           593
         </td>
         <td>
-          5102
+          5156
           -
-          5127
+          5181
         </td>
         <td>
           Apply
@@ -2145,15 +2146,15 @@
         </td>
       </tr><tr>
         <td>
-          141
+          142
         </td>
         <td>
           596
         </td>
         <td>
-          5061
+          5115
           -
-          5130
+          5184
         </td>
         <td>
           Block
@@ -2166,15 +2167,15 @@
         </td>
       </tr><tr>
         <td>
-          141
+          142
         </td>
         <td>
           595
         </td>
         <td>
-          5061
+          5115
           -
-          5130
+          5184
         </td>
         <td>
           Apply
@@ -2187,15 +2188,15 @@
         </td>
       </tr><tr>
         <td>
-          152
+          153
         </td>
         <td>
           597
         </td>
         <td>
-          5371
+          5425
           -
-          5384
+          5438
         </td>
         <td>
           Select
@@ -2208,15 +2209,15 @@
         </td>
       </tr><tr>
         <td>
-          152
+          153
         </td>
         <td>
           599
         </td>
         <td>
-          5358
+          5412
           -
-          5385
+          5439
         </td>
         <td>
           Apply
@@ -2229,15 +2230,15 @@
         </td>
       </tr><tr>
         <td>
-          152
+          153
         </td>
         <td>
           598
         </td>
         <td>
-          5367
+          5421
           -
-          5384
+          5438
         </td>
         <td>
           Apply
@@ -2250,15 +2251,15 @@
         </td>
       </tr><tr>
         <td>
-          153
+          154
         </td>
         <td>
           600
         </td>
         <td>
-          5414
+          5468
           -
-          5426
+          5480
         </td>
         <td>
           Select
@@ -2271,15 +2272,15 @@
         </td>
       </tr><tr>
         <td>
-          153
+          154
         </td>
         <td>
           602
         </td>
         <td>
-          5401
+          5455
           -
-          5427
+          5481
         </td>
         <td>
           Apply
@@ -2292,15 +2293,15 @@
         </td>
       </tr><tr>
         <td>
-          153
+          154
         </td>
         <td>
           601
         </td>
         <td>
-          5410
+          5464
           -
-          5426
+          5480
         </td>
         <td>
           Apply
@@ -2313,15 +2314,15 @@
         </td>
       </tr><tr>
         <td>
-          155
+          156
         </td>
         <td>
           603
         </td>
         <td>
-          5437
+          5491
           -
-          5450
+          5504
         </td>
         <td>
           Apply
@@ -2334,15 +2335,15 @@
         </td>
       </tr><tr>
         <td>
-          155
+          156
         </td>
         <td>
           608
         </td>
         <td>
-          5452
+          5506
           -
-          5619
+          5673
         </td>
         <td>
           Block
@@ -2359,15 +2360,15 @@
         </td>
       </tr><tr>
         <td>
-          157
+          158
         </td>
         <td>
           604
         </td>
         <td>
-          5475
+          5529
           -
-          5514
+          5568
         </td>
         <td>
           Select
@@ -2380,15 +2381,15 @@
         </td>
       </tr><tr>
         <td>
-          158
+          159
         </td>
         <td>
           605
         </td>
         <td>
-          5535
+          5589
           -
-          5562
+          5616
         </td>
         <td>
           Apply
@@ -2401,15 +2402,15 @@
         </td>
       </tr><tr>
         <td>
-          159
+          160
         </td>
         <td>
           606
         </td>
         <td>
-          5599
+          5653
           -
-          5611
+          5665
         </td>
         <td>
           Select
@@ -2422,15 +2423,15 @@
         </td>
       </tr><tr>
         <td>
-          159
+          160
         </td>
         <td>
           607
         </td>
         <td>
-          5569
+          5623
           -
-          5612
+          5666
         </td>
         <td>
           Apply
@@ -2443,15 +2444,15 @@
         </td>
       </tr><tr>
         <td>
-          161
+          162
         </td>
         <td>
           609
         </td>
         <td>
-          5629
+          5683
           -
-          5642
+          5696
         </td>
         <td>
           Apply
@@ -2464,15 +2465,15 @@
         </td>
       </tr><tr>
         <td>
-          161
+          162
         </td>
         <td>
           641
         </td>
         <td>
-          5625
+          5679
           -
-          6294
+          6347
         </td>
         <td>
           If
@@ -2490,8 +2491,8 @@
         val comments: org.apache.maven.unbound.DocComments = CommentExtractor.apply(config);
         try {
           {
-  final class $anon extends AnyRef with org.apache.maven.unbound.Writeable {
-    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writeable&gt; = {
+  final class $anon extends AnyRef with org.apache.maven.unbound.Writable {
+    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writable&gt; = {
       $anon.super.&lt;init&gt;();
       ()
     };
@@ -2511,15 +2512,15 @@ else
         </td>
       </tr><tr>
         <td>
-          161
+          162
         </td>
         <td>
           637
         </td>
         <td>
-          5644
+          5698
           -
-          6230
+          6283
         </td>
         <td>
           Block
@@ -2536,8 +2537,8 @@ else
       val comments: org.apache.maven.unbound.DocComments = CommentExtractor.apply(config);
       try {
         {
-  final class $anon extends AnyRef with org.apache.maven.unbound.Writeable {
-    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writeable&gt; = {
+  final class $anon extends AnyRef with org.apache.maven.unbound.Writable {
+    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writable&gt; = {
       $anon.super.&lt;init&gt;();
       ()
     };
@@ -2555,15 +2556,15 @@ else
         </td>
       </tr><tr>
         <td>
-          163
+          164
         </td>
         <td>
           610
         </td>
         <td>
-          5666
+          5720
           -
-          5682
+          5736
         </td>
         <td>
           Apply
@@ -2576,15 +2577,15 @@ else
         </td>
       </tr><tr>
         <td>
-          164
+          165
         </td>
         <td>
           611
         </td>
         <td>
-          5703
+          5757
           -
-          5730
+          5784
         </td>
         <td>
           Apply
@@ -2597,15 +2598,15 @@ else
         </td>
       </tr><tr>
         <td>
-          165
+          166
         </td>
         <td>
           612
         </td>
         <td>
-          5741
+          5795
           -
-          5746
+          5800
         </td>
         <td>
           Literal
@@ -2618,15 +2619,15 @@ else
         </td>
       </tr><tr>
         <td>
-          165
+          166
         </td>
         <td>
           633
         </td>
         <td>
-          5748
+          5802
           -
-          6156
+          6209
         </td>
         <td>
           Block
@@ -2639,8 +2640,8 @@ else
   val comments: org.apache.maven.unbound.DocComments = CommentExtractor.apply(config);
   try {
     {
-  final class $anon extends AnyRef with org.apache.maven.unbound.Writeable {
-    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writeable&gt; = {
+  final class $anon extends AnyRef with org.apache.maven.unbound.Writable {
+    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writable&gt; = {
       $anon.super.&lt;init&gt;();
       ()
     };
@@ -2655,15 +2656,15 @@ else
         </td>
       </tr><tr>
         <td>
-          166
+          167
         </td>
         <td>
           613
         </td>
         <td>
-          5804
+          5858
           -
-          5828
+          5882
         </td>
         <td>
           Apply
@@ -2676,15 +2677,15 @@ else
         </td>
       </tr><tr>
         <td>
-          167
+          168
         </td>
         <td>
           628
         </td>
         <td>
-          5854
+          5908
           -
-          6039
+          6092
         </td>
         <td>
           Block
@@ -2695,8 +2696,8 @@ else
         <td style="background: #F0ADAD">
           {
   {
-  final class $anon extends AnyRef with org.apache.maven.unbound.Writeable {
-    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writeable&gt; = {
+  final class $anon extends AnyRef with org.apache.maven.unbound.Writable {
+    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writable&gt; = {
       $anon.super.&lt;init&gt;();
       ()
     };
@@ -2710,15 +2711,15 @@ else
         </td>
       </tr><tr>
         <td>
-          168
+          169
         </td>
         <td>
           615
         </td>
         <td>
-          5854
+          5908
           -
-          5857
+          5911
         </td>
         <td>
           Apply
@@ -2731,15 +2732,15 @@ else
         </td>
       </tr><tr>
         <td>
-          169
+          170
         </td>
         <td>
           614
         </td>
         <td>
-          5892
+          5945
           -
-          5923
+          5976
         </td>
         <td>
           Apply
@@ -2752,26 +2753,26 @@ else
         </td>
       </tr><tr>
         <td>
-          170
+          171
         </td>
         <td>
           618
         </td>
         <td>
-          5854
+          5908
           -
-          5962
+          6015
         </td>
         <td>
           Apply
         </td>
         <td>
-          org.apache.maven.unbound.Writeable.writePOM
+          org.apache.maven.unbound.Writable.writePOM
         </td>
         <td style="background: #F0ADAD">
           {
-  final class $anon extends AnyRef with org.apache.maven.unbound.Writeable {
-    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writeable&gt; = {
+  final class $anon extends AnyRef with org.apache.maven.unbound.Writable {
+    def &lt;init&gt;(): &lt;$anon: org.apache.maven.unbound.Writable&gt; = {
       $anon.super.&lt;init&gt;();
       ()
     };
@@ -2783,15 +2784,15 @@ else
         </td>
       </tr><tr>
         <td>
-          170
+          171
         </td>
         <td>
           617
         </td>
         <td>
-          5946
+          5999
           -
-          5961
+          6014
         </td>
         <td>
           Apply
@@ -2804,15 +2805,15 @@ else
         </td>
       </tr><tr>
         <td>
-          170
+          171
         </td>
         <td>
           616
         </td>
         <td>
-          5950
+          6003
           -
-          5961
+          6014
         </td>
         <td>
           Select
@@ -2825,15 +2826,15 @@ else
         </td>
       </tr><tr>
         <td>
-          171
+          172
         </td>
         <td>
           627
         </td>
         <td>
-          5973
+          6026
           -
-          6039
+          6092
         </td>
         <td>
           Apply
@@ -2846,15 +2847,15 @@ else
         </td>
       </tr><tr>
         <td>
-          171
+          172
         </td>
         <td>
           621
         </td>
         <td>
-          6011
+          6064
           -
-          6018
+          6071
         </td>
         <td>
           Literal
@@ -2867,15 +2868,15 @@ else
         </td>
       </tr><tr>
         <td>
-          171
+          172
         </td>
         <td>
           624
         </td>
         <td>
-          5999
+          6052
           -
-          6010
+          6063
         </td>
         <td>
           Select
@@ -2888,15 +2889,15 @@ else
         </td>
       </tr><tr>
         <td>
-          171
+          172
         </td>
         <td>
           623
         </td>
         <td>
-          6037
+          6090
           -
-          6038
+          6091
         </td>
         <td>
           Literal
@@ -2909,15 +2910,15 @@ else
         </td>
       </tr><tr>
         <td>
-          171
+          172
         </td>
         <td>
           626
         </td>
         <td>
-          5981
+          6034
           -
-          6038
+          6091
         </td>
         <td>
           Apply
@@ -2930,15 +2931,15 @@ else
         </td>
       </tr><tr>
         <td>
-          171
+          172
         </td>
         <td>
           620
         </td>
         <td>
-          5997
+          6050
           -
-          5998
+          6051
         </td>
         <td>
           Literal
@@ -2951,15 +2952,15 @@ else
         </td>
       </tr><tr>
         <td>
-          171
+          172
         </td>
         <td>
           622
         </td>
         <td>
-          6021
+          6074
           -
-          6022
+          6075
         </td>
         <td>
           Literal
@@ -2972,15 +2973,15 @@ else
         </td>
       </tr><tr>
         <td>
-          171
+          172
         </td>
         <td>
           625
         </td>
         <td>
-          6023
+          6076
           -
-          6036
+          6089
         </td>
         <td>
           Select
@@ -2993,15 +2994,15 @@ else
         </td>
       </tr><tr>
         <td>
-          171
+          172
         </td>
         <td>
           619
         </td>
         <td>
-          5983
+          6036
           -
-          5994
+          6047
         </td>
         <td>
           Literal
@@ -3014,15 +3015,15 @@ else
         </td>
       </tr><tr>
         <td>
-          173
+          174
         </td>
         <td>
           630
         </td>
         <td>
-          6103
+          6156
           -
-          6136
+          6189
         </td>
         <td>
           Apply
@@ -3035,15 +3036,15 @@ else
         </td>
       </tr><tr>
         <td>
-          173
+          174
         </td>
         <td>
           632
         </td>
         <td>
-          6070
+          6123
           -
-          6138
+          6191
         </td>
         <td>
           Block
@@ -3056,15 +3057,15 @@ else
         </td>
       </tr><tr>
         <td>
-          173
+          174
         </td>
         <td>
           629
         </td>
         <td>
-          6111
+          6164
           -
-          6135
+          6188
         </td>
         <td>
           Apply
@@ -3077,15 +3078,15 @@ else
         </td>
       </tr><tr>
         <td>
-          173
+          174
         </td>
         <td>
           631
         </td>
         <td>
-          6070
+          6123
           -
-          6138
+          6191
         </td>
         <td>
           Apply
@@ -3098,15 +3099,15 @@ else
         </td>
       </tr><tr>
         <td>
-          176
+          177
         </td>
         <td>
           636
         </td>
         <td>
-          6172
+          6225
           -
-          6216
+          6269
         </td>
         <td>
           Block
@@ -3119,15 +3120,15 @@ else
         </td>
       </tr><tr>
         <td>
-          176
+          177
         </td>
         <td>
           635
         </td>
         <td>
-          6172
+          6225
           -
-          6216
+          6269
         </td>
         <td>
           Apply
@@ -3140,15 +3141,15 @@ else
         </td>
       </tr><tr>
         <td>
-          176
+          177
         </td>
         <td>
           634
         </td>
         <td>
-          6202
+          6255
           -
-          6215
+          6268
         </td>
         <td>
           Select
@@ -3161,15 +3162,15 @@ else
         </td>
       </tr><tr>
         <td>
-          180
+          181
         </td>
         <td>
           639
         </td>
         <td>
-          6245
+          6298
           -
-          6288
+          6341
         </td>
         <td>
           Apply
@@ -3182,15 +3183,15 @@ else
         </td>
       </tr><tr>
         <td>
-          180
+          181
         </td>
         <td>
           638
         </td>
         <td>
-          6253
+          6306
           -
-          6287
+          6340
         </td>
         <td>
           Apply
@@ -3203,15 +3204,15 @@ else
         </td>
       </tr><tr>
         <td>
-          180
+          181
         </td>
         <td>
           640
         </td>
         <td>
-          6245
+          6298
           -
-          6288
+          6341
         </td>
         <td>
           Block
@@ -3224,15 +3225,15 @@ else
         </td>
       </tr><tr>
         <td>
-          188
+          189
         </td>
         <td>
           642
         </td>
         <td>
-          6433
+          6486
           -
-          6459
+          6512
         </td>
         <td>
           Apply
@@ -3245,15 +3246,15 @@ else
         </td>
       </tr><tr>
         <td>
-          188
+          189
         </td>
         <td>
           670
         </td>
         <td>
-          6463
+          6516
           -
-          7085
+          7138
         </td>
         <td>
           Block
@@ -3283,15 +3284,15 @@ else
         </td>
       </tr><tr>
         <td>
-          188
+          189
         </td>
         <td>
           643
         </td>
         <td>
-          6419
+          6472
           -
-          6461
+          6514
         </td>
         <td>
           Apply
@@ -3304,15 +3305,15 @@ else
         </td>
       </tr><tr>
         <td>
-          191
+          192
         </td>
         <td>
           645
         </td>
         <td>
-          6512
+          6565
           -
-          6555
+          6608
         </td>
         <td>
           Select
@@ -3325,15 +3326,15 @@ else
         </td>
       </tr><tr>
         <td>
-          191
+          192
         </td>
         <td>
           651
         </td>
         <td>
-          6508
+          6561
           -
-          6508
+          6561
         </td>
         <td>
           Block
@@ -3346,15 +3347,15 @@ else
         </td>
       </tr><tr>
         <td>
-          191
+          192
         </td>
         <td>
           650
         </td>
         <td>
-          6508
+          6561
           -
-          6508
+          6561
         </td>
         <td>
           Literal
@@ -3367,15 +3368,15 @@ else
         </td>
       </tr><tr>
         <td>
-          191
+          192
         </td>
         <td>
           644
         </td>
         <td>
-          6522
+          6575
           -
-          6544
+          6597
         </td>
         <td>
           Apply
@@ -3388,15 +3389,15 @@ else
         </td>
       </tr><tr>
         <td>
-          192
+          193
         </td>
         <td>
           648
         </td>
         <td>
-          6565
+          6618
           -
-          6619
+          6672
         </td>
         <td>
           Apply
@@ -3409,15 +3410,15 @@ else
         </td>
       </tr><tr>
         <td>
-          192
+          193
         </td>
         <td>
           647
         </td>
         <td>
-          6594
+          6647
           -
-          6618
+          6671
         </td>
         <td>
           Apply
@@ -3430,15 +3431,15 @@ else
         </td>
       </tr><tr>
         <td>
-          192
+          193
         </td>
         <td>
           646
         </td>
         <td>
-          6576
+          6629
           -
-          6579
+          6632
         </td>
         <td>
           Literal
@@ -3451,15 +3452,15 @@ else
         </td>
       </tr><tr>
         <td>
-          192
+          193
         </td>
         <td>
           649
         </td>
         <td>
-          6565
+          6618
           -
-          6619
+          6672
         </td>
         <td>
           Block
@@ -3472,15 +3473,15 @@ else
         </td>
       </tr><tr>
         <td>
-          195
+          196
         </td>
         <td>
           659
         </td>
         <td>
-          6664
+          6717
           -
-          6664
+          6717
         </td>
         <td>
           Block
@@ -3493,15 +3494,15 @@ else
         </td>
       </tr><tr>
         <td>
-          195
+          196
         </td>
         <td>
           653
         </td>
         <td>
-          6668
+          6721
           -
-          6712
+          6765
         </td>
         <td>
           Select
@@ -3514,15 +3515,15 @@ else
         </td>
       </tr><tr>
         <td>
-          195
+          196
         </td>
         <td>
           658
         </td>
         <td>
-          6664
+          6717
           -
-          6664
+          6717
         </td>
         <td>
           Literal
@@ -3535,15 +3536,15 @@ else
         </td>
       </tr><tr>
         <td>
-          195
+          196
         </td>
         <td>
           652
         </td>
         <td>
-          6678
+          6731
           -
-          6701
+          6754
         </td>
         <td>
           Apply
@@ -3556,15 +3557,15 @@ else
         </td>
       </tr><tr>
         <td>
-          196
+          197
         </td>
         <td>
           654
         </td>
         <td>
-          6733
+          6786
           -
-          6736
+          6789
         </td>
         <td>
           Literal
@@ -3577,15 +3578,15 @@ else
         </td>
       </tr><tr>
         <td>
-          196
+          197
         </td>
         <td>
           657
         </td>
         <td>
-          6722
+          6775
           -
-          6780
+          6833
         </td>
         <td>
           Block
@@ -3598,15 +3599,15 @@ else
         </td>
       </tr><tr>
         <td>
-          196
+          197
         </td>
         <td>
           656
         </td>
         <td>
-          6722
+          6775
           -
-          6780
+          6833
         </td>
         <td>
           Apply
@@ -3619,15 +3620,15 @@ else
         </td>
       </tr><tr>
         <td>
-          196
+          197
         </td>
         <td>
           655
         </td>
         <td>
-          6751
+          6804
           -
-          6779
+          6832
         </td>
         <td>
           Apply
@@ -3640,15 +3641,15 @@ else
         </td>
       </tr><tr>
         <td>
-          198
+          199
         </td>
         <td>
           663
         </td>
         <td>
-          6799
+          6852
           -
-          6875
+          6928
         </td>
         <td>
           Apply
@@ -3661,15 +3662,15 @@ else
         </td>
       </tr><tr>
         <td>
-          199
+          200
         </td>
         <td>
           660
         </td>
         <td>
-          6829
+          6882
           -
-          6847
+          6900
         </td>
         <td>
           Literal
@@ -3682,15 +3683,15 @@ else
         </td>
       </tr><tr>
         <td>
-          199
+          200
         </td>
         <td>
           662
         </td>
         <td>
-          6824
+          6877
           -
-          6873
+          6926
         </td>
         <td>
           Apply
@@ -3703,15 +3704,15 @@ else
         </td>
       </tr><tr>
         <td>
-          199
+          200
         </td>
         <td>
           661
         </td>
         <td>
-          6851
+          6904
           -
-          6873
+          6926
         </td>
         <td>
           Apply
@@ -3724,15 +3725,15 @@ else
         </td>
       </tr><tr>
         <td>
-          200
+          201
         </td>
         <td>
           669
         </td>
         <td>
-          6882
+          6935
           -
-          6882
+          6935
         </td>
         <td>
           Block
@@ -3745,15 +3746,15 @@ else
         </td>
       </tr><tr>
         <td>
-          200
+          201
         </td>
         <td>
           668
         </td>
         <td>
-          6882
+          6935
           -
-          6882
+          6935
         </td>
         <td>
           Literal
@@ -3766,15 +3767,15 @@ else
         </td>
       </tr><tr>
         <td>
-          200
+          201
         </td>
         <td>
           664
         </td>
         <td>
-          6886
+          6939
           -
-          6900
+          6953
         </td>
         <td>
           Select
@@ -3787,15 +3788,15 @@ else
         </td>
       </tr><tr>
         <td>
-          200
+          201
         </td>
         <td>
           667
         </td>
         <td>
-          6902
+          6955
           -
-          7079
+          7132
         </td>
         <td>
           Block
@@ -3811,15 +3812,15 @@ else
         </td>
       </tr><tr>
         <td>
-          201
+          202
         </td>
         <td>
           665
         </td>
         <td>
-          6912
+          6965
           -
-          7001
+          7054
         </td>
         <td>
           Apply
@@ -3832,15 +3833,15 @@ else
         </td>
       </tr><tr>
         <td>
-          203
+          204
         </td>
         <td>
           666
         </td>
         <td>
-          7010
+          7063
           -
-          7071
+          7124
         </td>
         <td>
           Apply
@@ -3853,15 +3854,15 @@ else
         </td>
       </tr><tr>
         <td>
-          207
+          208
         </td>
         <td>
           672
         </td>
         <td>
-          7100
+          7153
           -
-          7112
+          7165
         </td>
         <td>
           Block
@@ -3874,15 +3875,15 @@ else
         </td>
       </tr><tr>
         <td>
-          207
+          208
         </td>
         <td>
           671
         </td>
         <td>
-          7100
+          7153
           -
-          7112
+          7165
         </td>
         <td>
           Apply

@@ -142,24 +142,25 @@
 </span>118 <span style=''>  }
 </span>119 <span style=''>}
 </span>120 <span style=''>
-</span>121 <span style=''>case class Exclusion(groupId: String, artifactId: String) {
+</span>121 <span style=''>case class Exclusion(groupId: String = null, artifactId: String = null) {
 </span>122 <span style=''>
 </span>123 <span style=''>  def this(elem: Elem) = </span><span style='background: #AEF1AE'>this(
 </span>124 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.GroupId).text),
 </span>125 <span style=''></span><span style='background: #AEF1AE'>    emptyToNull((elem \ SL.ArtifactId).text))</span><span style=''>
 </span>126 <span style=''>
-</span>127 <span style=''>  lazy val xml = &lt;exclusion&gt;
-</span>128 <span style=''>                   &lt;groupId&gt;{groupId}&lt;/groupId&gt;
-</span>129 <span style=''>                   &lt;artifactId&gt;{artifactId}&lt;/artifactId&gt;
-</span>130 <span style=''>                 &lt;/exclusion&gt;
-</span>131 <span style=''>
-</span>132 <span style=''>  def makeModelObject(): org.apache.maven.model.Exclusion = {
-</span>133 <span style=''>    val exclusion = </span><span style='background: #AEF1AE'>new org.apache.maven.model.Exclusion()</span><span style=''>
-</span>134 <span style=''>    </span><span style='background: #AEF1AE'>exclusion.setGroupId(groupId)</span><span style=''>
-</span>135 <span style=''>    </span><span style='background: #AEF1AE'>exclusion.setArtifactId(artifactId)</span><span style=''>
-</span>136 <span style=''>    exclusion
-</span>137 <span style=''>  }
-</span>138 <span style=''>}
+</span>127 <span style=''>  lazy val xml =
+</span>128 <span style=''>    &lt;exclusion&gt;
+</span>129 <span style=''>      { if (groupId != null) &lt;groupId&gt;{groupId}&lt;/groupId&gt; }
+</span>130 <span style=''>      { if (artifactId != null) &lt;artifactId&gt;{artifactId}&lt;/artifactId&gt; }
+</span>131 <span style=''>    &lt;/exclusion&gt;
+</span>132 <span style=''>
+</span>133 <span style=''>  def makeModelObject(): org.apache.maven.model.Exclusion = {
+</span>134 <span style=''>    val exclusion = </span><span style='background: #AEF1AE'>new org.apache.maven.model.Exclusion()</span><span style=''>
+</span>135 <span style=''>    if (</span><span style='background: #AEF1AE'>groupId != null</span><span style=''>) </span><span style='background: #AEF1AE'>exclusion.setGroupId(groupId)</span><span style=''>
+</span>136 <span style=''>    if (</span><span style='background: #AEF1AE'>artifactId != null</span><span style=''>) </span><span style='background: #AEF1AE'>exclusion.setArtifactId(artifactId)</span><span style=''>
+</span>137 <span style=''>    exclusion
+</span>138 <span style=''>  }
+</span>139 <span style=''>}
 </span></pre>
           </div>
           <div class="tab-pane" id="statementlist">
@@ -2115,9 +2116,9 @@
           1169
         </td>
         <td>
-          4782
+          4796
           -
-          4876
+          4890
         </td>
         <td>
           Apply
@@ -2136,9 +2137,9 @@
           1170
         </td>
         <td>
-          4782
+          4796
           -
-          4782
+          4796
         </td>
         <td>
           Literal
@@ -2157,9 +2158,9 @@
           1162
         </td>
         <td>
-          4812
+          4826
           -
-          4822
+          4836
         </td>
         <td>
           ApplyImplicitView
@@ -2178,9 +2179,9 @@
           1161
         </td>
         <td>
-          4812
+          4826
           -
-          4822
+          4836
         </td>
         <td>
           Select
@@ -2199,9 +2200,9 @@
           1164
         </td>
         <td>
-          4792
+          4806
           -
-          4829
+          4843
         </td>
         <td>
           Apply
@@ -2220,9 +2221,9 @@
           1163
         </td>
         <td>
-          4805
+          4819
           -
-          4828
+          4842
         </td>
         <td>
           Select
@@ -2241,9 +2242,9 @@
           1165
         </td>
         <td>
-          4855
+          4869
           -
-          4868
+          4882
         </td>
         <td>
           Select
@@ -2262,9 +2263,9 @@
           1168
         </td>
         <td>
-          4835
+          4849
           -
-          4875
+          4889
         </td>
         <td>
           Apply
@@ -2283,9 +2284,9 @@
           1167
         </td>
         <td>
-          4848
+          4862
           -
-          4874
+          4888
         </td>
         <td>
           Select
@@ -2304,9 +2305,9 @@
           1166
         </td>
         <td>
-          4855
+          4869
           -
-          4868
+          4882
         </td>
         <td>
           ApplyImplicitView
@@ -2319,15 +2320,15 @@
         </td>
       </tr><tr>
         <td>
-          133
+          134
         </td>
         <td>
           1171
         </td>
         <td>
-          5125
+          5157
           -
-          5163
+          5195
         </td>
         <td>
           Apply
@@ -2340,15 +2341,36 @@
         </td>
       </tr><tr>
         <td>
-          134
+          135
         </td>
         <td>
-          1173
+          1177
         </td>
         <td>
-          5168
+          5200
           -
-          5197
+          5200
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          135
+        </td>
+        <td>
+          1174
+        </td>
+        <td>
+          5221
+          -
+          5250
         </td>
         <td>
           Apply
@@ -2361,15 +2383,36 @@
         </td>
       </tr><tr>
         <td>
-          134
+          135
         </td>
         <td>
-          1172
+          1176
         </td>
         <td>
-          5189
+          5200
           -
-          5196
+          5200
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          135
+        </td>
+        <td>
+          1173
+        </td>
+        <td>
+          5242
+          -
+          5249
         </td>
         <td>
           Select
@@ -2385,12 +2428,117 @@
           135
         </td>
         <td>
-          1174
+          1172
         </td>
         <td>
-          5226
+          5204
           -
-          5236
+          5219
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Exclusion.this.groupId.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          135
+        </td>
+        <td>
+          1175
+        </td>
+        <td>
+          5221
+          -
+          5250
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.apache.maven.model.Exclusion.setGroupId
+        </td>
+        <td style="background: #AEF1AE">
+          exclusion.setGroupId(Exclusion.this.groupId)
+        </td>
+      </tr><tr>
+        <td>
+          136
+        </td>
+        <td>
+          1178
+        </td>
+        <td>
+          5259
+          -
+          5277
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.!=
+        </td>
+        <td style="background: #AEF1AE">
+          Exclusion.this.artifactId.!=(null)
+        </td>
+      </tr><tr>
+        <td>
+          136
+        </td>
+        <td>
+          1180
+        </td>
+        <td>
+          5279
+          -
+          5314
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.maven.model.Exclusion.setArtifactId
+        </td>
+        <td style="background: #AEF1AE">
+          exclusion.setArtifactId(Exclusion.this.artifactId)
+        </td>
+      </tr><tr>
+        <td>
+          136
+        </td>
+        <td>
+          1183
+        </td>
+        <td>
+          5255
+          -
+          5255
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          136
+        </td>
+        <td>
+          1179
+        </td>
+        <td>
+          5303
+          -
+          5313
         </td>
         <td>
           Select
@@ -2403,18 +2551,39 @@
         </td>
       </tr><tr>
         <td>
-          135
+          136
         </td>
         <td>
-          1175
+          1182
         </td>
         <td>
-          5202
+          5255
           -
-          5237
+          5255
         </td>
         <td>
-          Apply
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          ()
+        </td>
+      </tr><tr>
+        <td>
+          136
+        </td>
+        <td>
+          1181
+        </td>
+        <td>
+          5279
+          -
+          5314
+        </td>
+        <td>
+          Block
         </td>
         <td>
           org.apache.maven.model.Exclusion.setArtifactId
