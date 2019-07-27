@@ -259,8 +259,7 @@ So <tt>value = true</tt> becomes <tt>&lt;value&gt;true&lt;/value&gt;</tt> and <t
 <div>
 <pre class="source">transformers = [
   {
-    implementation = &quot;org.apache.maven.plugins.shade.resource.ManifestResourceTransformer&quot;
-    mainClass = &quot;org.apache.maven.unbound.Cli&quot;
+    implementation = &quot;org.apache.maven.plugins.shade.resource.ManifestResourceTransformer&quot;, mainClass = &quot;org.apache.maven.unbound.Cli&quot;
   }
 ]
 </pre></div></div>
@@ -308,9 +307,7 @@ So <tt>value = true</tt> becomes <tt>&lt;value&gt;true&lt;/value&gt;</tt> and <t
 
 <div>
 <div>
-<pre class="source">fileset {
-  directory = &quot;src/main/java&quot;, outputDirectory = &quot;target/classes&quot;, includes = [ &quot;*.java&quot; ]
-}
+<pre class="source">fileset { directory = &quot;src/main/java&quot;, outputDirectory = &quot;target/classes&quot;, includes = [ &quot;*.java&quot; ] }
 </pre></div></div>
 </div>
 <div class="section">
@@ -387,8 +384,7 @@ defineCompiler = [ { groupId = &quot;org.scala-lang&quot;, artifactId = &quot;sc
           configuration {
             minimizeJar = true, shadedArtifactAttached = true, shadedClassifierName = &quot;exec&quot;
             transformers = [ {
-                implementation = &quot;org.apache.maven.plugins.shade.resource.ManifestResourceTransformer&quot;
-                mainClass = &quot;org.apache.maven.unbound.Cli&quot;
+                implementation = &quot;org.apache.maven.plugins.shade.resource.ManifestResourceTransformer&quot;, mainClass = &quot;org.apache.maven.unbound.Cli&quot;
             } ]
           }
           goals = [ &quot;shade&quot; ], phase = &quot;package&quot;
